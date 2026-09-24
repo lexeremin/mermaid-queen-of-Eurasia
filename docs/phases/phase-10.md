@@ -72,3 +72,6 @@ Persistence of relationships (Phase 11), the singing Aura VFX and mana cost (Pha
 - A full run wins an NPC over: hearts at 60, invitation at `joinAt`, `joined` state, no dead ends.
 - Dialogue pauses the game; Esc, numbers and touch buttons work.
 - Draw calls stay ≤ 65; no console errors; works at 375×812; typecheck, lint, prettier, tests, build pass.
+
+## Rename (after Phase 13)
+NPC display names changed; ids, asset keys and save data are unchanged. Sergei → Sergey, Mikhalych → Sasha Prince (now a Kefir Seller, dialogue updated), Arkady → Gumelnik, Grisha → Maksim, Tolik → Vitalik, Lyoha → Malinin, Boris → Polish Prince, Uncle Kolya → Ukrainian Prince. Older sections of this doc use the original names.

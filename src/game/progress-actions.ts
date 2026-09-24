@@ -1,3 +1,4 @@
+import { NPC_BY_ID } from '@/data/npcs';
 import { ITEMS, type ItemDef, type ItemId } from '@/data/items';
 import { combat } from '@/game/combat-sim';
 import { dropOnGround } from '@/game/loot-sim';
@@ -43,7 +44,7 @@ function awardOnce(key: string, amount: number, label: string): void {
 export function startProgressHooks(): void {
   const check = () => {
     for (const [id, n] of Object.entries(useNpcStore.getState().npcs)) {
-      const name = id.charAt(0).toUpperCase() + id.slice(1);
+      const name = NPC_BY_ID.get(id)?.name ?? id;
       if (n.relationship >= MESMERIZED_AT)
         awardOnce(`mes:${id}`, XP_REWARDS.npcMesmerized, `${name} is mesmerized`);
       if (n.joined) awardOnce(`join:${id}`, XP_REWARDS.npcJoined, `${name} joined the kingdom`);

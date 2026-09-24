@@ -20,7 +20,7 @@ export type NpcDef = {
 export const NPCS: readonly NpcDef[] = [
   {
     id: 'grisha',
-    name: 'Grisha',
+    name: 'Maksim',
     title: 'Gate Guard',
     asset: 'npcGrisha',
     accent: '#6b8a3c',
@@ -59,7 +59,7 @@ export const NPCS: readonly NpcDef[] = [
   },
   {
     id: 'tolik',
-    name: 'Tolik',
+    name: 'Vitalik',
     title: 'Accordionist of Sad Waltzes',
     asset: 'npcTolik',
     accent: '#a4442f',
@@ -97,7 +97,7 @@ export const NPCS: readonly NpcDef[] = [
   },
   {
     id: 'lyoha',
-    name: 'Lyoha',
+    name: 'Malinin',
     title: 'Chess Hustler',
     asset: 'npcLyoha',
     accent: '#3a6ea8',
@@ -135,27 +135,27 @@ export const NPCS: readonly NpcDef[] = [
   },
   {
     id: 'mikhalych',
-    name: 'Mikhalych',
-    title: 'Kvass Vendor',
+    name: 'Sasha Prince',
+    title: 'Kefir Seller',
     asset: 'npcMikhalych',
     accent: '#e0742c',
     initial: 10,
     joinAt: 70,
     greet: {
-      low: 'Kvass, cold kvass. Nobody buys it in summer. Tastes better sad.',
+      low: 'Kefir, cold kefir. Nobody buys it in summer. Tastes better sad.',
       mid: 'Take a mug, Rosa. On the house. The house is a barrel.',
-      high: 'You drank my kvass and smiled. I have waited eleven summers for that.',
+      high: 'You drank my kefir and smiled. I have waited eleven summers for that.',
     },
-    invite: "Royal kvass supply? Yes! I'll brew the Queen's own. A little bitter, mostly proud.",
-    joined: "The Queen's Kvass Master! Cold, sparkling, and only slightly existential.",
+    invite: "Royal kefir supply? Yes! I'll ferment the Queen's own. A little bitter, mostly proud.",
+    joined: "The Queen's Kefir Master! Cold, sparkling, and only slightly existential.",
     methods: {
       kindness: {
-        option: 'This looks like the best kvass in Moscow.',
+        option: 'This looks like the best kefir in Moscow.',
         reaction: 'The best? In Moscow? Sit, sit. Take two.',
         delta: 26,
       },
       humor: {
-        option: 'Do you sell kvass, or bottled optimism?',
+        option: 'Do you sell kefir, or bottled optimism?',
         reaction: 'Both. The optimism is watered down.',
         delta: 14,
       },
@@ -173,7 +173,7 @@ export const NPCS: readonly NpcDef[] = [
   },
   {
     id: 'boris',
-    name: 'Boris',
+    name: 'Polish Prince',
     title: 'Clerk of Form 27-B',
     asset: 'npcBoris',
     accent: '#5f7590',
@@ -211,7 +211,7 @@ export const NPCS: readonly NpcDef[] = [
   },
   {
     id: 'sergei',
-    name: 'Sergei',
+    name: 'Sergey',
     title: 'Tour Guide With Nobody to Guide',
     asset: 'npcSergei',
     accent: '#d6b04a',
@@ -249,7 +249,7 @@ export const NPCS: readonly NpcDef[] = [
   },
   {
     id: 'arkady',
-    name: 'Arkady',
+    name: 'Gumelnik',
     title: 'Watch Seller of GUM',
     asset: 'npcArkady',
     accent: '#7a5aa8',
@@ -287,7 +287,7 @@ export const NPCS: readonly NpcDef[] = [
   },
   {
     id: 'kolya',
-    name: 'Uncle Kolya',
+    name: 'Ukrainian Prince',
     title: 'Pigeon Feeder',
     asset: 'npcKolya',
     accent: '#8a5a34',
