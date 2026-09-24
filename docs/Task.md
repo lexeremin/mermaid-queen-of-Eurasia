@@ -76,7 +76,7 @@ Read these files before starting any work:
 
 | Phase | Status | Outcome | Notes |
 |---|---|---|---|
-| Phase 0 — Docs bootstrap | ✅ Complete | Description.md rewritten, /docs created | (see git log) |
+| Phase 0 — Docs bootstrap | ✅ Complete | Description.md rewritten, /docs created | 9f8d3c8 |
 | Phase 1 — Project scaffold | ⬜ Next | Vite + React + TS strict, R3F, Zustand, lint/format, Vitest, folder layout, runs locally | |
 | Phase 2 — Engine core | ⬜ Todo | Fixed top-down camera, game loop, input (WASD + mouse aim, touch joystick + buttons), pause, responsive/safe-area layout | |
 | Phase 3 — Asset pipeline PoC | ⬜ Todo | Blender MCP end to end: Rosa placeholder, one house, one tree → GLB under budget, retro texture pass, licence ledger | Validates style + perf before content |
