@@ -171,4 +171,18 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   white-space: nowrap;
+  animation: zone-banner 3.2s ease-out forwards;
+}
+
+@keyframes zone-banner {
+  0% {
+    opacity: 0;
+  }
+  12%,
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }

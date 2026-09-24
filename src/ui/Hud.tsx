@@ -25,7 +25,11 @@ export function Hud() {
         </button>
       </div>
 
-      {zone && !paused && !inventoryOpen && <div className="zone-hint">{zone.label}</div>}
+      {zone && !paused && !inventoryOpen && (
+        <div key={zone.id} className="zone-hint">
+          {zone.label}
+        </div>
+      )}
 
       {touch && !paused && !inventoryOpen && <TouchControls />}
 

@@ -18,15 +18,22 @@ export type Placement = {
 
 export type Ribbon = { points: readonly Point[]; width: number };
 
+/** A river or pond: drawn as a ribbon with a wider bank edge; collider runs are capsule chains. */
+export type Water = {
+  ribbon: Ribbon;
+  edgeWidth: number;
+  colliderRuns: readonly (readonly Point[])[];
+};
+
 export type MapData = {
   id: string;
   bounds: Bounds;
   spawn: Vec2;
   placements: readonly Placement[];
-  river: { ribbon: Ribbon; iceWidth: number; colliderRuns: readonly (readonly Point[])[] };
+  waters: readonly Water[];
   paths: readonly Ribbon[];
-  /** Cobblestone rectangle: center and size. */
-  plaza: { cx: number; cz: number; w: number; d: number };
+  /** Cobblestone rectangles: center and size. */
+  plazas: readonly { cx: number; cz: number; w: number; d: number }[];
   zones: readonly Zone[];
   /** Colored ground rectangles (e.g. interior floors). */
   floors?: readonly { cx: number; cz: number; w: number; d: number; color: string; y?: number }[];

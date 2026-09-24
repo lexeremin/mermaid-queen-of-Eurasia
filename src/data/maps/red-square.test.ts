@@ -6,7 +6,7 @@ import { PLAYER_RADIUS } from '@/systems/movement';
 import { zoneAt } from '@/systems/zones';
 
 const world = buildCollisionWorld(RED_SQUARE);
-const STEP = 0.4;
+const STEP = 0.5;
 const { bounds } = RED_SQUARE;
 
 const walkable = (x: number, z: number): boolean => {
@@ -59,67 +59,110 @@ const canReach = (x: number, z: number, radius = 0.6): boolean => {
   return false;
 };
 
+const at = (asset: string) => RED_SQUARE.placements.find((p) => p.asset === asset);
+
 describe('Red Square map (real layout)', () => {
   it('spawns Rosa on free ground inside the bounds', () => {
     expect(walkable(RED_SQUARE.spawn.x, RED_SQUARE.spawn.z)).toBe(true);
   });
 
-  it('reaches both ends of the square', () => {
+  it('reaches both ends of Red Square', () => {
     expect(canReach(-3, -29)).toBe(true);
     expect(canReach(0, 29)).toBe(true);
   });
 
-  it('reaches inside GUM through every portal', () => {
+  it('reaches inside GUM through every portal and around the fountain', () => {
     for (const z of [-18, 0, 18]) {
       expect(canReach(-14.6, z)).toBe(true);
       expect(canReach(-16.5, z)).toBe(true);
       expect(canReach(-19.6, z)).toBe(true);
     }
-  });
-
-  it('walks the whole gallery around the fountain and kiosks', () => {
     expect(canReach(-26.8, 0)).toBe(true);
-    expect(canReach(-20, 0)).toBe(true);
     expect(canReach(-23.3, 21)).toBe(true);
     expect(canReach(-23.3, -21)).toBe(true);
     expect(zoneAt(RED_SQUARE.zones, { x: -23.3, z: 21 })?.id).toBe('gum');
   });
 
-  it('blocks the solid parts: facade wings, fountain, kiosks, west wall, Kremlin towers', () => {
+  it('walks out through the Resurrection Gate onto Manezhnaya Square', () => {
+    expect(canReach(9, 31)).toBe(true);
+    expect(canReach(9, 33.5)).toBe(true);
+    expect(canReach(9, 38.5)).toBe(true);
+    expect(canReach(25, 45)).toBe(true);
+    expect(canReach(25, 70)).toBe(true);
+    expect(zoneAt(RED_SQUARE.zones, { x: 25, z: 45 })?.id).toBe('manezh');
+  });
+
+  it('reaches the Alexander Garden entrance and the whole promenade', () => {
+    expect(canReach(53, 44)).toBe(true);
+    expect(canReach(53, 22)).toBe(true);
+    expect(canReach(53, -27)).toBe(true);
+    expect(canReach(56, 8)).toBe(true);
+    expect(canReach(49.5, 15.5)).toBe(true);
+    expect(zoneAt(RED_SQUARE.zones, { x: 53, z: -27 })?.id).toBe('alexander-garden');
+  });
+
+  it('crosses the Trinity Bridge over the pond into the pocket by the Trinity Tower', () => {
+    expect(canReach(51.6, 28)).toBe(true);
+    expect(canReach(48, 28)).toBe(true);
+    expect(canReach(46, 28)).toBe(true);
+  });
+
+  it('blocks the solid parts, the pond and the Kremlin', () => {
     expect(walkable(-16.5, 5)).toBe(false);
     expect(walkable(-23.3, 0)).toBe(false);
     expect(walkable(-23.3, 8)).toBe(false);
-    expect(walkable(-27.7, 0)).toBe(false);
-    expect(walkable(13, -29)).toBe(false);
-    expect(walkable(13, -2)).toBe(false);
+    expect(walkable(25, 56)).toBe(false);
+    expect(walkable(48, 22)).toBe(false);
+    expect(walkable(48, 33)).toBe(false);
+    expect(walkable(57.5, 28)).toBe(false);
+    expect(walkable(49.5, 13)).toBe(false);
     expect(walkable(-9, 25)).toBe(false);
-  });
-
-  it('keeps the Kremlin wall out of reach (right side) and never lets Rosa past the bounds', () => {
-    expect(canReach(14.5, 0, 0.5)).toBe(false);
-    expect(canReach(-30, 0, 0.5)).toBe(false);
-    expect(canReach(0, 31, 0.5)).toBe(false);
-    expect(canReach(0, -31, 0.5)).toBe(false);
+    expect(canReach(29, 0, 0.5)).toBe(false);
+    expect(canReach(44, -20, 0.5)).toBe(false);
+    expect(canReach(-4, 44, 0.5)).toBe(false);
   });
 
   it('places the buildings in their real relative positions', () => {
-    const at = (asset: string) => RED_SQUARE.placements.find((p) => p.asset === asset);
     const basil = at('basil');
     const museum = at('museum');
     const kazan = at('kazan');
     const gate = at('resurrectionGate');
-    const facade = at('gumFacade');
+    const facade = RED_SQUARE.placements.find((p) => p.asset === 'gumFacade' && p.z === 0);
     const wall = at('kremlinWall');
-    expect(basil && museum && kazan && gate && facade && wall).toBeTruthy();
-    // Far end vs near end.
+    const manege = at('manege');
+    const kutafya = at('kutafya');
+    const grotto = at('grotto');
+    const gardenGate = at('gardenGate');
+    expect(
+      basil &&
+        museum &&
+        kazan &&
+        gate &&
+        facade &&
+        wall &&
+        manege &&
+        kutafya &&
+        grotto &&
+        gardenGate,
+    ).toBeTruthy();
+    // Red Square: far end vs near end, GUM left, Kremlin right.
     expect(basil!.z).toBeLessThan(-30);
     expect(museum!.z).toBeGreaterThan(30);
-    // Facing the museum end from St. Basil's: GUM on the left (west), Kremlin on the right (east).
     expect(facade!.x).toBeLessThan(wall!.x);
-    // Near end, left to right: Kazan, museum, Resurrection Gate.
     expect(kazan!.x).toBeLessThan(museum!.x);
     expect(museum!.x).toBeLessThan(gate!.x);
-    // Resurrection Gate sits on the Kremlin side of the square.
-    expect(gate!.x).toBeGreaterThan(0);
+    // Manezhnaya Square lies beyond the Resurrection Gate, on the far side from St. Basil's.
+    const manezh = RED_SQUARE.zones.find((z) => z.id === 'manezh')!;
+    expect(manezh.box.cz).toBeGreaterThan(gate!.z);
+    // The garden is on the far side of the Kremlin: right of the Kremlin's interior, outside its
+    // west wall, and only reachable via Manezhnaya Square.
+    const westWall = RED_SQUARE.placements.find((p) => p.asset === 'kremlinWall' && p.x === 44)!;
+    expect(gardenGate!.x).toBeGreaterThan(westWall.x);
+    expect(kutafya!.x).toBeGreaterThan(westWall.x);
+    expect(grotto!.x).toBeGreaterThan(westWall.x);
+    expect(manege!.x).toBeGreaterThan(gardenGate!.x);
+    // Every reachable garden cell is south (via Manezhnaya) of, or beside, the Kremlin wall line.
+    expect(canReach(46.2, 28)).toBe(true);
+    expect(walkable(44, 28)).toBe(false);
   });
 });

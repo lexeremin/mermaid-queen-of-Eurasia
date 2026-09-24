@@ -23,6 +23,7 @@ const ICE_Y = 0.03;
 const WATER_Y = 0.04;
 const PATH_Y = 0.05;
 const GLASS_COLOR = '#c4d6dc';
+const GRAVEL_COLOR = '#8f8672';
 const GLASS_OPACITY = 0.22;
 
 function groupByAsset(placements: readonly Placement[]): [AssetId, Transform[]][] {
@@ -119,9 +120,13 @@ function GlassRoofs({ map }: { map: typeof currentMap }) {
 export function MapScene() {
   const map = currentMap;
   const groups = useMemo(() => groupByAsset(map.placements), [map]);
-  const ice = useMemo(() => buildRibbon(map.river.ribbon.points, map.river.iceWidth, ICE_Y), [map]);
+  const ice = useMemo(
+    () => mergeRibbons(map.waters.map((w) => buildRibbon(w.ribbon.points, w.edgeWidth, ICE_Y))),
+    [map],
+  );
   const water = useMemo(
-    () => buildRibbon(map.river.ribbon.points, map.river.ribbon.width, WATER_Y),
+    () =>
+      mergeRibbons(map.waters.map((w) => buildRibbon(w.ribbon.points, w.ribbon.width, WATER_Y))),
     [map],
   );
   const paths = useMemo(
@@ -140,8 +145,16 @@ export function MapScene() {
         d={400}
         y={0}
       />
-      <TiledGround url={COBBLE_URL} tileMeters={COBBLE_TILE_METERS} {...map.plaza} y={PLAZA_Y} />
-      {map.paths.length > 0 && <RibbonMeshView data={paths} color={PALETTE.frost} />}
+      {map.plazas.map((plaza, i) => (
+        <TiledGround
+          key={i}
+          url={COBBLE_URL}
+          tileMeters={COBBLE_TILE_METERS}
+          {...plaza}
+          y={PLAZA_Y}
+        />
+      ))}
+      {map.paths.length > 0 && <RibbonMeshView data={paths} color={GRAVEL_COLOR} />}
       <RibbonMeshView data={ice} color={PALETTE.slate_light} />
       <RibbonMeshView data={water} color={PALETTE.slate} />
       <Floors map={map} />

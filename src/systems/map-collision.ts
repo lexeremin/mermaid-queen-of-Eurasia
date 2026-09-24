@@ -7,7 +7,7 @@ import {
   type CollisionWorld,
 } from '@/systems/collision';
 
-const RIVER_COLLIDER_INSET = 0.1;
+const WATER_COLLIDER_INSET = 0.1;
 
 export function buildCollisionWorld(map: MapData): CollisionWorld {
   const colliders: Collider[] = [];
@@ -25,8 +25,10 @@ export function buildCollisionWorld(map: MapData): CollisionWorld {
       ),
     );
   }
-  const riverRadius = map.river.ribbon.width / 2 - RIVER_COLLIDER_INSET;
-  for (const run of map.river.colliderRuns) colliders.push(...polylineToCapsules(run, riverRadius));
+  for (const water of map.waters) {
+    const radius = water.ribbon.width / 2 - WATER_COLLIDER_INSET;
+    for (const run of water.colliderRuns) colliders.push(...polylineToCapsules(run, radius));
+  }
   colliders.push(...map.colliders);
   return { bounds: map.bounds, colliders };
 }

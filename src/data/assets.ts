@@ -36,6 +36,9 @@ export const ASSETS = {
     footprint: [box(1.45, 1.45, -3.5), box(1.45, 1.45, 3.5)],
   },
   kremlinInside: { url: '/assets/lmk/lmk_kremlin_inside.glb', clips: [] },
+  kutafya: { url: '/assets/bld/bld_kutafya.glb', clips: [], footprint: [circle(2.8)] },
+  manege: { url: '/assets/bld/bld_manege.glb', clips: [], footprint: [box(11, 4.5)] },
+  grotto: { url: '/assets/bld/bld_grotto.glb', clips: [], footprint: [box(6.2, 1.7)] },
   museum: { url: '/assets/bld/bld_museum.glb', clips: [], footprint: [box(7.2, 2.7)] },
   archBridge: {
     url: '/assets/bld/bld_arch_bridge.glb',
@@ -51,6 +54,8 @@ export const ASSETS = {
   shop: { url: '/assets/bld/bld_shop.glb', clips: [], footprint: [box(1.95, 1.55)] },
   shopHerbs: { url: '/assets/bld/bld_shop_herbs.glb', clips: [], footprint: [box(1.95, 1.55)] },
   questBoard: { url: '/assets/prop/prop_questboard.glb', clips: [], footprint: [box(1.1, 0.25)] },
+  obelisk: { url: '/assets/prop/prop_obelisk.glb', clips: [], footprint: [circle(1.3)] },
+  hedge: { url: '/assets/prop/prop_hedge.glb', clips: [], footprint: [box(1.0, 0.35)] },
   fountain: { url: '/assets/prop/prop_fountain.glb', clips: [], footprint: [circle(2.75)] },
   kiosk: { url: '/assets/prop/prop_kiosk.glb', clips: [], footprint: [box(0.95, 0.95)] },
   bench: { url: '/assets/prop/prop_bench.glb', clips: [], footprint: [box(0.95, 0.3)] },
