@@ -7,6 +7,9 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  optimizeDeps: {
+    include: ['three', 'zustand', '@react-three/fiber', '@react-three/drei'],
+  },
   test: {
     environment: 'node',
     include: ['src/**/*.test.ts'],

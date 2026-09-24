@@ -1,0 +1,57 @@
+import { isZero, type Vec2 } from '@/utils/vec2';
+
+export const ACTIONS = ['attack', 'dash', 'aura', 'spell', 'interact'] as const;
+export type Action = (typeof ACTIONS)[number];
+
+export type InputState = {
+  keyMove: Vec2;
+  stickMove: Vec2;
+  aim: Vec2;
+  pointerActive: boolean;
+  held: Record<Action, boolean>;
+  pressed: Record<Action, boolean>;
+};
+
+function flags(): Record<Action, boolean> {
+  return { attack: false, dash: false, aura: false, spell: false, interact: false };
+}
+
+export function createInputState(): InputState {
+  return {
+    keyMove: { x: 0, z: 0 },
+    stickMove: { x: 0, z: 0 },
+    aim: { x: 0, z: 0 },
+    pointerActive: false,
+    held: flags(),
+    pressed: flags(),
+  };
+}
+
+export function setHeld(input: InputState, action: Action, down: boolean): void {
+  if (down && !input.held[action]) input.pressed[action] = true;
+  input.held[action] = down;
+}
+
+export function consumePressed(input: InputState, action: Action): boolean {
+  const was = input.pressed[action];
+  input.pressed[action] = false;
+  return was;
+}
+
+export function clearPressed(input: InputState): void {
+  for (const action of ACTIONS) input.pressed[action] = false;
+}
+
+export function resetInput(input: InputState): void {
+  input.keyMove = { x: 0, z: 0 };
+  input.stickMove = { x: 0, z: 0 };
+  input.aim = { x: 0, z: 0 };
+  input.held = flags();
+  input.pressed = flags();
+}
+
+export function getMove(input: InputState): Vec2 {
+  return isZero(input.stickMove) ? input.keyMove : input.stickMove;
+}
+
+export const input: InputState = createInputState();

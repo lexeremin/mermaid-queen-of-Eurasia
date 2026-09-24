@@ -1,5 +1,13 @@
 import { Scene } from '@/game/Scene';
+import { Hud } from '@/ui/Hud';
+import { useInputBridge } from '@/ui/use-input-bridge';
 
 export function App() {
-  return <Scene />;
+  useInputBridge();
+  return (
+    <>
+      <Scene />
+      <Hud />
+    </>
+  );
 }
