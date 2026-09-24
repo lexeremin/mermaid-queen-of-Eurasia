@@ -24,6 +24,22 @@ if (key.startsWith('sb_secret_')) {
   process.exit(1);
 }
 
+const leaked = Object.entries(env).filter(
+  ([name, value]) =>
+    name.startsWith('VITE_') &&
+    /^sb_secret_|service_role/.test(
+      value.startsWith('eyJ')
+        ? Buffer.from(value.split('.')[1] ?? '', 'base64url').toString()
+        : value,
+    ),
+);
+if (leaked.length > 0) {
+  console.error(
+    `A secret key is stored in ${leaked.map(([n]) => n).join(', ')}. Vite ships every VITE_ variable to the browser.\nRename it (e.g. SUPABASE_SECRET_KEY) and rotate the key if it was ever built or deployed.`,
+  );
+  process.exit(1);
+}
+
 const results = [];
 const check = (name, ok, detail = '') => {
   results.push(ok);

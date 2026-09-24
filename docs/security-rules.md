@@ -6,6 +6,11 @@
 - Client may hold only `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The service-role key never enters the repo, the client bundle, or docs.
 - AI-generation keys (Hunyuan3D, Rodin, Sketchfab, etc.) stay in the Blender MCP addon / local environment.
 
+## Vite env exposure
+- Vite bundles **every `VITE_` variable** into the browser. Only the project URL and the publishable/anon key may use that prefix. A secret or service-role key must never be named `VITE_…`; keep it as `SUPABASE_SECRET_KEY` (or better, out of `.env` entirely).
+- The client reads each variable explicitly (never the whole env object), and `src/net/env-safety.test.ts` fails the build if that changes or a secret-looking `VITE_` name appears in source. `src/net/config.ts` refuses `sb_secret_` and `service_role` keys at runtime; `npm run supabase:check` refuses to run when a `VITE_` variable holds one.
+- History: on 2026-09-24 a secret key was added as `VITE_SUPABASE_SECRET_KEY`. It was renamed before any build or push contained it (verified: 0 matches in a fresh `dist/`), but the dev server on localhost had served it to the page. Rotating that key is recommended.
+
 ## Supabase
 - RLS enabled on every table; policies defined in migrations and documented in `docs/database-schema.md`.
 - Anonymous auth only; no PII collected. No user-supplied free text stored in slice (payload is structured, size-limited).

@@ -51,6 +51,9 @@ Progress survives a reload (local save, offline-first), and — when Supabase is
 - `saved_at` uses the client clock; a badly wrong clock could win or lose a last-write-wins comparison. Acceptable for the slice.
 - Cloud pull applies mid-session (about 1 s after load); a very slow connection could reposition Rosa after the player has started moving. Only applies when the cloud save is newer.
 
+## Follow-up: secret key incident (2026-09-24)
+A secret key was added to `.env` as `VITE_SUPABASE_SECRET_KEY`. Fixed the same day: renamed to `SUPABASE_SECRET_KEY`, the client now reads only its three variables explicitly, `env-safety.test.ts` guards this, `check-supabase.mjs` refuses `VITE_` secrets. A fresh build contains 0 occurrences. See `docs/security-rules.md`.
+
 ## Out of scope
 Cross-device restore UI (the save syncs, but there is no account or code to link devices), leaderboard, save slots, encryption of the local save, server-side validation of save contents.
 
