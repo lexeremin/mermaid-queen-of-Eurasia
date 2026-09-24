@@ -38,7 +38,7 @@ export type EnemyDef = {
 export const ENEMIES: Readonly<Record<EnemyKind, EnemyDef>> = {
   tycoon: {
     kind: 'tycoon',
-    name: 'Golden-Pen Tycoon',
+    name: 'Zelebeba',
     weapon: 'giant golden fountain pen',
     asset: 'enemyTycoon',
     maxHp: 24,
@@ -62,7 +62,7 @@ export const ENEMIES: Readonly<Record<EnemyKind, EnemyDef>> = {
   },
   speaker: {
     kind: 'speaker',
-    name: 'Gavel Speaker',
+    name: 'Uncle Sosunok',
     weapon: 'enormous gavel',
     asset: 'enemySpeaker',
     maxHp: 70,
@@ -86,7 +86,7 @@ export const ENEMIES: Readonly<Record<EnemyKind, EnemyDef>> = {
   },
   demagogue: {
     kind: 'demagogue',
-    name: 'Megaphone Demagogue',
+    name: 'Ugrumiy Putan',
     weapon: 'megaphone (sound blasts)',
     asset: 'enemyDemagogue',
     maxHp: 32,

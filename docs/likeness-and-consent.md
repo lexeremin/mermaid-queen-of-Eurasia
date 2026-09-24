@@ -8,7 +8,7 @@ The hero, Rosa, is a **stylized low-poly character based on the look of a real p
 - **The reference photo is never committed.** It lives in `assets-src/reference/` (git-ignored) and nowhere in the repo, docs or CI. Do not paste it into docs, issues or PRs.
 - **Only the hero.** No other real person is depicted. NPCs are original archetypes.
 - **Politics.** No real political figures. Corrupt politicians and bureaucratic monsters are fictional and must not resemble real politicians. No state emblems, flags or party symbols; no Lenin Mausoleum; tower crowns are a fantasy ruby-crystal spire.
-- **Enemies.** The satirical politician enemies (Gavel Speaker, Golden-Pen Tycoon, Megaphone Demagogue) are original caricatures defined by costume and weapon. On 2026-09-24 a request to model enemies on specific real, living political leaders was declined and replaced by these archetypes.
+- **Enemies.** The satirical politician enemies (display names Uncle Sosunok, Zelebeba and Ugrumiy Putan since 2026-09-25; earlier Gavel Speaker, Golden-Pen Tycoon and Megaphone Demagogue) are original caricatures defined by costume and weapon. On 2026-09-24 a request to model enemies on specific real, living political leaders was declined and replaced by these archetypes. The renames only change display names: the designs stay original and must not be reworked toward any real person's face or likeness.
 - **Withdrawal.** If the person asks to be removed, replace the hero design with an original one; the stylized model is a design asset and can be redrawn.
 
 ## Record

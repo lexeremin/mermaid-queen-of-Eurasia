@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMIES } from '@/data/enemies';
-import { AURA, DASH, HURT_INVULN, MAX_HP, MAX_MANA, SPELL, TRIDENT } from '@/systems/abilities';
+import {
+  AURA,
+  DASH,
+  HURT_INVULN,
+  MAX_HP,
+  MAX_MANA,
+  SPELL,
+  SWING_TIME,
+  TRIDENT,
+} from '@/systems/abilities';
 import { BASE_STATS } from '@/systems/progression';
 import type { CollisionWorld } from '@/systems/collision';
 import {
@@ -205,7 +214,7 @@ describe('tide surge', () => {
     expect(s.enemies[1]?.state).toBe('dead');
     expect(s.enemies[2]?.hp).toBe(ENEMIES.tycoon.maxHp);
     expect(s.mana).toBeCloseTo(MAX_MANA - 35, 0);
-    expect(s.effects.some((e) => e.type === 'ring')).toBe(true);
+    expect(s.effects.some((e) => e.type === 'wave')).toBe(true);
   });
 });
 
@@ -335,5 +344,60 @@ describe('player stats', () => {
     revive(s, strong);
     expect(s.hp).toBe(90);
     expect(s.mana).toBe(140);
+  });
+});
+
+describe('spell looks', () => {
+  it('starts a trident swing that runs out, even with no enemy in reach', () => {
+    const s = createCombatState();
+    expect(s.swing).toBe(0);
+    step(s, { actions: { attack: true } });
+    expect(s.swing).toBeGreaterThan(SWING_TIME - 0.05);
+    run(s, SWING_TIME + 0.1);
+    expect(s.swing).toBe(0);
+  });
+
+  it('turns Rosa into a mermaid for the whole Aura song and a moment after', () => {
+    const s = createCombatState();
+    step(s, { actions: { aura: true } });
+    expect(s.mermaid).toBeGreaterThan(AURA.duration);
+    run(s, AURA.duration);
+    expect(s.mermaid).toBeGreaterThan(0);
+    run(s, AURA.mermaidTail + 0.1);
+    expect(s.mermaid).toBe(0);
+    expect(s.effects.some((e) => e.type === 'bubbles')).toBe(false);
+  });
+
+  it('turns Rosa into a mermaid while casting Tide Surge and back afterwards', () => {
+    const s = createCombatState();
+    step(s, { actions: { spell: true } });
+    expect(s.mermaid).toBeGreaterThan(SPELL.mermaid - 0.05);
+    expect(s.effects.filter((e) => e.type === 'bubbles')).toHaveLength(1);
+    run(s, SPELL.mermaid + 0.1);
+    expect(s.mermaid).toBe(0);
+  });
+
+  it('does not change form when the spell cannot be cast', () => {
+    const s = createCombatState();
+    s.mana = 0;
+    step(s, { actions: { spell: true, aura: true } });
+    expect(s.mermaid).toBe(0);
+  });
+
+  it('bursts water bubbles where the dash starts and where it ends', () => {
+    const s = createCombatState();
+    step(s, { actions: { dash: true }, move: { x: 1, z: 0 } });
+    expect(s.effects.filter((e) => e.type === 'bubbles')).toHaveLength(1);
+    run(s, DASH.duration + 0.1, { move: { x: 1, z: 0 } });
+    expect(s.effects.filter((e) => e.type === 'bubbles')).toHaveLength(2);
+  });
+
+  it('fainting and getting up clear the temporary looks', () => {
+    const s = createCombatState();
+    step(s, { actions: { aura: true, attack: true } });
+    s.downed = true;
+    revive(s);
+    expect(s.mermaid).toBe(0);
+    expect(s.swing).toBe(0);
   });
 });

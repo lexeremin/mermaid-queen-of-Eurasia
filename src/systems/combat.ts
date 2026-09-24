@@ -9,6 +9,7 @@ import {
   MAX_HP,
   MAX_MANA,
   SPELL,
+  SWING_TIME,
   TRIDENT,
   canUse,
   createCooldowns,
@@ -34,7 +35,7 @@ import { isZero, normalize, type Vec2 } from '@/utils/vec2';
 
 export type Projectile = { id: number; pos: Vec2; vel: Vec2; damage: number; age: number };
 
-export type EffectType = 'arc' | 'ring' | 'streak' | 'puff';
+export type EffectType = 'arc' | 'wave' | 'bubbles' | 'puff';
 export type Effect = {
   id: number;
   type: EffectType;
@@ -67,6 +68,10 @@ export type CombatState = {
   enemies: Enemy[];
   projectiles: Projectile[];
   effects: Effect[];
+  /** Seconds left of the trident swing animation. */
+  swing: number;
+  /** Seconds left of the temporary mermaid look (Aura song, Tide Surge). */
+  mermaid: number;
   /** NPC id -> time (sim seconds) until which the NPC is charmed by the Aura. */
   charmed: Record<string, number>;
   kills: number;
@@ -91,6 +96,8 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     enemies: spawns.map((s) => createEnemy(s.id, s.kind, { x: s.x, z: s.z })),
     projectiles: [],
     effects: [],
+    swing: 0,
+    mermaid: 0,
     charmed: {},
     kills: 0,
     nextId: 1,
@@ -127,6 +134,12 @@ const PROJECTILE_RADIUS = 0.25;
 const BLIND_MELEE_REACH = 0.9;
 const PROJECTILE_LIFE = 2.2;
 
+/** Turns Rosa into a mermaid for `seconds`, with a burst of bubbles when the change starts. */
+function startMermaid(s: CombatState, seconds: number, at: Vec2): void {
+  if (s.mermaid <= 0) pushEffect(s, 'bubbles', at.x, at.z, { x: 0, z: 1 }, 0.9, 1.2);
+  s.mermaid = Math.max(s.mermaid, seconds);
+}
+
 const pushEffect = (
   s: CombatState,
   type: EffectType,
@@ -153,6 +166,8 @@ function hurtPlayer(
   if (s.hp <= 0) {
     s.downed = true;
     s.aura.active = false;
+    s.swing = 0;
+    s.mermaid = 0;
     s.dash.active = false;
     events.push({ type: 'playerDowned' });
     for (const e of s.enemies) standDown(e);
@@ -192,6 +207,8 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   s.invuln = Math.max(0, s.invuln - dt);
   s.hurtFlash = Math.max(0, s.hurtFlash - dt * 2.5);
   s.attackLock = Math.max(0, s.attackLock - dt);
+  s.swing = Math.max(0, s.swing - dt);
+  s.mermaid = Math.max(0, s.mermaid - dt);
   s.sinceHurt += dt;
   tickCooldowns(s.cooldowns, dt);
 
@@ -213,7 +230,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       const dir = isZero(p.move) ? facing : normalize(p.move);
       s.dash = { active: true, t: 0, dir };
       s.invuln = Math.max(s.invuln, DASH.invuln);
-      pushEffect(s, 'streak', playerPos.x, playerPos.z, dir, 0.3, DASH.distance);
+      pushEffect(s, 'bubbles', playerPos.x, playerPos.z, dir, 0.8, 1);
       frame.cancelWalk = true;
     }
 
@@ -228,6 +245,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
           : aimAssist(playerPos, facing, targets, AIM_ASSIST.closeRange, Math.PI);
       spendAbility(s.cooldowns, s.mana, 'attack');
       s.attackLock = ATTACK_LOCK;
+      s.swing = SWING_TIME;
       frame.faceOverride = facing;
       frame.cancelWalk = true;
       pushEffect(s, 'arc', playerPos.x, playerPos.z, facing, 0.16, TRIDENT.range);
@@ -249,7 +267,8 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     if (p.actions.spell && canUse(s.cooldowns, s.mana, 'spell')) {
       s.mana = spendAbility(s.cooldowns, s.mana, 'spell') ?? s.mana;
       frame.cancelWalk = true;
-      pushEffect(s, 'ring', playerPos.x, playerPos.z, facing, SPELL.burst + 0.15, SPELL.radius);
+      startMermaid(s, SPELL.mermaid, playerPos);
+      pushEffect(s, 'wave', playerPos.x, playerPos.z, facing, 0.95, SPELL.radius);
       for (const e of s.enemies) {
         if (e.state === 'dead') continue;
         if (inCircle(playerPos, e.pos, defOf(e).radius, SPELL.radius)) {
@@ -268,6 +287,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     if (p.actions.aura && !s.aura.active && canUse(s.cooldowns, s.mana, 'aura')) {
       s.mana = spendAbility(s.cooldowns, s.mana, 'aura') ?? s.mana;
       s.aura = { active: true, t: 0, hit: new Set() };
+      startMermaid(s, AURA.duration + AURA.mermaidTail, playerPos);
       frame.cancelWalk = true;
     }
   }
@@ -276,7 +296,10 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     s.dash.t += dt;
     const speedFactor = DASH.distance / DASH.duration / PLAYER_SPEED;
     frame.moveOverride = { x: s.dash.dir.x * speedFactor, z: s.dash.dir.z * speedFactor };
-    if (s.dash.t >= DASH.duration) s.dash.active = false;
+    if (s.dash.t >= DASH.duration) {
+      s.dash.active = false;
+      pushEffect(s, 'bubbles', playerPos.x, playerPos.z, s.dash.dir, 0.8, 1);
+    }
   } else if (s.attackLock > 0) {
     frame.moveScale = ATTACK_LOCK_SCALE;
   }
@@ -357,5 +380,7 @@ export function revive(s: CombatState, stats: PlayerStats = BASE_STATS): void {
   s.projectiles = [];
   s.aura.active = false;
   s.dash.active = false;
+  s.swing = 0;
+  s.mermaid = 0;
   for (const e of s.enemies) standDown(e);
 }

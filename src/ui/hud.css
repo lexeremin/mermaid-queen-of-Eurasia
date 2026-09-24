@@ -460,7 +460,8 @@
   align-items: center;
   justify-content: center;
   width: 74px;
-  height: 64px;
+  height: 78px;
+  gap: 1px;
   border: 2px solid #9fd8cf;
   border-radius: 10px;
   background: rgba(11, 18, 32, 0.78);
@@ -469,7 +470,11 @@
 }
 
 .ability-slot b {
-  font-size: 14px;
+  position: absolute;
+  top: 3px;
+  left: 6px;
+  font-size: 11px;
+  opacity: 0.85;
 }
 
 .ability-slot em {
@@ -947,4 +952,28 @@
 
 .toasts {
   top: calc(var(--safe-top) + 118px);
+}
+
+.action-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+}
+
+.action-label {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.quick-btn svg,
+.tile svg {
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.35));
 }

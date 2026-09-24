@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { input, setHeld, type Action } from '@/input/input-state';
 import type { AbilityId } from '@/systems/abilities';
 import { CooldownSweep } from '@/ui/CombatHud';
+import { AbilityIcon } from '@/ui/icons';
 
 const ABILITY_OF: Record<Action, AbilityId | undefined> = {
   attack: 'attack',
@@ -28,7 +29,8 @@ export function ActionButton({ action, label, size, style }: Props) {
       onPointerUp={release}
       onPointerCancel={release}
     >
-      {label}
+      {ABILITY_OF[action] && <AbilityIcon id={ABILITY_OF[action]} size={Math.round(size * 0.46)} />}
+      <span className="action-label">{label}</span>
       {ABILITY_OF[action] && <CooldownSweep id={ABILITY_OF[action]} />}
     </button>
   );

@@ -1,4 +1,5 @@
 import { ITEMS, type ItemId } from '@/data/items';
+import { ItemIcon } from '@/ui/icons';
 import { quickUse } from '@/game/progress-actions';
 import { useGameStore } from '@/store/game-store';
 import { useProgressStore } from '@/store/progress-store';
@@ -29,9 +30,7 @@ export function QuickUse({ touch }: { touch: boolean }) {
             aria-label={`Use ${ITEMS[id].name}, ${count} left`}
             onClick={() => quickUse(id)}
           >
-            <span className="quick-glyph" style={{ color: ITEMS[id].color }}>
-              {ITEMS[id].glyph}
-            </span>
+            <ItemIcon id={id} size={34} />
             <span className="quick-count">{count}</span>
             {!touch && <kbd>{key}</kbd>}
           </button>

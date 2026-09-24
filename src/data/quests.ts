@@ -70,8 +70,8 @@ export const QUESTS: readonly QuestDef[] = [
   },
   {
     id: 'gavel-down',
-    title: 'Gavel Down',
-    blurb: 'The Gavel Speakers keep ruling that joy is out of order. Overrule two.',
+    title: 'Overrule Sosunok',
+    blurb: 'Uncle Sosunok keeps ruling that joy is out of order. Overrule him twice.',
     minRank: 1,
     objectives: [{ kind: 'kill', count: 2, enemy: 'speaker' }],
     reward: { xp: 70, rep: 12, items: [{ id: 'rainCloak', qty: 1 }] },

@@ -72,8 +72,7 @@ export function objectiveState(
     case 'kill': {
       need = objective.count;
       have = progress.counts[index] ?? 0;
-      const who = objective.enemy ? `${ENEMIES[objective.enemy].name}s` : 'politicians';
-      text = `Defeat ${who}`;
+      text = `Defeat ${objective.enemy ? ENEMIES[objective.enemy].name : 'politicians'}`;
       break;
     }
     case 'visit': {

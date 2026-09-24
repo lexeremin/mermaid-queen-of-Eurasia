@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/game-store';
 import { useProgressStore, selectStats } from '@/store/progress-store';
 import { xpToNext, MAX_LEVEL } from '@/systems/progression';
 import { ABILITIES, cooldownFraction, type AbilityId } from '@/systems/abilities';
+import { AbilityIcon } from '@/ui/icons';
 import { QuestTracker } from '@/ui/QuestTracker';
 import { QuickUse } from '@/ui/QuickUse';
 import { Toasts } from '@/ui/Toasts';
@@ -94,6 +95,7 @@ export function CombatHud({ touch }: { touch: boolean }) {
           {SLOTS.map((slot) => (
             <div key={slot.id} className="ability-slot" title={slot.label}>
               <b>{slot.key}</b>
+              <AbilityIcon id={slot.id} size={30} />
               <em>{slot.label}</em>
               {ABILITIES[slot.id].mana > 0 && <i>{ABILITIES[slot.id].mana}</i>}
               <CooldownSweep id={slot.id} />

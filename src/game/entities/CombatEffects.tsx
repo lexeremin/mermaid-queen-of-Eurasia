@@ -14,13 +14,23 @@ import {
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { combat } from '@/game/combat-sim';
 import { sim } from '@/game/sim';
+import { createWaveGeometry } from '@/game/entities/wave-geometry';
 import { AURA, TRIDENT } from '@/systems/abilities';
 import type { Effect } from '@/systems/combat';
 
 const POOL = 6;
+const WAVE_SLOTS = 3;
+const WAVE_LAYERS = 3;
+const BUBBLES_PER_BURST = 14;
+const MAX_BURSTS = 6;
 const NOTES_PER_RING = 8;
 const NOTE_COLORS = ['#ff9fb8', '#ffe28f', '#f4d0df'].map((c) => new Color(c));
 const dummy = new Object3D();
+
+const rand = (n: number): number => {
+  const x = Math.sin(n * 127.1 + 311.7) * 43758.5453;
+  return x - Math.floor(x);
+};
 
 const yawOf = (dir: { x: number; z: number }): number => Math.atan2(-dir.z, dir.x);
 const easeOut = (t: number): number => 1 - (1 - t) * (1 - t);
@@ -42,14 +52,11 @@ export function CombatEffects() {
     () => Array.from({ length: POOL }, () => ({ mesh: null, material: null })),
     [],
   );
-  const rings = useMemo<Pool[]>(
-    () => Array.from({ length: POOL }, () => ({ mesh: null, material: null })),
+  const waves = useMemo<Pool[]>(
+    () => Array.from({ length: WAVE_SLOTS * WAVE_LAYERS }, () => ({ mesh: null, material: null })),
     [],
   );
-  const streaks = useMemo<Pool[]>(
-    () => Array.from({ length: POOL }, () => ({ mesh: null, material: null })),
-    [],
-  );
+  const bubbles = useRef<InstancedMesh>(null);
   const puffs = useMemo<Pool[]>(
     () => Array.from({ length: POOL }, () => ({ mesh: null, material: null })),
     [],
@@ -64,6 +71,8 @@ export function CombatEffects() {
     return new RingGeometry(0.25, 1, 20, 1, -half, half * 2).rotateX(-Math.PI / 2);
   }, []);
   const ringGeometry = useMemo(() => new RingGeometry(0.8, 1, 40).rotateX(-Math.PI / 2), []);
+  const waveRingGeometry = useMemo(() => createWaveGeometry(), []);
+  const bubbleGeometry = useMemo(() => new SphereGeometry(1, 6, 5), []);
   const puffGeometry = useMemo(() => new SphereGeometry(1, 8, 6), []);
   const noteGeo = useMemo(() => noteGeometry(), []);
   const waveGeometry = useMemo(
@@ -84,7 +93,7 @@ export function CombatEffects() {
   }, []);
 
   useFrame(() => {
-    const byType: Record<string, Effect[]> = { arc: [], ring: [], streak: [], puff: [] };
+    const byType: Record<string, Effect[]> = { arc: [], wave: [], bubbles: [], puff: [] };
     for (const fx of combat.effects) byType[fx.type]?.push(fx);
 
     const place = (
@@ -105,22 +114,54 @@ export function CombatEffects() {
       m.scale.setScalar(fx.size * (0.7 + 0.3 * easeOut(t)));
       mat.opacity = 0.8 * (1 - t);
     });
-    place(rings, byType.ring ?? [], (m, mat, fx, t) => {
-      m.position.set(fx.x, 0.1, fx.z);
-      m.scale.setScalar(Math.max(0.1, fx.size * easeOut(Math.min(1, t * 1.6))));
-      mat.opacity = 0.85 * (1 - t);
-    });
-    place(streaks, byType.streak ?? [], (m, mat, fx, t) => {
-      m.position.set(fx.x + (fx.dir.x * fx.size) / 2, 0.5, fx.z + (fx.dir.z * fx.size) / 2);
-      m.rotation.y = yawOf(fx.dir);
-      m.scale.set(fx.size, 1, 0.5 * (1 - t));
-      mat.opacity = 0.55 * (1 - t);
+    const waveEffects = byType.wave ?? [];
+    waves.forEach((slot, i) => {
+      const fx = waveEffects[Math.floor(i / WAVE_LAYERS)];
+      const layer = i % WAVE_LAYERS;
+      if (!slot.mesh || !slot.material) return;
+      slot.mesh.visible = false;
+      if (!fx) return;
+      const t = (fx.age - layer * 0.07) / (fx.life - 0.3);
+      if (t <= 0 || t >= 1) return;
+      const radius = Math.max(0.3, fx.size * (1 - layer * 0.16) * easeOut(Math.min(1, t * 1.25)));
+      slot.mesh.visible = true;
+      slot.mesh.position.set(fx.x, 0.02, fx.z);
+      slot.mesh.rotation.y = layer * 0.5;
+      slot.mesh.scale.set(radius, (1 - layer * 0.18) * (1 - t * 0.5), radius);
+      slot.material.opacity = 0.92 * (1 - t * t);
     });
     place(puffs, byType.puff ?? [], (m, mat, fx, t) => {
       m.position.set(fx.x, 0.6, fx.z);
       m.scale.setScalar(fx.size * (0.4 + 0.9 * easeOut(t)));
       mat.opacity = 0.7 * (1 - t);
     });
+
+    const bubbleMesh = bubbles.current;
+    if (bubbleMesh) {
+      let n = 0;
+      const bursts = (byType.bubbles ?? []).slice(0, MAX_BURSTS);
+      for (const fx of bursts) {
+        const t = fx.age / fx.life;
+        for (let k = 0; k < BUBBLES_PER_BURST; k++) {
+          const seed = fx.id * 31 + k * 7.3;
+          const angle = rand(seed) * Math.PI * 2;
+          const reach = fx.size * (0.25 + 0.75 * rand(seed + 1)) * easeOut(Math.min(1, t * 1.6));
+          const rise = (0.3 + 1.7 * rand(seed + 2)) * t;
+          const size = (0.08 + 0.15 * rand(seed + 3)) * (1 - t * t * t);
+          dummy.position.set(
+            fx.x + Math.cos(angle) * reach + Math.sin(t * 9 + k) * 0.05,
+            0.25 + rise,
+            fx.z + Math.sin(angle) * reach,
+          );
+          dummy.rotation.set(0, 0, 0);
+          dummy.scale.setScalar(Math.max(0.001, size));
+          dummy.updateMatrix();
+          bubbleMesh.setMatrixAt(n++, dummy.matrix);
+        }
+      }
+      bubbleMesh.count = n;
+      bubbleMesh.instanceMatrix.needsUpdate = true;
+    }
 
     const projectiles = combat.projectiles;
     shots.forEach((mesh, i) => {
@@ -204,19 +245,19 @@ export function CombatEffects() {
           </mesh>
         );
       })}
-      {Array.from({ length: POOL }, (_, i) => {
-        const s = slot(rings, i);
+      {Array.from({ length: WAVE_SLOTS * WAVE_LAYERS }, (_, i) => {
+        const s = slot(waves, i);
         return (
           <mesh
-            key={`ring${i}`}
+            key={`wave${i}`}
             ref={s.mesh}
-            geometry={ringGeometry}
+            geometry={waveRingGeometry}
             visible={false}
             renderOrder={4}
           >
             <meshBasicMaterial
               ref={s.material}
-              color="#6be3d1"
+              vertexColors
               transparent
               depthWrite={false}
               side={DoubleSide}
@@ -224,15 +265,14 @@ export function CombatEffects() {
           </mesh>
         );
       })}
-      {Array.from({ length: POOL }, (_, i) => {
-        const s = slot(streaks, i);
-        return (
-          <mesh key={`streak${i}`} ref={s.mesh} visible={false} renderOrder={4}>
-            <boxGeometry args={[1, 0.9, 1]} />
-            <meshBasicMaterial ref={s.material} color="#f4d0df" transparent depthWrite={false} />
-          </mesh>
-        );
-      })}
+      <instancedMesh
+        ref={bubbles}
+        args={[bubbleGeometry, undefined, MAX_BURSTS * BUBBLES_PER_BURST]}
+        frustumCulled={false}
+        renderOrder={5}
+      >
+        <meshBasicMaterial color="#8fe9ff" transparent opacity={0.85} depthWrite={false} />
+      </instancedMesh>
       {Array.from({ length: POOL }, (_, i) => {
         const s = slot(puffs, i);
         return (

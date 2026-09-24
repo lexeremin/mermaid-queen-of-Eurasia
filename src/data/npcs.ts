@@ -135,38 +135,41 @@ export const NPCS: readonly NpcDef[] = [
   },
   {
     id: 'mikhalych',
-    name: 'Sasha Prince',
+    name: 'Prince Sasha',
     title: 'Kefir Seller',
     asset: 'npcMikhalych',
-    accent: '#e0742c',
+    accent: '#6fa0ff',
     initial: 10,
     joinAt: 70,
     greet: {
-      low: 'Kefir, cold kefir. Nobody buys it in summer. Tastes better sad.',
-      mid: 'Take a mug, Rosa. On the house. The house is a barrel.',
-      high: 'You drank my kefir and smiled. I have waited eleven summers for that.',
+      low: 'Kefir, milady? Chilled, fresh, and served by a prince. Nobody has bought any all summer.',
+      mid: 'Take a bottle, Rosa. On the house. The house is a wooden crate.',
+      high: 'You smiled at my kefir. I have waited a whole royal summer for that.',
     },
-    invite: "Royal kefir supply? Yes! I'll ferment the Queen's own. A little bitter, mostly proud.",
-    joined: "The Queen's Kefir Master! Cold, sparkling, and only slightly existential.",
+    invite:
+      "Royal kefir supply? Gladly! I shall ferment the Queen's own. Slightly tart, deeply devoted.",
+    joined:
+      'Prince Sasha, Kefir Master to the Queen! Cold, sparkling, and only slightly heartbroken.',
     methods: {
       kindness: {
-        option: 'This looks like the best kefir in Moscow.',
-        reaction: 'The best? In Moscow? Sit, sit. Take two.',
+        option: 'Your kefir looks like the best in all of Moscow.',
+        reaction: 'The best? In Moscow? Sit, sit. My crown says yes. Take two.',
         delta: 26,
       },
       humor: {
         option: 'Do you sell kefir, or bottled optimism?',
-        reaction: 'Both. The optimism is watered down.',
+        reaction: 'Both. The optimism is a little watered down.',
         delta: 14,
       },
       song: {
-        option: 'Rosa sings a warm folk melody across the stall.',
-        reaction: 'My babushka sang that. Where did you learn... never mind. Keep going.',
+        option: 'Rosa sings a warm folk melody beside his crate of bottles.',
+        reaction:
+          'My nanny sang that in the palace. Where did you learn... never mind. Keep going.',
         delta: 32,
       },
       silence: {
-        option: 'You sit at his stall and share a quiet mug.',
-        reaction: 'A quiet customer. Rarer than sunshine.',
+        option: 'You sit beside him and share a quiet bottle.',
+        reaction: 'A quiet guest. Rarer than sunshine, and twice as welcome.',
         delta: 10,
       },
     },

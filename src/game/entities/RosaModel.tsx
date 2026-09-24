@@ -1,24 +1,42 @@
 import { useAnimations, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import type { Group } from 'three';
+import type { Group, Object3D } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
 import { applyHeroLook } from '@/game/assets/xray';
+import { combat } from '@/game/combat-sim';
 import { renderStats } from '@/game/render-stats';
 import { sim } from '@/game/sim';
 import type { HeroForm } from '@/store/game-store';
+import { SWING_TIME } from '@/systems/abilities';
 
 const WALK_SPEED_THRESHOLD = 0.5;
 const CROSSFADE_SECONDS = 0.18;
 
 type Clip = 'idle' | 'walk';
 
+const smooth = (t: number): number => t * t * (3 - 2 * t);
+const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
+
+/**
+ * Extra rotation of the trident arm (radians around its shoulder) during a swing: a short wind-up
+ * that lifts the trident back, a fast overhead slash that ends with the tips pointing forward,
+ * then a recovery. `t` runs 0..1 over the swing.
+ */
+export function swingAngle(t: number): number {
+  if (t <= 0 || t >= 1) return 0;
+  if (t < 0.25) return lerp(0, -0.55, smooth(t / 0.25));
+  if (t < 0.55) return lerp(-0.55, 1.75, smooth((t - 0.25) / 0.3));
+  return lerp(1.75, 0, smooth((t - 0.55) / 0.45));
+}
+
 const ASSET_BY_FORM = { human: 'rosa', mermaid: 'rosaMermaid' } as const;
 
 export function RosaModel({ form }: { form: HeroForm }) {
   const root = useRef<Group>(null);
   const current = useRef<Clip | null>(null);
+  const arm = useRef<Object3D | null>(null);
 
   const gltf = useGLTF(ASSETS[ASSET_BY_FORM[form]].url);
   const scene = useMemo(() => clone(gltf.scene) as Group, [gltf.scene]);
@@ -26,6 +44,7 @@ export function RosaModel({ form }: { form: HeroForm }) {
 
   useEffect(() => {
     applyHeroLook(scene);
+    arm.current = scene.getObjectByName('arm_r') ?? null;
   }, [scene]);
 
   useEffect(() => {
@@ -36,6 +55,9 @@ export function RosaModel({ form }: { form: HeroForm }) {
   }, [actions]);
 
   useFrame((_, delta) => {
+    if (arm.current && combat.swing > 0) {
+      arm.current.rotation.x += swingAngle(1 - combat.swing / SWING_TIME);
+    }
     const dx = sim.curr.pos.x - sim.prev.pos.x;
     const dz = sim.curr.pos.z - sim.prev.pos.z;
     const speed = Math.hypot(dx, dz) / Math.max(delta, 1e-4);

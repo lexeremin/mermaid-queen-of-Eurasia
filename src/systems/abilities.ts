@@ -36,8 +36,19 @@ export const AURA = {
   ringWidth: 1.4,
   npcCharm: 12,
   enemyBlind: 5,
+  /** Rosa keeps her mermaid look this long after the song ends. */
+  mermaidTail: 0.5,
 } as const;
-export const SPELL = { radius: 4.8, damage: 28, knockback: 5, burst: 0.35 } as const;
+export const SPELL = {
+  radius: 4.8,
+  damage: 28,
+  knockback: 5,
+  burst: 0.35,
+  /** Seconds Rosa looks like a mermaid while casting. */
+  mermaid: 1.3,
+} as const;
+/** Length of the trident swing animation. */
+export const SWING_TIME = 0.34;
 
 export type Cooldowns = Record<AbilityId, number>;
 

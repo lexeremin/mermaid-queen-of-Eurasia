@@ -12,6 +12,7 @@ import { useGameStore } from '@/store/game-store';
 import { selectStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
+import { ItemIcon } from '@/ui/icons';
 
 type Selection = { from: 'bag'; index: number } | { from: 'slot'; slot: EquipSlot } | null;
 
@@ -85,9 +86,7 @@ export function InventoryPanel() {
                 <small>{SLOT_LABEL[slot]}</small>
                 {item ? (
                   <>
-                    <span className="tile-glyph" style={{ color: item.color }}>
-                      {item.glyph}
-                    </span>
+                    <ItemIcon id={item.id} size={34} />
                     <em>{item.name}</em>
                   </>
                 ) : (
@@ -122,9 +121,7 @@ export function InventoryPanel() {
               >
                 {item && stack && (
                   <>
-                    <span className="tile-glyph" style={{ color: item.color }}>
-                      {item.glyph}
-                    </span>
+                    <ItemIcon id={item.id} size={34} />
                     {stack.qty > 1 && <b className="tile-qty">{stack.qty}</b>}
                   </>
                 )}
@@ -136,7 +133,10 @@ export function InventoryPanel() {
         <div className="detail">
           {def ? (
             <>
-              <strong style={{ color: RARITY_COLOR[def.rarity] }}>{def.name}</strong>
+              <div className="detail-head">
+                {selectedId && <ItemIcon id={selectedId} size={44} />}
+                <strong style={{ color: RARITY_COLOR[def.rarity] }}>{def.name}</strong>
+              </div>
               <p>{def.description}</p>
               {bonusLines(def).length > 0 && <p className="bonus">{bonusLines(def).join(' · ')}</p>}
               <div className="detail-actions">
