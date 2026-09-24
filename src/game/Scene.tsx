@@ -4,6 +4,7 @@ import { CameraRig } from '@/game/CameraRig';
 import { ATMOSPHERE } from '@/game/atmosphere';
 import { CAMERA_FOV, CAMERA_OFFSET } from '@/game/camera';
 import { GameLoop } from '@/game/GameLoop';
+import { ClickMarker } from '@/game/entities/ClickMarker';
 import { Player } from '@/game/entities/Player';
 import { MapScene } from '@/game/world/MapScene';
 import { RenderStatsProbe } from '@/game/RenderStatsProbe';
@@ -37,6 +38,7 @@ export function Scene() {
       <Suspense fallback={null}>
         <MapScene />
         <Player />
+        <ClickMarker />
       </Suspense>
 
       {import.meta.env.DEV && (

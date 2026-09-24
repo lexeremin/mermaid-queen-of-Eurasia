@@ -6,8 +6,8 @@ export type Action = (typeof ACTIONS)[number];
 export type InputState = {
   keyMove: Vec2;
   stickMove: Vec2;
-  aim: Vec2;
-  pointerActive: boolean;
+  /** Left-click on the canvas in normalized device coordinates, consumed by the game loop. */
+  click: { x: number; y: number } | null;
   held: Record<Action, boolean>;
   pressed: Record<Action, boolean>;
 };
@@ -20,8 +20,7 @@ export function createInputState(): InputState {
   return {
     keyMove: { x: 0, z: 0 },
     stickMove: { x: 0, z: 0 },
-    aim: { x: 0, z: 0 },
-    pointerActive: false,
+    click: null,
     held: flags(),
     pressed: flags(),
   };
@@ -45,7 +44,7 @@ export function clearPressed(input: InputState): void {
 export function resetInput(input: InputState): void {
   input.keyMove = { x: 0, z: 0 };
   input.stickMove = { x: 0, z: 0 };
-  input.aim = { x: 0, z: 0 };
+  input.click = null;
   input.held = flags();
   input.pressed = flags();
 }

@@ -11,7 +11,7 @@ const MOVE_CODES = {
 const ALL_MOVE_CODES: ReadonlySet<string> = new Set(Object.values(MOVE_CODES).flat());
 
 const ACTION_CODES: Readonly<Record<string, Action>> = {
-  Space: 'dash',
+  Space: 'attack',
   ShiftLeft: 'dash',
   ShiftRight: 'dash',
   KeyQ: 'aura',
@@ -66,15 +66,19 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
   };
 
   const onPointerDown = (e: PointerEvent) => {
-    if (e.pointerType === 'mouse' && e.button === 0 && e.target instanceof HTMLCanvasElement) {
+    if (e.pointerType !== 'mouse' || !(e.target instanceof HTMLCanvasElement)) return;
+    if (e.button === 0) {
+      const rect = e.target.getBoundingClientRect();
+      input.click = {
+        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+        y: -((e.clientY - rect.top) / rect.height) * 2 + 1,
+      };
+    } else if (e.button === 2) {
       setHeld(input, 'attack', true);
     }
   };
   const onPointerUp = (e: PointerEvent) => {
-    if (e.pointerType === 'mouse' && e.button === 0) setHeld(input, 'attack', false);
-  };
-  const onPointerMove = (e: PointerEvent) => {
-    if (e.pointerType === 'mouse') input.pointerActive = true;
+    if (e.pointerType === 'mouse' && e.button === 2) setHeld(input, 'attack', false);
   };
   const onContextMenu = (e: Event) => {
     if (e.target instanceof HTMLCanvasElement) e.preventDefault();
@@ -88,7 +92,6 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
   window.addEventListener('keyup', onKeyUp);
   window.addEventListener('pointerdown', onPointerDown);
   window.addEventListener('pointerup', onPointerUp);
-  window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('blur', onBlur);
 
@@ -97,7 +100,6 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
     window.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('pointerdown', onPointerDown);
     window.removeEventListener('pointerup', onPointerUp);
-    window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('contextmenu', onContextMenu);
     window.removeEventListener('blur', onBlur);
   };

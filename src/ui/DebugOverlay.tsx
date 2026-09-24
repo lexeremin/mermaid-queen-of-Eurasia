@@ -19,7 +19,7 @@ export function DebugOverlay() {
           `pos  ${sim.curr.pos.x.toFixed(2)}, ${sim.curr.pos.z.toFixed(2)}`,
           `face ${sim.curr.facing.x.toFixed(2)}, ${sim.curr.facing.z.toFixed(2)}`,
           `move ${move.x.toFixed(2)}, ${move.z.toFixed(2)}`,
-          `aim  ${input.aim.x.toFixed(2)}, ${input.aim.z.toFixed(2)}`,
+          `path ${sim.path.length} wp`,
           `held ${held}`,
           `paused ${paused} inv ${inventoryOpen} zone ${zone?.id ?? '-'}`,
           `draw ${renderStats.calls} tris ${renderStats.triangles}`,

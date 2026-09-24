@@ -3,12 +3,26 @@ import { isZero, normalize, type Vec2 } from '@/utils/vec2';
 
 export const PLAYER_SPEED = 5;
 export const PLAYER_RADIUS = 0.4;
+/** Radians per second the character can turn toward the direction it is moving. */
+export const TURN_SPEED = 14;
 
 export type PlayerState = { pos: Vec2; facing: Vec2 };
-export type MoveIntent = { move: Vec2; aim: Vec2 };
+export type MoveIntent = { move: Vec2 };
 
 export function createPlayer(spawn: Vec2 = { x: 0, z: 0 }): PlayerState {
   return { pos: { x: spawn.x, z: spawn.z }, facing: { x: 0, z: 1 } };
+}
+
+/** Rotates the unit vector `current` toward `desired` by at most `maxAngle` (angle = atan2(x, z)). */
+export function turnToward(current: Vec2, desired: Vec2, maxAngle: number): Vec2 {
+  const from = Math.atan2(current.x, current.z);
+  const to = Math.atan2(desired.x, desired.z);
+  let diff = to - from;
+  while (diff > Math.PI) diff -= 2 * Math.PI;
+  while (diff < -Math.PI) diff += 2 * Math.PI;
+  if (Math.abs(diff) <= maxAngle) return { x: desired.x, z: desired.z };
+  const angle = from + Math.sign(diff) * maxAngle;
+  return { x: Math.sin(angle), z: Math.cos(angle) };
 }
 
 export function stepPlayer(
@@ -17,12 +31,14 @@ export function stepPlayer(
   dt: number,
   world: CollisionWorld,
 ): PlayerState {
-  const { move, aim } = intent;
+  const { move } = intent;
   const target = {
     x: player.pos.x + move.x * PLAYER_SPEED * dt,
     z: player.pos.z + move.z * PLAYER_SPEED * dt,
   };
   const pos = resolveCircle(target, PLAYER_RADIUS, world);
-  const facing = !isZero(aim) ? normalize(aim) : !isZero(move) ? normalize(move) : player.facing;
+  const facing = isZero(move)
+    ? player.facing
+    : turnToward(player.facing, normalize(move), TURN_SPEED * dt);
   return { pos, facing };
 }

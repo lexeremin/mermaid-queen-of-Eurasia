@@ -184,9 +184,10 @@ Each transformation changes Rosa's appearance and provides one gameplay modifier
 - Game works without hover interactions.
 
 ### Desktop
-- WASD movement.
-- Mouse aiming.
-- Left click attack.
+- **Left click on the ground: Rosa walks there** (pathfinding around buildings, water and props; a ring marks the destination; any movement key cancels the walk).
+- WASD / arrow keys move; Rosa turns smoothly to face the direction she is moving. There is no mouse aiming; attacks go in the facing direction.
+- Space or right click: attack.
+- Shift: dash. Q: Mermaid Aura (song). R: area spell.
 - E interact.
 - I inventory.
 - ESC pause.

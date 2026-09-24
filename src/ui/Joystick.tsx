@@ -38,8 +38,6 @@ export function Joystick() {
       onPointerDown={(e) => {
         if (activePointer.current !== null) return;
         activePointer.current = e.pointerId;
-        input.pointerActive = false;
-        input.aim = { x: 0, z: 0 };
         e.currentTarget.setPointerCapture(e.pointerId);
         update(e);
       }}

@@ -39,6 +39,9 @@ A controllable placeholder Rosa in a fixed-camera scene, driven by a fixed-times
 Out of scope: combat effects, NPC interaction, real inventory, real assets, audio.
 
 ## Control map
+
+> Desktop mouse controls were reworked in Phase 9b (click-to-move, no aim; attack is Space or right click, dash is Shift). See `docs/phases/phase-9b.md`.
+
 | Action | Desktop | Touch |
 |---|---|---|
 | Move | WASD / arrows | left joystick |

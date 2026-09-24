@@ -51,8 +51,8 @@ export function Hud() {
             <h2>Paused</h2>
             {!touch && (
               <p className="hint">
-                WASD move · mouse aim · click attack · Space dash · Q aura · R spell · E interact ·
-                I inventory · ESC pause
+                WASD move · click to walk · Space / right-click attack · Shift dash · Q aura · R
+                spell · E interact · I inventory · ESC pause
               </p>
             )}
             <button type="button" className="hud-btn big" onClick={togglePause}>
