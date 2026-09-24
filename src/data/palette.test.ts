@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { ATLAS, atlasCell, PALETTE, PALETTE_NAMES } from '@/data/palette';
 
 describe('palette', () => {
-  it('has valid, unique hex colors within the 32-color budget', () => {
+  it('has valid, unique hex colors within the 64-slot atlas', () => {
     const values = Object.values(PALETTE);
-    expect(values.length).toBeLessThanOrEqual(32);
+    expect(values.length).toBeLessThanOrEqual(64);
     for (const hex of values) expect(hex).toMatch(/^#[0-9a-f]{6}$/);
     expect(new Set(values).size).toBe(values.length);
   });

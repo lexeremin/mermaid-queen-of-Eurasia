@@ -14,6 +14,7 @@ const circle = (r: number, x = 0, z = 0): Shape => ({ kind: 'circle', x, z, r })
 
 export const ASSETS = {
   rosa: { url: '/assets/char/char_rosa.glb', clips: ['idle', 'walk'] },
+  rosaMermaid: { url: '/assets/char/char_rosa_mermaid.glb', clips: ['idle', 'walk'] },
   izba: { url: '/assets/bld/bld_izba.glb', clips: [], footprint: [box(2.2, 1.9)] },
   shop: { url: '/assets/bld/bld_shop.glb', clips: [], footprint: [box(1.95, 1.55)] },
   shopHerbs: { url: '/assets/bld/bld_shop_herbs.glb', clips: [], footprint: [box(1.95, 1.55)] },

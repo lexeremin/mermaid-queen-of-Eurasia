@@ -7,6 +7,7 @@ Blender axes: +Z up, front of a character faces -Y (exports to glTF +Z forward).
 """
 
 import json
+import math
 import os
 
 import bmesh
@@ -33,6 +34,10 @@ def clear_scene():
         bpy.data.objects.remove(obj, do_unlink=True)
     for mesh in list(bpy.data.meshes):
         bpy.data.meshes.remove(mesh)
+    for datablocks, name in ((bpy.data.materials, "palette"), (bpy.data.images, "palette_atlas")):
+        stale = datablocks.get(name)
+        if stale:
+            datablocks.remove(stale)
 
 
 def get_atlas():
@@ -221,3 +226,54 @@ def export_glb(filename, root_names, animations=False):
     kwargs = {k: v for k, v in kwargs.items() if k in props}
     bpy.ops.export_scene.gltf(**kwargs)
     return path
+
+
+def _key_rot(obj, frames, axis, amplitude, phase, cycles):
+    steps = 8
+    for i in range(steps + 1):
+        t = i / steps
+        rot = list(obj.rotation_euler)
+        rot[axis] = amplitude * math.sin(2 * math.pi * cycles * t + phase)
+        obj.rotation_euler = rot
+        obj.keyframe_insert("rotation_euler", index=axis, frame=1 + t * frames)
+
+
+def _key_bob(obj, frames, amplitude, base, cycles):
+    steps = 8
+    for i in range(steps + 1):
+        t = i / steps
+        obj.location.z = base + amplitude * math.sin(2 * math.pi * cycles * t)
+        obj.keyframe_insert("location", index=2, frame=1 + t * frames)
+
+
+def author_clips(clips):
+    """Sinusoidal looping clips exported as one glTF animation each (NLA track name = clip name).
+
+    clips = {"idle": {"frames": 60, "tracks": [
+        {"obj": "tail1", "kind": "rot", "axis": 2, "amp": 0.05, "phase": 0.0},
+        {"obj": "torso", "kind": "bob", "amp": 0.01}]}}
+    """
+    for clip, spec in clips.items():
+        per_object = {}
+        for track in spec["tracks"]:
+            per_object.setdefault(track["obj"], []).append(track)
+        touched = []
+        for name, tracks in per_object.items():
+            obj = bpy.data.objects[name]
+            anim = obj.animation_data_create()
+            action = bpy.data.actions.new(f"{clip}_{name}")
+            anim.action = action
+            base_z = obj.location.z
+            for t in tracks:
+                if t["kind"] == "rot":
+                    _key_rot(obj, spec["frames"], t["axis"], t["amp"], t.get("phase", 0.0), t.get("cycles", 1))
+                else:
+                    _key_bob(obj, spec["frames"], t["amp"], base_z, t.get("cycles", 2))
+            touched.append((anim, action))
+        for anim, action in touched:
+            track = anim.nla_tracks.new()
+            track.name = clip
+            track.strips.new(clip, 1, action)
+            anim.action = None
+    for obj in bpy.data.objects:
+        obj.rotation_euler = (0, 0, 0)

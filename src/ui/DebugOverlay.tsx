@@ -23,7 +23,7 @@ export function DebugOverlay() {
           `held ${held}`,
           `paused ${paused} inv ${inventoryOpen} zone ${zone?.id ?? '-'}`,
           `draw ${renderStats.calls} tris ${renderStats.triangles}`,
-          `clip ${renderStats.clip} tailZ ${renderStats.tailZ.toFixed(3)}`,
+          `clip ${renderStats.clip} pose ${renderStats.pose.toFixed(3)}`,
         ].join('\n');
       }
       raf = requestAnimationFrame(tick);

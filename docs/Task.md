@@ -51,12 +51,13 @@ Read these files before starting any work:
 | `docs/features.md` | Full feature list with phase mapping |
 | `docs/dod-global.md` | Global definition of done |
 | `docs/security-rules.md` | Secret handling, RLS, git safety |
+| `docs/likeness-and-consent.md` | Hero likeness rules, reference photo handling |
 
 ---
 
 ## Current Phase
 
-**Phase 4 complete (village map).** Next: **Phase 5 — NPCs + dialogue** (`docs/phases/phase-5.md` — write it first, it does not exist yet).
+**Phase 4 complete (village map).** Direction change requested (person-based hero, Red Square). Next: **Phase 5 — Hero redesign + direction change** (`docs/phases/phase-5.md`).
 
 ---
 
@@ -81,19 +82,21 @@ Read these files before starting any work:
 | Phase 2 — Engine core | ✅ Complete | Fixed top-down camera, game loop, input (WASD + mouse aim, touch joystick + buttons), pause, responsive/safe-area layout | 5b29ffc |
 | Phase 3 — Asset pipeline PoC | ✅ Complete | Blender MCP end to end: Rosa placeholder, one house, one tree → GLB under budget, retro texture pass, licence ledger | ea0000c. Procedural assets; AI generators not enabled (needs user opt-in/keys) |
 | Phase 4 — Village map | ✅ Complete | Terrain, river, houses, collision, forest entrance, Rosa movement/animation | 5b9feae. 16 assets total, instanced rendering, ~26 draw calls |
-| Phase 5 — NPCs + dialogue | ⬜ Next | 8 NPCs, dialogue, tap/E interact, relationships, Mermaid Aura persuasion | |
-| Phase 6 — Save + Supabase | ⬜ Todo | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
-| Phase 7 — Combat core | ⬜ Todo | Trident attack, dash, Mermaid Aura, AoE spell, damage, 3 enemy types + AI | |
-| Phase 8 — Progression + inventory | ⬜ Todo | HP/mana/XP/levels, inventory + equipment UI (touch), loot | |
-| Phase 9 — Quests + kingdom | ⬜ Todo | Quest board, quest log, kingdom reputation | |
-| Phase 10 — Forest | ⬜ Todo | Herbs, pearls, monsters, hidden shrine | |
-| Phase 11 — Dungeon + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight | |
-| Phase 12 — Transformations | ⬜ Todo | 4 forms, appearance swap, one modifier each, unlock flow | |
-| Phase 13 — Polish | ⬜ Todo | Audio, VFX (mist/snow/particles), HUD juice, title screen, settings | |
-| Phase 14 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
-| Phase 15 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |
+| Phase 5 — Hero redesign + direction change | ⬜ Next | Person-based Rosa (stylized), mermaid as a transformation model, palette v2, docs for the Red Square setting | Consent + likeness rules in `docs/likeness-and-consent.md` |
+| Phase 6 — Red Square map | ⬜ Todo | Replace the village: cathedral, Kremlin-style wall, GUM-style arcade, museum, cobblestone plaza, river + bridge, Alexander Garden entrance | Cobble tile texture; retire village-only assets |
+| Phase 7 — NPCs + dialogue | ⬜ Todo | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, Mermaid Aura persuasion | |
+| Phase 8 — Save + Supabase | ⬜ Todo | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
+| Phase 9 — Combat core | ⬜ Todo | Trident attack, dash, Mermaid Aura, AoE spell, damage, 3 enemy types + AI | |
+| Phase 10 — Progression + inventory | ⬜ Todo | HP/mana/XP/levels, inventory + equipment UI (touch), loot | |
+| Phase 11 — Quests + kingdom | ⬜ Todo | Quest board, quest log, kingdom reputation | |
+| Phase 12 — Alexander Garden | ⬜ Todo | Herbs, pearls, monsters, hidden shrine (was "Forest") | |
+| Phase 13 — Moscow underground + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight (was "Dungeon") | |
+| Phase 14 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the Moscow setting | |
+| Phase 15 — Polish | ⬜ Todo | Audio, VFX (mist/snow/particles), HUD juice, title screen, settings, occlusion fade | |
+| Phase 16 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
+| Phase 17 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |
 
-Order rationale: asset pipeline (3) comes before content so style and performance risk is found early; Supabase (6) comes before gameplay data grows so the save schema stays stable.
+Order rationale: asset pipeline (3) comes before content so style and performance risk is found early; the direction change (5–6) lands before NPCs so characters are built for the final setting; Supabase (8) comes before gameplay data grows so the save schema stays stable.
 
 ---
 

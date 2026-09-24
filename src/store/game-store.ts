@@ -1,10 +1,14 @@
 import { create } from 'zustand';
 import type { Zone } from '@/systems/zones';
 
+export type HeroForm = 'human' | 'mermaid';
+
 export type GameState = {
   paused: boolean;
   inventoryOpen: boolean;
   zone: Zone | null;
+  form: HeroForm;
+  setForm: (form: HeroForm) => void;
   setZone: (zone: Zone | null) => void;
   setPaused: (paused: boolean) => void;
   togglePause: () => void;
@@ -16,6 +20,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   paused: false,
   inventoryOpen: false,
   zone: null,
+  form: 'human',
+  setForm: (form) => set({ form }),
   setZone: (zone) => set({ zone }),
   setPaused: (paused) => set(paused ? { paused, inventoryOpen: false } : { paused }),
   togglePause: () => set((s) => ({ paused: !s.paused, inventoryOpen: false })),

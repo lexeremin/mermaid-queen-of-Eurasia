@@ -8,9 +8,11 @@ A browser-based 3D low-poly action RPG (fixed top-down camera) with online stats
 
 ## 1. Pitch
 
-Rosa, a fictional mermaid queen from Eurasia, arrives in a surreal fantasy version of Russia and decides to build her own kingdom.
+Rosa is a radiant, rose-crowned woman with a secret: she is a mermaid queen from Eurasia. She arrives in a surreal, snow-covered fantasy version of Moscow's Red Square and decides to build her own kingdom there.
 
-Her primary power is **Mermaid Aura**: she persuades lonely, confused or unhappy NPCs to join her kingdom through dialogue, kindness, humor and magical charisma.
+Her primary power is **Mermaid Aura**: she mesmerizes lonely, confused or unhappy Russian men (and other NPCs) so they join her kingdom, through dialogue, kindness, humor and magical charisma.
+
+Rosa's default form is human. She can **transform into a mermaid** (transformation 1) and gain a special skill, **Tidal Song**: an area charm wave that mesmerizes everyone nearby and lets her cross water.
 
 The world contains fictional corrupt politicians and absurd bureaucratic monsters. They are completely fictional characters and must not resemble or directly represent real politicians.
 
@@ -53,9 +55,9 @@ Original visual style inspired by:
 - chunky low-poly 3D geometry
 - limited-resolution pixel-art textures (nearest filtering, roughly 64–128 px, palette-quantized)
 - dark fantasy atmosphere
-- Slavic forests and villages
-- mist, snow, rivers and old wooden architecture
-- warm interiors contrasting with cold outdoor environments
+- Moscow's Red Square in winter, stylized and surreal: cobblestones, red-brick walls and towers, onion domes, festive market lights
+- mist, snow, a frozen river and grand historic architecture
+- warm interiors (arcade, market stalls) contrasting with cold outdoor environments
 
 Rendering approach: fixed angled top-down camera, flat or vertex lighting, fog and mist, low-res textures, restrained post-processing. Exact rules are in `docs/design-direction.md`.
 
@@ -93,7 +95,10 @@ Schema and policies: `docs/database-schema.md`.
 
 The tone is surreal, romantic, darkly humorous and absurd. The story should feel like Rosa's exaggerated fantasy world rather than a realistic political story.
 
-Do not make the game autobiographical or imply that real people are being depicted.
+**Real people and symbols (see `docs/likeness-and-consent.md`):**
+- Only the hero is based on a real person: a stylized character inspired by the look of someone who agreed. No face scan, no photo-derived textures, and the reference photo is never committed.
+- No other real person is depicted. The corrupt politicians and bureaucratic monsters are fictional and must not resemble real politicians.
+- No real political figures, state emblems, flags or party symbols. Landmarks appear in stylized, surreal form (no Lenin Mausoleum; tower crowns are a fantasy ruby-crystal spire, not a state star).
 
 ---
 
@@ -113,23 +118,23 @@ Simple real-time top-down combat.
 
 ## 8. Exploration
 
-One small village, one forest, one dungeon.
+One Red Square district, one snowy garden, one underground dungeon.
 
-**Village**
-- 8 NPCs
-- shops
-- a small house
-- river
-- forest entrance
+**Red Square district** (a stylized Red Square: St. Basil's-style cathedral, Kremlin-style wall with a clock tower, GUM-style arcade, red-brick museum)
+- 8 NPCs (Russian men of many kinds, all waiting to be mesmerized)
+- shops (festive market stalls)
+- a small house (Rosa's lodge at the plaza's edge)
+- river (the Moskva, with a bridge)
+- Alexander Garden entrance
 - quest board
 
-**Forest**
+**Alexander Garden** (snowy park along the wall)
 - collectible herbs
 - pearls
 - monsters
 - hidden shrine
 
-**Dungeon**
+**Moscow underground** (metro-palace halls and cellars)
 - 3 rooms
 - enemies
 - loot
@@ -160,7 +165,7 @@ Four unlockable transformations:
 3. Elvish Form
 4. Tsarina of Eurasia
 
-Each transformation changes Rosa's appearance and provides one gameplay modifier.
+Each transformation changes Rosa's appearance and provides one gameplay modifier. Rosa starts in human form; the Mermaid Queen form is the first one she unlocks and adds the Tidal Song skill. (Forest Spirit and Elvish Form are kept for now and will be reviewed for the Moscow setting.)
 
 ---
 

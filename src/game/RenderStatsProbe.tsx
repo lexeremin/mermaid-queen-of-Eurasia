@@ -5,7 +5,10 @@ export function RenderStatsProbe() {
   useFrame(({ gl, scene }) => {
     renderStats.calls = gl.info.render.calls;
     renderStats.triangles = gl.info.render.triangles;
-    renderStats.tailZ = scene.getObjectByName('tail1')?.rotation.y ?? 0;
+    const joint = scene.getObjectByName('leg_l') ?? scene.getObjectByName('tail1');
+    renderStats.pose = joint
+      ? Math.abs(joint.rotation.x) + Math.abs(joint.rotation.y) + Math.abs(joint.rotation.z)
+      : 0;
   });
   return null;
 }

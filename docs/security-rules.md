@@ -21,5 +21,9 @@
 - No force-push, no `--no-verify`.
 - If a secret is ever committed: rotate it immediately, then clean history with the user's approval.
 
+## Reference material and likeness
+- The hero reference photo stays in `assets-src/reference/` (git-ignored). Never commit, upload or paste it. See `docs/likeness-and-consent.md`.
+- Before any `git add`, check `git status` for anything under `assets-src/`.
+
 ## Content
-- No real people depicted. No copied third-party assets. Every asset in the licence ledger.
+- Only the hero is based on a real person (stylized, with consent). No other real people depicted. No copied third-party assets. Every asset in the licence ledger.

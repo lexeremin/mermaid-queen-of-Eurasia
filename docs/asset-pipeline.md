@@ -23,29 +23,29 @@ REPO = "/abs/path/to/repo"
 ns = {"REPO": REPO, "__name__": "poc"}
 exec(open(REPO + "/tools/blender/lib.py").read(), ns)
 exec(open(REPO + "/tools/blender/build_poc_assets.py").read(), ns)
-print(ns["build_izba"]())   # or build_tree(), build_rosa()
+print(ns["build_izba"]())   # or build_tree(); hero: build_hero.py -> build_rosa_human(), build_rosa_mermaid()
 ```
 `assets-src/` (raw exports) is git-ignored; scripts are the source of truth.
 
 ## Adding an asset
-1. Write a builder (or extend `tools/blender/`) using `Part` / `Empty` from `lib.py`. Every face gets a palette color name, so the asset uses the shared atlas automatically. Phase 3 builders: `build_poc_assets.py` (Rosa, izba, spruce); Phase 4 builders: `build_village_assets.py` (`build_all_village()`).
+1. Write a builder (or extend `tools/blender/`) using `Part` / `Empty` from `lib.py`. Every face gets a palette color name, so the asset uses the shared atlas automatically. Builders: `build_poc_assets.py` (izba, spruce), `build_village_assets.py` (`build_all_village()`), `build_hero.py` (Rosa human and mermaid). Animation clips are authored with `author_clips()` in `lib.py`. After changing `tools/palette.json` rebuild every asset (UVs depend on the atlas size).
 2. Build, export to `assets-src/<category>_<name>.glb`, screenshot the Blender viewport (game camera angle is about 54° elevation) to check the silhouette.
 3. `npm run assets:optimize`.
 4. Add the asset to `src/data/assets.ts` (with a collision `footprint` in asset-local coordinates if it blocks movement) and a row to `docs/asset-ledger.md`. Place it in a map (`src/data/maps/*.ts`); scenes draw repeated assets through `InstancedModel`.
 5. `npm run assets:check`, then look at it in game (add a placement to a map; characters go through `Player`). Use `?zoom=2.6` in dev for an overview.
 
 ## Look: palette atlas, not per-asset textures
-- One shared palette (`tools/palette.json`, 32 colors, mirrored by `src/data/palette.ts`) baked into one 128×64 atlas (`public/assets/atlas/palette_atlas.png`), one flat 16 px cell per color.
+- One shared palette (`tools/palette.json`, 46 colors, mirrored by `src/data/palette.ts`) baked into one 128×128 atlas (`public/assets/atlas/palette_atlas.png`), one flat 16 px cell per color.
 - Each face's UVs point at the center of its color cell. All assets therefore share the palette, one texture and one material (`getRetroMaterial()`: `MeshLambertMaterial`, nearest filtering, no mipmaps, `flipY = false`).
 - Consequence: faces are flat colors. Chunky faceted geometry + palette + fog gives the retro look. Pixel-art surface detail (wood grain, snow speckle) is **not** possible with single-texel UVs; if needed later, add small tiling detail textures per material family (wood, snow, foliage, skin) or a dither post effect (Phase 13). Decision deferred until the look is judged in context.
 
 ## Source options
-- **Procedural Blender scripts** (used for the PoC): buildings, props, trees, and even the placeholder character. Best style consistency, zero licence risk, fully reproducible.
+- **Procedural Blender scripts** (used so far): buildings, props, trees, and even the placeholder character. Best style consistency, zero licence risk, fully reproducible.
 - **AI generation** (Hunyuan3D, Hyper3D Rodin): intended for characters/monsters. **Not enabled**: the addon panel needs the user's opt-in and credentials. Whatever comes out must be re-processed: decimate to budget, snap every face to palette cells (re-UV), rebuild the node hierarchy. Record service, prompt, date and commercial-use terms in the ledger.
 - **CC0 bases** (Poly Haven is enabled; Sketchfab needs a key; the installed addon build has no Poly Pizza): restyle to the palette and record the source URL and licence.
 
 ## Characters and animation
-- Characters are rigid-part node hierarchies (tail chain, torso, head, arms), not skinned meshes. Fits the chunky style, exports small, and needs no skeleton budget.
+- Characters are rigid-part node hierarchies (torso, head, arms, legs or tail chain, petals), not skinned meshes. Fits the chunky style, exports small, and needs no skeleton budget.
 - Clips: author keyframes on the part objects, push each clip into an NLA track named after the clip (`idle`, `walk`). With `export_animation_mode = NLA_TRACKS` every track name becomes one glTF animation. In game, `useAnimations` + crossfade (`Player.tsx`).
 - Skinned rigs are only worth it if an AI-generated or purchased character needs deformation. Revisit then.
 

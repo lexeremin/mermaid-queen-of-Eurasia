@@ -1,7 +1,7 @@
 {
   "atlas": {
     "width": 128,
-    "height": 64,
+    "height": 128,
     "cell": 16,
     "cols": 8
   },
@@ -37,6 +37,20 @@
     "skin_shadow": "#cf9e7b",
     "gold": "#e9bd56",
     "sick_green": "#a7b83a",
-    "paper": "#ece0c0"
+    "paper": "#ece0c0",
+    "hair_dark": "#2a1a18",
+    "hair_brown": "#5a3a2e",
+    "ivory": "#f1e9dc",
+    "blush": "#efc7c0",
+    "lilac": "#c9b6d9",
+    "brick_dark": "#7a2e26",
+    "brick_light": "#b85a44",
+    "stone": "#e2d8c6",
+    "ruby": "#d6304a",
+    "dome_green": "#2f8a5a",
+    "dome_blue": "#3a6ea8",
+    "dome_red": "#c23a3a",
+    "cobble_dark": "#6e7a8c",
+    "cobble_light": "#a4afbf"
   }
 }
