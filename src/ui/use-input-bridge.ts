@@ -7,7 +7,7 @@ import { useGameStore } from '@/store/game-store';
 
 export function useInputBridge(): void {
   useEffect(() => {
-    const { handleEscape, toggleInventory, setPaused } = useGameStore.getState();
+    const { handleEscape, toggleInventory, toggleQuestLog, setPaused } = useGameStore.getState();
     const detach = attachKeyboardMouse(input, {
       onEscape: () => {
         const dialogue = useDialogueStore.getState();
@@ -15,6 +15,7 @@ export function useInputBridge(): void {
         else handleEscape();
       },
       onInventory: toggleInventory,
+      onQuests: toggleQuestLog,
       onQuickUse: (slot) => {
         if (canQuickUse()) quickUse(slot === 0 ? 'healingTea' : 'coldKvass');
       },

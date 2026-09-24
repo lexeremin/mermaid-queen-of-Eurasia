@@ -35,6 +35,7 @@ type ProgressState = ProgressSnapshot & {
   gainXp: (amount: number) => number;
   /** Awards `amount` XP once per `key`, ever. Returns false if already awarded. */
   award: (key: string, amount: number) => { awarded: boolean; levelsGained: number };
+  setBag: (bag: Bag) => void;
   addItem: (id: ItemId, qty?: number) => AddResult;
   removeAt: (index: number, qty?: number) => void;
   equip: (index: number) => EquipResult;
@@ -58,6 +59,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     set({ awarded: [...get().awarded, key] });
     return { awarded: true, levelsGained: get().gainXp(amount) };
   },
+
+  setBag: (bag) => set({ bag }),
 
   addItem: (id, qty = 1) => {
     const result = addToBag(get().bag, id, qty);

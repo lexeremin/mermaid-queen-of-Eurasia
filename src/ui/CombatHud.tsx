@@ -5,6 +5,7 @@ import { useGameStore } from '@/store/game-store';
 import { useProgressStore, selectStats } from '@/store/progress-store';
 import { xpToNext, MAX_LEVEL } from '@/systems/progression';
 import { ABILITIES, cooldownFraction, type AbilityId } from '@/systems/abilities';
+import { QuestTracker } from '@/ui/QuestTracker';
 import { QuickUse } from '@/ui/QuickUse';
 import { Toasts } from '@/ui/Toasts';
 
@@ -82,6 +83,7 @@ export function CombatHud({ touch }: { touch: boolean }) {
           <div className="bar-fill" style={{ width: `${xpFraction * 100}%` }} />
           <span>{level >= MAX_LEVEL ? `LV ${level} MAX` : `LV ${level}`}</span>
         </div>
+        <QuestTracker />
       </div>
 
       <QuickUse touch={touch} />

@@ -2,13 +2,17 @@ import { create } from 'zustand';
 import type { Zone } from '@/systems/zones';
 
 export type HeroForm = 'human' | 'mermaid';
+export type QuestPanel = 'log' | 'board' | null;
 
 export type GameState = {
   paused: boolean;
   inventoryOpen: boolean;
+  /** Quest panel: the read-only log, or the notice board where quests are accepted and claimed. */
+  questPanel: QuestPanel;
   dialogueOpen: boolean;
   downed: boolean;
   nearbyNpc: string | null;
+  nearBoard: boolean;
   zone: Zone | null;
   form: HeroForm;
   setForm: (form: HeroForm) => void;
@@ -16,6 +20,10 @@ export type GameState = {
   setDialogueOpen: (open: boolean) => void;
   setDowned: (downed: boolean) => void;
   setNearbyNpc: (id: string | null) => void;
+  setNearBoard: (near: boolean) => void;
+  openQuestPanel: (panel: 'log' | 'board') => void;
+  closeQuestPanel: () => void;
+  toggleQuestLog: () => void;
   setPaused: (paused: boolean) => void;
   togglePause: () => void;
   toggleInventory: () => void;
@@ -25,29 +33,50 @@ export type GameState = {
 export const useGameStore = create<GameState>((set, get) => ({
   paused: false,
   inventoryOpen: false,
+  questPanel: null,
   dialogueOpen: false,
   downed: false,
   nearbyNpc: null,
+  nearBoard: false,
   zone: null,
   setDialogueOpen: (dialogueOpen) => set({ dialogueOpen }),
   setDowned: (downed) => set({ downed }),
   setNearbyNpc: (nearbyNpc) => set({ nearbyNpc }),
+  setNearBoard: (nearBoard) => set({ nearBoard }),
+  openQuestPanel: (questPanel) =>
+    set((s) => (s.paused || s.dialogueOpen || s.downed ? s : { questPanel, inventoryOpen: false })),
+  closeQuestPanel: () => set({ questPanel: null }),
+  toggleQuestLog: () =>
+    set((s) => {
+      if (s.paused || s.dialogueOpen || s.downed) return s;
+      return s.questPanel ? { questPanel: null } : { questPanel: 'log', inventoryOpen: false };
+    }),
   form: 'human',
   setForm: (form) => set({ form }),
   setZone: (zone) => set({ zone }),
-  setPaused: (paused) => set(paused ? { paused, inventoryOpen: false } : { paused }),
-  togglePause: () => set((s) => ({ paused: !s.paused, inventoryOpen: false })),
+  setPaused: (paused) =>
+    set(paused ? { paused, inventoryOpen: false, questPanel: null } : { paused }),
+  togglePause: () => set((s) => ({ paused: !s.paused, inventoryOpen: false, questPanel: null })),
   toggleInventory: () =>
-    set((s) => (s.paused || s.dialogueOpen ? s : { inventoryOpen: !s.inventoryOpen })),
+    set((s) =>
+      s.paused || s.dialogueOpen ? s : { inventoryOpen: !s.inventoryOpen, questPanel: null },
+    ),
   handleEscape: () => {
     if (get().downed) return;
-    if (get().inventoryOpen) set({ inventoryOpen: false });
+    if (get().questPanel) set({ questPanel: null });
+    else if (get().inventoryOpen) set({ inventoryOpen: false });
     else get().togglePause();
   },
 }));
 
 export function isSimRunning(
-  state: Pick<GameState, 'paused' | 'inventoryOpen' | 'dialogueOpen' | 'downed'>,
+  state: Pick<GameState, 'paused' | 'inventoryOpen' | 'questPanel' | 'dialogueOpen' | 'downed'>,
 ): boolean {
-  return !state.paused && !state.inventoryOpen && !state.dialogueOpen && !state.downed;
+  return (
+    !state.paused &&
+    !state.inventoryOpen &&
+    !state.questPanel &&
+    !state.dialogueOpen &&
+    !state.downed
+  );
 }

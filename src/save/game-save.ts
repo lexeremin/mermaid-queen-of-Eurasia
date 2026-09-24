@@ -6,6 +6,7 @@ import { parseSave, SAVE_VERSION, type SaveData } from '@/save/save-data';
 import { isSimRunning, useGameStore } from '@/store/game-store';
 import { useNpcStore, type NpcRuntime } from '@/store/npc-store';
 import { useProgressStore, currentStats } from '@/store/progress-store';
+import { useQuestStore } from '@/store/quest-store';
 import { resolveCircle } from '@/systems/collision';
 import { PLAYER_RADIUS } from '@/systems/movement';
 
@@ -39,6 +40,20 @@ export function collectSave(): SaveData {
     },
     npcs,
     progress: collectProgress(),
+    quests: collectQuests(),
+  };
+}
+
+function collectQuests(): SaveData['quests'] {
+  const { log } = useQuestStore.getState();
+  return {
+    active: Object.fromEntries(
+      Object.entries(log.active).map(([id, p]) => [
+        id,
+        { counts: [...p.counts], visited: [...p.visited] },
+      ]),
+    ),
+    completed: [...log.completed],
   };
 }
 
@@ -66,6 +81,9 @@ export function applySave(save: SaveData): void {
     bag: save.progress.bag.map((s) => (s ? { ...s } : null)),
     equipment: { ...save.progress.equipment },
   });
+  useQuestStore
+    .getState()
+    .hydrate({ active: save.quests.active, completed: save.quests.completed });
   useNpcStore.getState().hydrate(npcs);
   useGameStore.getState().setForm(save.hero.form);
   playSeconds = save.playSeconds;
@@ -108,6 +126,7 @@ export function resetProgress(): void {
   removeKey(KEYS.save);
   playSeconds = 0;
   useProgressStore.getState().reset();
+  useQuestStore.getState().reset();
   useNpcStore.getState().reset();
   useGameStore.getState().setForm('human');
   resetSim();
@@ -131,6 +150,7 @@ export function startPersistence(): void {
     if (state.form !== prev.form) scheduleSave();
   });
   useProgressStore.subscribe(scheduleSave);
+  useQuestStore.subscribe(scheduleSave);
 
   window.setInterval(() => {
     if (isSimRunning(useGameStore.getState()) && !document.hidden)

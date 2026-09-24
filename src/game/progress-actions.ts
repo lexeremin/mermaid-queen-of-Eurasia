@@ -100,5 +100,5 @@ export function dropAt(index: number): void {
 /** Ignore quick-use while the world is paused or a panel is open. */
 export const canQuickUse = (): boolean => {
   const s = useGameStore.getState();
-  return !s.paused && !s.inventoryOpen && !s.dialogueOpen && !s.downed;
+  return !s.paused && !s.inventoryOpen && !s.questPanel && !s.dialogueOpen && !s.downed;
 };

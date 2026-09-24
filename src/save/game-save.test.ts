@@ -6,6 +6,7 @@ import { parseSave, SAVE_VERSION } from '@/save/save-data';
 import { useGameStore } from '@/store/game-store';
 import { useNpcStore } from '@/store/npc-store';
 import { useProgressStore } from '@/store/progress-store';
+import { useQuestStore } from '@/store/quest-store';
 
 const save = (hero: Record<string, unknown>, npcs: Record<string, unknown> = {}) =>
   parseSave({
@@ -21,6 +22,7 @@ describe('game save', () => {
     resetSim();
     useNpcStore.getState().reset();
     useProgressStore.getState().reset();
+    useQuestStore.getState().reset();
     useGameStore.getState().setForm('human');
   });
 
@@ -78,5 +80,21 @@ describe('game save', () => {
     expect(restored.equipment.weapon).toBe('silverTrident');
     expect(restored.bag.filter((s) => s?.id === 'healingTea')[0]?.qty).toBe(3);
     expect(restored.awarded).toEqual(['mes:grisha']);
+  });
+
+  it('round-trips the quest log', () => {
+    const base = save({ form: 'human', x: 0, z: 24, facingX: 0, facingZ: 1 });
+    applySave({
+      ...base,
+      quests: {
+        active: { 'clear-the-gloom': { counts: [2], visited: [] } },
+        completed: ['first-notes'],
+      },
+    });
+    expect(useQuestStore.getState().log.completed).toEqual(['first-notes']);
+    const out = collectSave();
+    expect(out.quests.active['clear-the-gloom']).toEqual({ counts: [2], visited: [] });
+    expect(out.quests.completed).toEqual(['first-notes']);
+    expect(parseSave(JSON.parse(JSON.stringify(out)))?.quests).toEqual(out.quests);
   });
 });

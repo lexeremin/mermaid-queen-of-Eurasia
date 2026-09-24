@@ -5,6 +5,7 @@ import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
 import { InventoryPanel } from '@/ui/InventoryPanel';
+import { QuestPanel } from '@/ui/QuestPanel';
 import { PauseSettings } from '@/ui/PauseSettings';
 import { TouchControls } from '@/ui/TouchControls';
 import { useTouchDevice } from '@/ui/use-touch-device';
@@ -14,6 +15,10 @@ export function Hud() {
   const touch = useTouchDevice();
   const paused = useGameStore((s) => s.paused);
   const inventoryOpen = useGameStore((s) => s.inventoryOpen);
+  const questPanel = useGameStore((s) => s.questPanel);
+  const nearBoard = useGameStore((s) => s.nearBoard);
+  const openQuestPanel = useGameStore((s) => s.openQuestPanel);
+  const toggleQuestLog = useGameStore((s) => s.toggleQuestLog);
   const zone = useGameStore((s) => s.zone);
   const dialogueOpen = useGameStore((s) => s.dialogueOpen);
   const nearbyNpc = useGameStore((s) => s.nearbyNpc);
@@ -28,6 +33,9 @@ export function Hud() {
       <CombatHud touch={touch} />
 
       <div className="hud-top">
+        <button type="button" className="hud-btn" onClick={toggleQuestLog} aria-label="Quests">
+          {touch ? 'LOG' : 'QUESTS'}
+        </button>
         <button type="button" className="hud-btn" onClick={toggleInventory} aria-label="Inventory">
           BAG
         </button>
@@ -36,23 +44,30 @@ export function Hud() {
         </button>
       </div>
 
-      {zone && !paused && !inventoryOpen && (
+      {zone && !paused && !inventoryOpen && !questPanel && (
         <div key={zone.id} className="zone-hint">
           {zone.label}
         </div>
       )}
 
-      {nearbyNpc && !paused && !inventoryOpen && !dialogueOpen && (
+      {nearbyNpc && !paused && !inventoryOpen && !questPanel && !dialogueOpen && (
         <button type="button" className="talk-prompt" onClick={() => openDialogue(nearbyNpc)}>
           {touch ? 'TALK' : 'E'} · {NPC_BY_ID.get(nearbyNpc)?.name}
         </button>
       )}
 
-      {touch && !paused && !inventoryOpen && !dialogueOpen && <TouchControls />}
+      {nearBoard && !nearbyNpc && !paused && !inventoryOpen && !questPanel && !dialogueOpen && (
+        <button type="button" className="talk-prompt" onClick={() => openQuestPanel('board')}>
+          {touch ? 'NOTICE BOARD' : 'E · Notice Board'}
+        </button>
+      )}
+
+      {touch && !paused && !inventoryOpen && !questPanel && !dialogueOpen && <TouchControls />}
 
       <DialogueBox />
 
       {inventoryOpen && <InventoryPanel />}
+      {questPanel && <QuestPanel />}
 
       {paused && (
         <div className="overlay">

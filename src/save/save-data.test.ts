@@ -203,3 +203,66 @@ describe('save v2: progress', () => {
     expect(parseSave(good({ progress: 'junk' }))!.progress).toEqual(defaultSavedProgress());
   });
 });
+
+describe('save v3: quests', () => {
+  it('migrates a v2 save to an empty quest log', () => {
+    const v2 = good({ version: 2, progress: defaultSavedProgress() });
+    const save = parseSave(v2)!;
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.quests).toEqual({ active: {}, completed: [] });
+  });
+
+  it('migrates a v1 save all the way up', () => {
+    const save = parseSave(good({ version: 1 }))!;
+    expect(save.quests).toEqual({ active: {}, completed: [] });
+    expect(save.progress.level).toBe(1);
+  });
+
+  it('keeps valid quest state', () => {
+    const save = parseSave(
+      good({
+        quests: {
+          active: {
+            'clear-the-gloom': { counts: [2], visited: [] },
+            'the-grand-tour': { counts: [0], visited: ['gum', 'manezh'] },
+          },
+          completed: ['first-notes'],
+        },
+      }),
+    )!;
+    expect(save.quests.active['clear-the-gloom']?.counts).toEqual([2]);
+    expect(save.quests.active['the-grand-tour']?.visited).toEqual(['gum', 'manezh']);
+    expect(save.quests.completed).toEqual(['first-notes']);
+  });
+
+  it('drops or repairs hostile quest data', () => {
+    const save = parseSave(
+      good({
+        quests: {
+          active: {
+            'clear-the-gloom': { counts: [999], visited: 'x' },
+            'a-court-forms': { counts: [5] },
+            'first-notes': { counts: [], visited: [] },
+            bogus: { counts: [1], visited: [] },
+            'the-grand-tour': { counts: [0], visited: ['gum', 'gum', 'moon', 7] },
+            'rising-tide': 'nope',
+          },
+          completed: ['first-notes', 'first-notes', 'bogus', 12],
+        },
+      }),
+    )!;
+    expect(save.quests.completed).toEqual(['first-notes']);
+    expect(save.quests.active.bogus).toBeUndefined();
+    expect(save.quests.active['first-notes']).toBeUndefined();
+    expect(save.quests.active['rising-tide']).toBeUndefined();
+    expect(save.quests.active['clear-the-gloom']).toEqual({ counts: [3], visited: [] });
+    expect(save.quests.active['a-court-forms']?.counts).toEqual([0]);
+    expect(save.quests.active['the-grand-tour']?.visited).toEqual(['gum']);
+  });
+
+  it('survives non-object quest data', () => {
+    for (const bad of [null, 5, 'x', [], { active: 4, completed: 'y' }]) {
+      expect(parseSave(good({ quests: bad }))!.quests).toEqual({ active: {}, completed: [] });
+    }
+  });
+});

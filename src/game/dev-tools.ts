@@ -1,6 +1,7 @@
 import { Vector3, type Camera } from 'three';
 import { loot, spawnDrops, spawnPickup } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
+import { useQuestStore } from '@/store/quest-store';
 import { useProgressStore } from '@/store/progress-store';
 import { combat } from '@/game/combat-sim';
 import { walkTo } from '@/game/GameLoop';
@@ -26,6 +27,7 @@ declare global {
       world: typeof currentWorld;
       input: typeof input;
       progress: typeof useProgressStore;
+      quests: typeof useQuestStore;
       loot: typeof loot;
       spawnDrops: typeof spawnDrops;
       spawnPickup: typeof spawnPickup;
@@ -40,6 +42,7 @@ export function installDevTools(): void {
     world: currentWorld,
     input,
     progress: useProgressStore,
+    quests: useQuestStore,
     loot,
     spawnDrops,
     spawnPickup,

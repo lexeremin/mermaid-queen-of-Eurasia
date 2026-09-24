@@ -1,11 +1,12 @@
 import { METHODS, type Method } from '@/data/dialogue-types';
 import { NPCS } from '@/data/npcs';
+import { QUEST_BY_ID } from '@/data/quests';
 import { ITEMS, STARTER_EQUIPMENT, isItemId, type EquipSlot, type ItemId } from '@/data/items';
 import { BAG_SIZE } from '@/systems/inventory';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 export type SavedNpc = { relationship: number; used: Method[]; joined: boolean };
 
@@ -17,6 +18,11 @@ export type SavedProgress = {
   equipment: Record<EquipSlot, ItemId | null>;
 };
 
+export type SavedQuests = {
+  active: Record<string, { counts: number[]; visited: string[] }>;
+  completed: string[];
+};
+
 export type SaveData = {
   version: number;
   savedAt: string;
@@ -24,6 +30,7 @@ export type SaveData = {
   hero: { form: 'human' | 'mermaid'; x: number; z: number; facingX: number; facingZ: number };
   npcs: Record<string, SavedNpc>;
   progress: SavedProgress;
+  quests: SavedQuests;
 };
 
 type Raw = Record<string, unknown>;
@@ -32,7 +39,10 @@ export type Migrations = Readonly<Record<number, (data: Raw) => Raw>>;
 /** `MIGRATIONS[n]` upgrades a version-n save to version n + 1. */
 export const MIGRATIONS: Migrations = {
   1: (data) => ({ ...data, progress: defaultSavedProgress() }),
+  2: (data) => ({ ...data, quests: defaultSavedQuests() }),
 };
+
+export const defaultSavedQuests = (): SavedQuests => ({ active: {}, completed: [] });
 
 export const defaultSavedProgress = (): SavedProgress => ({
   level: 1,
@@ -111,6 +121,39 @@ function parseProgress(raw: unknown): SavedProgress {
   return { level, xp, awarded, bag, equipment };
 }
 
+function parseQuests(raw: unknown): SavedQuests {
+  const result = defaultSavedQuests();
+  if (!isRecord(raw)) return result;
+  if (Array.isArray(raw.completed)) {
+    result.completed = [
+      ...new Set(
+        raw.completed.filter((id): id is string => typeof id === 'string' && QUEST_BY_ID.has(id)),
+      ),
+    ];
+  }
+  if (isRecord(raw.active)) {
+    for (const [id, entry] of Object.entries(raw.active)) {
+      const def = QUEST_BY_ID.get(id);
+      if (!def || result.completed.includes(id) || !isRecord(entry)) continue;
+      const rawCounts = Array.isArray(entry.counts) ? entry.counts : [];
+      const counts = def.objectives.map((o, i) => {
+        const max = o.kind === 'kill' ? o.count : 0;
+        return Math.min(max, Math.max(0, Math.floor(finite(rawCounts[i], 0))));
+      });
+      const zones = new Set(def.objectives.flatMap((o) => (o.kind === 'visit' ? o.zones : [])));
+      const visited = Array.isArray(entry.visited)
+        ? [
+            ...new Set(
+              entry.visited.filter((z): z is string => typeof z === 'string' && zones.has(z)),
+            ),
+          ]
+        : [];
+      result.active[id] = { counts, visited };
+    }
+  }
+  return result;
+}
+
 /** Turns untrusted data into a valid SaveData, or null if it is not a usable save. */
 export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): SaveData | null {
   const data = migrateSave(raw, migrations);
@@ -148,6 +191,7 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
     },
     npcs,
     progress: parseProgress(data.progress),
+    quests: parseQuests(data.quests),
   };
 }
 

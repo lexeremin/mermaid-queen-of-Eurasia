@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from '@/App';
 import '@/index.css';
 import { startProgressHooks } from '@/game/progress-actions';
+import { startQuestHooks } from '@/game/quest-actions';
 import { startPersistence } from '@/save/game-save';
 import { startSync } from '@/net/sync';
 
@@ -15,6 +16,7 @@ if (import.meta.env.DEV) {
 
 startPersistence();
 startProgressHooks();
+startQuestHooks();
 startSync();
 
 createRoot(root).render(

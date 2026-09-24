@@ -11,7 +11,9 @@ const SLOTS: { id: ItemId; key: string }[] = [
 
 export function QuickUse({ touch }: { touch: boolean }) {
   const bag = useProgressStore((s) => s.bag);
-  const blocked = useGameStore((s) => s.paused || s.inventoryOpen || s.dialogueOpen || s.downed);
+  const blocked = useGameStore(
+    (s) => s.paused || s.inventoryOpen || !!s.questPanel || s.dialogueOpen || s.downed,
+  );
   return (
     <div className={touch ? 'quick-use quick-use-touch' : 'quick-use'}>
       {SLOTS.map(({ id, key }) => {

@@ -4,6 +4,7 @@ import { createFixedStepper } from '@/game/fixed-step';
 import { combat } from '@/game/combat-sim';
 import { loot, spawnDrops } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
+import { onEnemyDefeatedForQuests } from '@/game/quest-actions';
 import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { ITEMS } from '@/data/items';
@@ -38,6 +39,10 @@ const raycaster = new Raycaster();
 const stepper = createFixedStepper(SIM_STEP, MAX_STEPS_PER_FRAME);
 const STUCK_SECONDS = 0.5;
 const SPOTS = currentMap.npcs;
+const BOARD_ID = 'board';
+const BOARDS = currentMap.placements
+  .filter((p) => p.asset === 'questBoard')
+  .map((p) => ({ id: BOARD_ID, x: p.x, z: p.z }));
 const NPC_TARGETS = currentMap.npcs.map((n) => ({ id: n.id, pos: { x: n.x, z: n.z } }));
 const STUCK_SPEED_FRACTION = 0.25;
 
@@ -74,6 +79,7 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
     if (event.type === 'enemyDefeated') {
       track('enemy_defeated', { kind: event.kind });
       grantXp(XP_REWARDS.enemy[event.kind], ENEMIES[event.kind].name);
+      onEnemyDefeatedForQuests(event.kind);
       spawnDrops(event.kind, { x: event.x, z: event.z });
     } else if (event.type === 'playerDowned') {
       useGameStore.getState().setDowned(true);
@@ -101,6 +107,12 @@ export function GameLoop() {
         useDialogueStore.getState().open(near.id);
         return;
       }
+      if (nearestTalkable(BOARDS, sim.curr.pos)) {
+        sim.path = [];
+        sim.talkTo = null;
+        useGameStore.getState().openQuestPanel('board');
+        return;
+      }
     }
 
     if (input.click) {
@@ -123,6 +135,21 @@ export function GameLoop() {
           }
           sim.talkTo = npc.id;
           walkTo(approachPoint(npc, sim.curr.pos));
+        } else if (npcAtPoint(BOARDS, target)) {
+          const board = npcAtPoint(BOARDS, target);
+          if (
+            board &&
+            Math.hypot(board.x - sim.curr.pos.x, board.z - sim.curr.pos.z) <= TALK_RANGE
+          ) {
+            sim.path = [];
+            sim.talkTo = null;
+            useGameStore.getState().openQuestPanel('board');
+            return;
+          }
+          if (board) {
+            sim.talkTo = BOARD_ID;
+            walkTo(approachPoint(board, sim.curr.pos));
+          }
         } else if (!click.touch) {
           sim.talkTo = null;
           walkTo(target);
@@ -199,10 +226,15 @@ export function GameLoop() {
     const nearId = near?.id ?? null;
     if (nearId !== store.nearbyNpc) store.setNearbyNpc(nearId);
 
+    const nearBoard = nearestTalkable(BOARDS, sim.curr.pos) !== null;
+    if (nearBoard !== store.nearBoard) store.setNearBoard(nearBoard);
+
     if (sim.talkTo && sim.path.length === 0) {
       const target = SPOTS.find((n) => n.id === sim.talkTo);
+      const toBoard = sim.talkTo === BOARD_ID;
       sim.talkTo = null;
       if (target && nearId === target.id) useDialogueStore.getState().open(target.id);
+      else if (toBoard && nearBoard) useGameStore.getState().openQuestPanel('board');
     }
   });
 
