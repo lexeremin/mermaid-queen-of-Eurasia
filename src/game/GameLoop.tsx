@@ -4,7 +4,9 @@ import { createFixedStepper } from '@/game/fixed-step';
 import { MAX_STEPS_PER_FRAME, SIM_STEP, sim } from '@/game/sim';
 import { clearPressed, getMove, input } from '@/input/input-state';
 import { isSimRunning, useGameStore } from '@/store/game-store';
+import { currentMap, currentWorld } from '@/game/world/current-map';
 import { stepPlayer } from '@/systems/movement';
+import { zoneAt } from '@/systems/zones';
 import { normalize } from '@/utils/vec2';
 
 const GROUND = new Plane(new Vector3(0, 1, 0), 0);
@@ -28,9 +30,13 @@ export function GameLoop() {
 
     sim.alpha = stepper.advance(delta, (dt) => {
       sim.prev = sim.curr;
-      sim.curr = stepPlayer(sim.curr, { move: getMove(input), aim: input.aim }, dt);
+      sim.curr = stepPlayer(sim.curr, { move: getMove(input), aim: input.aim }, dt, currentWorld);
       clearPressed(input);
     });
+
+    const store = useGameStore.getState();
+    const zone = zoneAt(currentMap.zones, sim.curr.pos);
+    if (zone !== store.zone) store.setZone(zone);
   });
 
   return null;

@@ -1,3 +1,4 @@
+import { currentMap } from '@/game/world/current-map';
 import { createPlayer, type PlayerState } from '@/systems/movement';
 import { lerp } from '@/utils/math';
 import type { Vec2 } from '@/utils/vec2';
@@ -6,14 +7,14 @@ export const SIM_STEP = 1 / 60;
 export const MAX_STEPS_PER_FRAME = 5;
 
 export const sim: { prev: PlayerState; curr: PlayerState; alpha: number } = {
-  prev: createPlayer(),
-  curr: createPlayer(),
+  prev: createPlayer(currentMap.spawn),
+  curr: createPlayer(currentMap.spawn),
   alpha: 0,
 };
 
 export function resetSim(): void {
-  sim.prev = createPlayer();
-  sim.curr = createPlayer();
+  sim.prev = createPlayer(currentMap.spawn);
+  sim.curr = createPlayer(currentMap.spawn);
   sim.alpha = 0;
 }
 

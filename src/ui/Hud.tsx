@@ -8,6 +8,7 @@ export function Hud() {
   const touch = useTouchDevice();
   const paused = useGameStore((s) => s.paused);
   const inventoryOpen = useGameStore((s) => s.inventoryOpen);
+  const zone = useGameStore((s) => s.zone);
   const togglePause = useGameStore((s) => s.togglePause);
   const toggleInventory = useGameStore((s) => s.toggleInventory);
 
@@ -23,6 +24,8 @@ export function Hud() {
           PAUSE
         </button>
       </div>
+
+      {zone && !paused && !inventoryOpen && <div className="zone-hint">{zone.label}</div>}
 
       {touch && !paused && !inventoryOpen && <TouchControls />}
 

@@ -9,6 +9,10 @@ import {
 } from '@/game/camera';
 import { getRenderPosition } from '@/game/sim';
 
+const DEBUG_ZOOM = import.meta.env.DEV
+  ? Number(new URLSearchParams(window.location.search).get('zoom')) || 1
+  : 1;
+
 const player = { x: 0, z: 0 };
 const desired = new Vector3();
 const lookAtTarget = new Vector3();
@@ -21,7 +25,7 @@ export function CameraRig() {
     const { camera, scene, size } = state;
     getRenderPosition(player);
 
-    const scale = cameraDistanceScale(size.width / size.height);
+    const scale = cameraDistanceScale(size.width / size.height) * DEBUG_ZOOM;
     desired.set(
       player.x + CAMERA_OFFSET[0] * scale,
       CAMERA_OFFSET[1] * scale,

@@ -13,7 +13,7 @@ export function DebugOverlay() {
       const el = ref.current;
       if (el) {
         const move = getMove(input);
-        const { paused, inventoryOpen } = useGameStore.getState();
+        const { paused, inventoryOpen, zone } = useGameStore.getState();
         const held = ACTIONS.filter((a) => input.held[a]).join(',') || '-';
         el.textContent = [
           `pos  ${sim.curr.pos.x.toFixed(2)}, ${sim.curr.pos.z.toFixed(2)}`,
@@ -21,7 +21,7 @@ export function DebugOverlay() {
           `move ${move.x.toFixed(2)}, ${move.z.toFixed(2)}`,
           `aim  ${input.aim.x.toFixed(2)}, ${input.aim.z.toFixed(2)}`,
           `held ${held}`,
-          `paused ${paused} inv ${inventoryOpen}`,
+          `paused ${paused} inv ${inventoryOpen} zone ${zone?.id ?? '-'}`,
           `draw ${renderStats.calls} tris ${renderStats.triangles}`,
           `clip ${renderStats.clip} tailZ ${renderStats.tailZ.toFixed(3)}`,
         ].join('\n');

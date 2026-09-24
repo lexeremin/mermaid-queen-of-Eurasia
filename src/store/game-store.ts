@@ -1,8 +1,11 @@
 import { create } from 'zustand';
+import type { Zone } from '@/systems/zones';
 
 export type GameState = {
   paused: boolean;
   inventoryOpen: boolean;
+  zone: Zone | null;
+  setZone: (zone: Zone | null) => void;
   setPaused: (paused: boolean) => void;
   togglePause: () => void;
   toggleInventory: () => void;
@@ -12,6 +15,8 @@ export type GameState = {
 export const useGameStore = create<GameState>((set, get) => ({
   paused: false,
   inventoryOpen: false,
+  zone: null,
+  setZone: (zone) => set({ zone }),
   setPaused: (paused) => set(paused ? { paused, inventoryOpen: false } : { paused }),
   togglePause: () => set((s) => ({ paused: !s.paused, inventoryOpen: false })),
   toggleInventory: () => set((s) => (s.paused ? s : { inventoryOpen: !s.inventoryOpen })),

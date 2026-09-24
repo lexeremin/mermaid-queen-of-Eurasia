@@ -4,7 +4,7 @@ import { CameraRig } from '@/game/CameraRig';
 import { CAMERA_FOV, CAMERA_OFFSET, BASE_FOG_DENSITY } from '@/game/camera';
 import { GameLoop } from '@/game/GameLoop';
 import { Player } from '@/game/entities/Player';
-import { PocVillage } from '@/game/world/PocVillage';
+import { Village } from '@/game/world/Village';
 import { RenderStatsProbe } from '@/game/RenderStatsProbe';
 import { Suspense } from 'react';
 
@@ -14,7 +14,7 @@ export function Scene() {
   return (
     <Canvas
       dpr={[1, 2]}
-      camera={{ position: [...CAMERA_OFFSET], fov: CAMERA_FOV, near: 0.1, far: 200 }}
+      camera={{ position: [...CAMERA_OFFSET], fov: CAMERA_FOV, near: 1, far: 200 }}
     >
       <color attach="background" args={[FOG_COLOR]} />
       <fogExp2 attach="fog" args={[FOG_COLOR, BASE_FOG_DENSITY]} />
@@ -24,14 +24,8 @@ export function Scene() {
       <GameLoop />
       <CameraRig />
 
-      <mesh rotation-x={-Math.PI / 2}>
-        <planeGeometry args={[60, 60]} />
-        <meshLambertMaterial color="#cfd8e3" flatShading />
-      </mesh>
-      <gridHelper args={[60, 20, '#6b7d95', '#8fa0b5']} position={[0, 0.01, 0]} />
-
       <Suspense fallback={null}>
-        <PocVillage />
+        <Village />
         <Player />
       </Suspense>
 

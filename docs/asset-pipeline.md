@@ -28,11 +28,11 @@ print(ns["build_izba"]())   # or build_tree(), build_rosa()
 `assets-src/` (raw exports) is git-ignored; scripts are the source of truth.
 
 ## Adding an asset
-1. Write a builder (or extend `tools/blender/`) using `Part` / `Empty` from `lib.py`. Every face gets a palette color name, so the asset uses the shared atlas automatically.
+1. Write a builder (or extend `tools/blender/`) using `Part` / `Empty` from `lib.py`. Every face gets a palette color name, so the asset uses the shared atlas automatically. Phase 3 builders: `build_poc_assets.py` (Rosa, izba, spruce); Phase 4 builders: `build_village_assets.py` (`build_all_village()`).
 2. Build, export to `assets-src/<category>_<name>.glb`, screenshot the Blender viewport (game camera angle is about 54° elevation) to check the silhouette.
 3. `npm run assets:optimize`.
-4. Add the asset to `src/data/assets.ts` and a row to `docs/asset-ledger.md`.
-5. `npm run assets:check`, then look at it in game (`RetroModel id="..."`, or `Player` for characters).
+4. Add the asset to `src/data/assets.ts` (with a collision `footprint` in asset-local coordinates if it blocks movement) and a row to `docs/asset-ledger.md`. Place it in a map (`src/data/maps/*.ts`); scenes draw repeated assets through `InstancedModel`.
+5. `npm run assets:check`, then look at it in game (add a placement to a map; characters go through `Player`). Use `?zoom=2.6` in dev for an overview.
 
 ## Look: palette atlas, not per-asset textures
 - One shared palette (`tools/palette.json`, 32 colors, mirrored by `src/data/palette.ts`) baked into one 128×64 atlas (`public/assets/atlas/palette_atlas.png`), one flat 16 px cell per color.
@@ -55,7 +55,9 @@ print(ns["build_izba"]())   # or build_tree(), build_rosa()
 - **Meshopt + quantization** (`npm run assets:optimize`): about 55% smaller, but it adds unnamed wrapper nodes above mesh nodes. Joint node names and animation channels are preserved. drei `useGLTF` decodes meshopt by default.
 - **Palette texture embedded in each GLB** (tiny, keeps the exporter emitting UVs and the file viewable standalone). The engine ignores it and swaps in the shared material.
 - **Blender MCP addon:** must be enabled and its server started, or every tool returns "Could not connect to Blender". The installed addon is an older build than the MCP server expects (`uvx mcp-for-blender install-addon` updates it); core tools still work.
-- **Clones:** use `SkeletonUtils.clone` for each instance so animation mixers don't share nodes.
+- **Clones:** use `SkeletonUtils.clone` for each animated instance so mixers don't share nodes. Static repeated assets use `InstancedModel` (per-mesh `InstancedMesh`, node world matrix baked into each instance).
+- **Flat river:** water is a flat ribbon at y≈0.03, so bridge decks must sit almost flush with the ground or characters sink into them.
+- **Footprints:** box footprints only support quarter-turn placement rotations (they stay axis-aligned); circles rotate freely. Trees on the perimeter have no collision by design (the map bounds stop the player).
 
 ## Budgets (enforced by `tools/asset-budgets.json` / `npm run assets:check`)
 Class is taken from the file name prefix.
@@ -79,7 +81,9 @@ Scene targets: ≤ 150 000 visible triangles, ≤ 150 draw calls, initial downlo
 | `tree_spruce` | 160 | 5.6 KB |
 | `palette_atlas.png` | | 0.7 KB |
 
-Test scene (Rosa, 1 izba, 14 spruces, ground, grid): 19–24 draw calls, about 2 000–2 800 triangles, about 100 fps. Real iPhone numbers come in Phase 14.
+Phase 3 test scene (Rosa, 1 izba, 14 spruces): 19–24 draw calls, about 2 000–2 800 triangles, about 100 fps.
+
+Phase 4 village (16 assets, about 250 placements, 220-tree perimeter forest, all instanced): 21–29 draw calls, 41–43k triangles, about 100 fps in the desktop pane and in 375×812 emulation. All 16 shipped GLBs total about 120 KB. Real iPhone numbers come in Phase 14.
 
 ## Naming
 `<category>_<name>[_<variant>].glb`, lowercase snake case. Categories: `char`, `npc`, `enemy`, `boss`, `bld`, `prop`, `tree`, `terrain`, `fx`.
