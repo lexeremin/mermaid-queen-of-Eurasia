@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { renderStats } from '@/game/render-stats';
 import { sim } from '@/game/sim';
 import { ACTIONS, getMove, input } from '@/input/input-state';
 import { useGameStore } from '@/store/game-store';
@@ -21,6 +22,8 @@ export function DebugOverlay() {
           `aim  ${input.aim.x.toFixed(2)}, ${input.aim.z.toFixed(2)}`,
           `held ${held}`,
           `paused ${paused} inv ${inventoryOpen}`,
+          `draw ${renderStats.calls} tris ${renderStats.triangles}`,
+          `clip ${renderStats.clip} tailZ ${renderStats.tailZ.toFixed(3)}`,
         ].join('\n');
       }
       raf = requestAnimationFrame(tick);

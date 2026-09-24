@@ -5,14 +5,14 @@ Late-80s / early-90s fantasy computer games seen through a 3D lens: chunky low-p
 
 ## Rendering rules
 - Fixed angled top-down camera (roughly 50–60° pitch), slight follow-lag, no player camera rotation in the slice.
-- Textures: nearest-neighbour filtering, 64–128 px, quantized to the shared palette. No PBR maps beyond base color (no normal/roughness maps).
+- Textures: one shared palette atlas (128×64, one flat cell per color), nearest-neighbour filtering, no mipmaps, one shared `MeshLambertMaterial`. No PBR maps beyond base color. Surface detail beyond flat palette colors is deferred (see `docs/asset-pipeline.md`).
 - Lighting: hemisphere + one directional light, baked-look vertex colors where possible. Few or no real-time shadows; use blob shadows on iPhone.
 - Fog/mist: exponential fog tinted per area. Snow/mist particles kept cheap (points/instancing).
 - Optional post-processing (dither, slight palette crush, vignette) must be disable-able and off by default on low-end mobile.
 - Warm interiors (amber/orange, low fog) vs cold outdoors (blue-grey, heavy fog, snow).
 
 ## Palette
-A single shared palette (target 32–48 colors) is defined in Phase 3 in `src/data/palette.ts` and `tools/palette.json`, and used by the texture quantizer, materials and UI. Direction:
+A single shared palette (32 colors) lives in `tools/palette.json` (mirrored by `src/data/palette.ts`) and drives the atlas, the Blender scripts and, later, the UI. Direction:
 - Cold outdoors: slate blues, pale grey-greens, snow white, deep spruce green.
 - Warm interiors: amber, ember orange, dark walnut, candle yellow.
 - Magic (Aura, trident, spells): teal/aquamarine and pearl pink.

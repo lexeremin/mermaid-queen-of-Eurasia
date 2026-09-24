@@ -1,0 +1,42 @@
+{
+  "atlas": {
+    "width": 128,
+    "height": 64,
+    "cell": 16,
+    "cols": 8
+  },
+  "colors": {
+    "snow": "#eef3f8",
+    "frost": "#b9c9dc",
+    "slate_light": "#8ea3bd",
+    "slate": "#5f7590",
+    "slate_dark": "#3a4a63",
+    "night": "#1b2436",
+    "ink": "#0b1220",
+    "spruce_light": "#4f8a6a",
+    "spruce": "#2f6a55",
+    "spruce_dark": "#1c4238",
+    "moss": "#6b8a3c",
+    "birch": "#dcd5c3",
+    "wood_light": "#b98a5a",
+    "wood": "#8a5a34",
+    "wood_dark": "#5a3822",
+    "walnut": "#33200f",
+    "amber": "#f2b04a",
+    "candle": "#ffe28f",
+    "ember": "#e0742c",
+    "brick": "#a4442f",
+    "straw": "#d8b466",
+    "aqua": "#6be3d1",
+    "teal": "#2f9c8a",
+    "teal_dark": "#1b6461",
+    "pearl": "#f4d0df",
+    "rose": "#d98cae",
+    "violet": "#7a5aa8",
+    "skin": "#f0c8a4",
+    "skin_shadow": "#cf9e7b",
+    "gold": "#e9bd56",
+    "sick_green": "#a7b83a",
+    "paper": "#ece0c0"
+  }
+}

@@ -1,41 +1,92 @@
 # Asset Pipeline
 
-Goal: high-quality, consistent, original-feeling 3D assets that fit iPhone Safari budgets. Validated in Phase 3 (proof of concept) before content phases.
+Goal: consistent, original-feeling 3D assets that fit iPhone Safari budgets. Validated in Phase 3 with three procedural assets (Rosa placeholder, izba, spruce).
 
-## Tooling
-- **Blender MCP** (live Blender via `mcp__blender__*` tools): `execute_blender_code`, `generate_hunyuan3d_model`, `generate_hyper3d_model_via_text/images`, `search_polyhaven_assets`, `download_polyhaven_asset`, `search_polypizza_models`, `search_sketchfab_models`, `export_scene`, `get_viewport_screenshot`.
-- `tools/` in this repo holds repeatable scripts: Blender Python (decimate, UV, bake, export), texture quantizer (palette + downscale), GLB optimizer (meshopt/Draco via gltf-transform).
+```
+Blender (MCP)  ->  assets-src/*.glb  ->  npm run assets:optimize  ->  public/assets/<category>/*.glb
+   build script       raw export          dedup, weld, meshopt        + palette_atlas.png
+                                                     |
+                     src/data/assets.ts (manifest) + docs/asset-ledger.md  ->  npm run assets:check
+```
 
-## Workflow per asset
-1. **Brief**: name, category, silhouette notes, budget class (see below).
-2. **Source** (pick the cheapest that meets quality):
-   - *Procedural* Blender scripts: buildings, fences, trees, terrain kits, props. Best style consistency.
-   - *AI generated*: Hunyuan3D / Rodin for characters, monsters, unique props. Generate from text + reference image.
-   - *CC0 base*: Poly Haven / Poly Pizza models as a base to restyle. Record source URL and licence.
-3. **Reduce**: decimate/retopo to the poly budget; enforce chunky, flat-shaded look.
-4. **Retro texture**: bake/collapse to one atlas, downscale to 64–128 px, quantize to the shared palette (`tools/palette.json`), nearest filtering.
-5. **Rig/animate** (characters): simple skeleton, few clips (idle, walk, attack, hit, die); keep bone count low.
-6. **Export** GLB, compress (meshopt/Draco), name per convention, drop in `public/assets/<category>/`.
-7. **Register** in `src/data/assets.ts` (manifest) and in `docs/asset-ledger.md` (licence ledger).
-8. **Verify in game**: viewport screenshot in Blender + in-engine check on desktop and iPhone Safari.
+## Commands
+| Step | Command |
+|---|---|
+| Start Blender with the MCP server | `/Applications/Blender.app/Contents/MacOS/Blender --python tools/blender/start_mcp.py` (or sidebar N-panel > BlenderMCP > Connect) |
+| Build + export assets | MCP `execute_blender_code`, see snippet below |
+| Optimize into `public/assets/` | `npm run assets:optimize` |
+| Check budgets, manifest, ledger | `npm run assets:check` (also runs in `npm test`) |
 
-## Budgets (initial — tighten in Phase 3 and 14 after measuring on device)
-| Class | Triangles | Texture | Notes |
+Build snippet (run through MCP `execute_blender_code`):
+```python
+REPO = "/abs/path/to/repo"
+ns = {"REPO": REPO, "__name__": "poc"}
+exec(open(REPO + "/tools/blender/lib.py").read(), ns)
+exec(open(REPO + "/tools/blender/build_poc_assets.py").read(), ns)
+print(ns["build_izba"]())   # or build_tree(), build_rosa()
+```
+`assets-src/` (raw exports) is git-ignored; scripts are the source of truth.
+
+## Adding an asset
+1. Write a builder (or extend `tools/blender/`) using `Part` / `Empty` from `lib.py`. Every face gets a palette color name, so the asset uses the shared atlas automatically.
+2. Build, export to `assets-src/<category>_<name>.glb`, screenshot the Blender viewport (game camera angle is about 54° elevation) to check the silhouette.
+3. `npm run assets:optimize`.
+4. Add the asset to `src/data/assets.ts` and a row to `docs/asset-ledger.md`.
+5. `npm run assets:check`, then look at it in game (`RetroModel id="..."`, or `Player` for characters).
+
+## Look: palette atlas, not per-asset textures
+- One shared palette (`tools/palette.json`, 32 colors, mirrored by `src/data/palette.ts`) baked into one 128×64 atlas (`public/assets/atlas/palette_atlas.png`), one flat 16 px cell per color.
+- Each face's UVs point at the center of its color cell. All assets therefore share the palette, one texture and one material (`getRetroMaterial()`: `MeshLambertMaterial`, nearest filtering, no mipmaps, `flipY = false`).
+- Consequence: faces are flat colors. Chunky faceted geometry + palette + fog gives the retro look. Pixel-art surface detail (wood grain, snow speckle) is **not** possible with single-texel UVs; if needed later, add small tiling detail textures per material family (wood, snow, foliage, skin) or a dither post effect (Phase 13). Decision deferred until the look is judged in context.
+
+## Source options
+- **Procedural Blender scripts** (used for the PoC): buildings, props, trees, and even the placeholder character. Best style consistency, zero licence risk, fully reproducible.
+- **AI generation** (Hunyuan3D, Hyper3D Rodin): intended for characters/monsters. **Not enabled**: the addon panel needs the user's opt-in and credentials. Whatever comes out must be re-processed: decimate to budget, snap every face to palette cells (re-UV), rebuild the node hierarchy. Record service, prompt, date and commercial-use terms in the ledger.
+- **CC0 bases** (Poly Haven is enabled; Sketchfab needs a key; the installed addon build has no Poly Pizza): restyle to the palette and record the source URL and licence.
+
+## Characters and animation
+- Characters are rigid-part node hierarchies (tail chain, torso, head, arms), not skinned meshes. Fits the chunky style, exports small, and needs no skeleton budget.
+- Clips: author keyframes on the part objects, push each clip into an NLA track named after the clip (`idle`, `walk`). With `export_animation_mode = NLA_TRACKS` every track name becomes one glTF animation. In game, `useAnimations` + crossfade (`Player.tsx`).
+- Skinned rigs are only worth it if an AI-generated or purchased character needs deformation. Revisit then.
+
+## Gotchas found in Phase 3
+- **Axes:** Blender is Z-up, glTF is Y-up. Build characters facing Blender **-Y** (becomes glTF +Z, the game's default facing). A rotation about Blender Z shows up as rotation about Y in three.
+- **Blender 5.x:** the glTF exporter option names are read from `bpy.ops.export_scene.gltf.get_rna_type().properties` (see `export_glb`) instead of hard-coding enums.
+- **Meshopt + quantization** (`npm run assets:optimize`): about 55% smaller, but it adds unnamed wrapper nodes above mesh nodes. Joint node names and animation channels are preserved. drei `useGLTF` decodes meshopt by default.
+- **Palette texture embedded in each GLB** (tiny, keeps the exporter emitting UVs and the file viewable standalone). The engine ignores it and swaps in the shared material.
+- **Blender MCP addon:** must be enabled and its server started, or every tool returns "Could not connect to Blender". The installed addon is an older build than the MCP server expects (`uvx mcp-for-blender install-addon` updates it); core tools still work.
+- **Clones:** use `SkeletonUtils.clone` for each instance so animation mixers don't share nodes.
+
+## Budgets (enforced by `tools/asset-budgets.json` / `npm run assets:check`)
+Class is taken from the file name prefix.
+
+| Class | Triangles | GLB size | Texture |
 |---|---|---|---|
-| Hero (Rosa, per form) | ≤ 3 000 | 128×128 | ≤ 40 bones |
-| NPC / enemy | ≤ 1 500 | 64–128 | ≤ 25 bones |
-| Boss | ≤ 4 000 | 128×128 | |
-| Building | ≤ 1 500 | shared atlas | |
-| Prop / tree | ≤ 300 | shared atlas | Instance where repeated |
-| Scene total (visible) | ≤ 150 000 | — | ≤ 150 draw calls target |
-| GLB size | ≤ 300 KB each (hero ≤ 600 KB) | — | Total initial download target ≤ 8 MB |
+| `char` (hero) | ≤ 3 000 | ≤ 600 KB | ≤ 128 px |
+| `npc`, `enemy` | ≤ 1 500 | ≤ 300 KB | ≤ 128 px |
+| `boss` | ≤ 4 000 | ≤ 600 KB | ≤ 128 px |
+| `bld` | ≤ 1 500 | ≤ 300 KB | ≤ 128 px |
+| `prop`, `tree`, `fx` | ≤ 300 / 300 / 500 | ≤ 100 KB | ≤ 128 px |
+| `terrain` | ≤ 20 000 | ≤ 600 KB | ≤ 256 px |
+
+Scene targets: ≤ 150 000 visible triangles, ≤ 150 draw calls, initial download ≤ 8 MB. Instance repeated props/trees once a scene has more than a few dozen (Phase 4+).
+
+### PoC measurements (2026-09-24, desktop Chrome pane, dev build)
+| Asset | Tris | GLB |
+|---|---|---|
+| `char_rosa` | 456 | 25.1 KB |
+| `bld_izba` | 464 | 8.6 KB |
+| `tree_spruce` | 160 | 5.6 KB |
+| `palette_atlas.png` | | 0.7 KB |
+
+Test scene (Rosa, 1 izba, 14 spruces, ground, grid): 19–24 draw calls, about 2 000–2 800 triangles, about 100 fps. Real iPhone numbers come in Phase 14.
 
 ## Naming
 `<category>_<name>[_<variant>].glb`, lowercase snake case. Categories: `char`, `npc`, `enemy`, `boss`, `bld`, `prop`, `tree`, `terrain`, `fx`.
 
-## Licence ledger (`docs/asset-ledger.md`, created in Phase 3)
-One row per asset: file, source (procedural / generator name + prompt + date / URL), licence, commercial use OK (y/n), author, notes. No asset ships without a row. Generated assets must come from a service whose terms allow commercial use; record the terms/date.
+## Licence ledger
+`docs/asset-ledger.md`: one row per shipped file (source, licence, commercial OK, notes). No asset ships without a row; `assets:check` fails otherwise.
 
 ## Fallbacks
-- Generator quota/keys unavailable: procedural Blender geometry + Poly Haven CC0.
-- Style drift: re-run the retro-texture pass with the shared palette and re-decimate.
+- Generators unavailable: procedural Blender geometry + Poly Haven CC0 (current state).
+- Style drift: rebuild from scripts with the shared palette; re-run optimize.

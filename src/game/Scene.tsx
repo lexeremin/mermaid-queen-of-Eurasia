@@ -4,6 +4,9 @@ import { CameraRig } from '@/game/CameraRig';
 import { CAMERA_FOV, CAMERA_OFFSET, BASE_FOG_DENSITY } from '@/game/camera';
 import { GameLoop } from '@/game/GameLoop';
 import { Player } from '@/game/entities/Player';
+import { PocVillage } from '@/game/world/PocVillage';
+import { RenderStatsProbe } from '@/game/RenderStatsProbe';
+import { Suspense } from 'react';
 
 const FOG_COLOR = '#0b1220';
 
@@ -27,18 +30,17 @@ export function Scene() {
       </mesh>
       <gridHelper args={[60, 20, '#6b7d95', '#8fa0b5']} position={[0, 0.01, 0]} />
 
-      <mesh position={[3, 0.5, -1]}>
-        <boxGeometry args={[1.5, 1, 1.5]} />
-        <meshLambertMaterial color="#8a5a34" flatShading />
-      </mesh>
-      <mesh position={[-5, 0.75, -4]}>
-        <coneGeometry args={[0.8, 1.5, 5]} />
-        <meshLambertMaterial color="#3a5f4a" flatShading />
-      </mesh>
+      <Suspense fallback={null}>
+        <PocVillage />
+        <Player />
+      </Suspense>
 
-      <Player />
-
-      {import.meta.env.DEV && <Stats />}
+      {import.meta.env.DEV && (
+        <>
+          <Stats />
+          <RenderStatsProbe />
+        </>
+      )}
     </Canvas>
   );
 }
