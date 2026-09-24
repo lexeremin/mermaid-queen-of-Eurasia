@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 6 complete (Red Square map).** Direction change requested (summer overcast, real layout with detailed GUM and the real Alexander Garden). Next: **Phase 7 — Summer overcast look** (`docs/phases/phase-7.md`).
+**Phase 7 complete (summer overcast look).** Next: **Phase 8 — Real layout + detailed GUM** (`docs/phases/phase-8.md` — write it first, it does not exist yet).
 
 ---
 
@@ -65,7 +65,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-7.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-8.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -84,8 +84,8 @@ Read these files before starting any work:
 | Phase 4 — Village map | ✅ Complete | Terrain, river, houses, collision, forest entrance, Rosa movement/animation | 5b9feae. 16 assets total, instanced rendering, ~26 draw calls |
 | Phase 5 — Hero redesign + direction change | ✅ Complete | Person-based Rosa (stylized), mermaid as a transformation model, palette v2, docs for the Red Square setting | bd5e367. Consent + likeness rules in `docs/likeness-and-consent.md` |
 | Phase 6 — Red Square map | ✅ Complete | Replace the village: cathedral, Kremlin-style wall, GUM-style arcade, museum, cobblestone plaza, river + bridge, Alexander Garden entrance | b26d27f. Cobble tile texture; village-only assets retired; 19 assets, ~26 draw calls |
-| Phase 7 — Summer overcast look | ⬜ Next | Moody grey summer: atmosphere config, summer palette, assets rebuilt without snow, new trees, grass ground, Rosa warm light; docs for the singing Aura | Keeps the current layout; Phase 8 re-lays it out |
-| Phase 8 — Real layout + detailed GUM | ⬜ Todo | Red Square in real relative positions (Kremlin right, GUM left, cathedral far end, museum/Kazan/Resurrection Gate near end), detailed GUM facade, walkable GUM gallery under a translucent glass roof | Map rotated 180° from real north |
+| Phase 7 — Summer overcast look | ✅ Complete | Moody grey summer: atmosphere config, summer palette, assets rebuilt without snow, new trees, grass ground, Rosa warm light; docs for the singing Aura | 275e8a0. Keeps the Phase 6 layout |
+| Phase 8 — Real layout + detailed GUM | ⬜ Next | Red Square in real relative positions (Kremlin right, GUM left, cathedral far end, museum/Kazan/Resurrection Gate near end), detailed GUM facade, walkable GUM gallery under a translucent glass roof | Map rotated 180° from real north |
 | Phase 9 — Manezhnaya Square + Alexander Garden | ⬜ Todo | Through the Resurrection Gate: Manezhnaya Square, Kremlin north wall, the real Alexander Garden outside the west wall (Kutafya tower, grotto, obelisk, paths, lawns) | Same contiguous map |
 | Phase 10 — NPCs + dialogue | ⬜ Todo | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, heart-buff visual | |
 | Phase 11 — Save + Supabase | ⬜ Todo | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
