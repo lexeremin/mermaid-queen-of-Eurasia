@@ -372,3 +372,27 @@
   font-style: normal;
   font-weight: 700;
 }
+
+.pause-settings {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding-top: 12px;
+  border-top: 1px solid rgba(159, 216, 207, 0.35);
+}
+
+.pause-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.hud-btn.danger {
+  border-color: #ff8fa0;
+  color: #ffd3da;
+}

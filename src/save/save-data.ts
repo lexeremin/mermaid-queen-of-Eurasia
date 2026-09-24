@@ -1,0 +1,100 @@
+import { METHODS, type Method } from '@/data/dialogue-types';
+import { NPCS } from '@/data/npcs';
+import { clampRelationship } from '@/systems/relationship';
+
+export const SAVE_VERSION = 1;
+
+export type SavedNpc = { relationship: number; used: Method[]; joined: boolean };
+
+export type SaveData = {
+  version: number;
+  savedAt: string;
+  playSeconds: number;
+  hero: { form: 'human' | 'mermaid'; x: number; z: number; facingX: number; facingZ: number };
+  npcs: Record<string, SavedNpc>;
+};
+
+type Raw = Record<string, unknown>;
+export type Migrations = Readonly<Record<number, (data: Raw) => Raw>>;
+
+/** `MIGRATIONS[n]` upgrades a version-n save to version n + 1. Empty while the format is v1. */
+export const MIGRATIONS: Migrations = {};
+
+const isRecord = (value: unknown): value is Raw =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const finite = (value: unknown, fallback: number): number =>
+  typeof value === 'number' && Number.isFinite(value) ? value : fallback;
+
+const validDate = (value: unknown): string | null =>
+  typeof value === 'string' && !Number.isNaN(Date.parse(value)) ? value : null;
+
+/** Upgrades an older save step by step. Returns null for unknown or newer-than-supported versions. */
+export function migrateSave(
+  raw: unknown,
+  migrations: Migrations = MIGRATIONS,
+  target = SAVE_VERSION,
+): Raw | null {
+  if (!isRecord(raw)) return null;
+  let version = raw.version;
+  if (typeof version !== 'number' || !Number.isInteger(version) || version < 1 || version > target)
+    return null;
+  let data: Raw = raw;
+  while (version < target) {
+    const step = migrations[version];
+    if (!step) return null;
+    data = { ...step(data), version: version + 1 };
+    version += 1;
+  }
+  return data;
+}
+
+/** Turns untrusted data into a valid SaveData, or null if it is not a usable save. */
+export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): SaveData | null {
+  const data = migrateSave(raw, migrations);
+  if (!data) return null;
+  const savedAt = validDate(data.savedAt);
+  const hero = data.hero;
+  if (!savedAt || !isRecord(hero)) return null;
+
+  const npcs: Record<string, SavedNpc> = {};
+  if (isRecord(data.npcs)) {
+    for (const def of NPCS) {
+      const entry = data.npcs[def.id];
+      if (!isRecord(entry)) continue;
+      const used = Array.isArray(entry.used)
+        ? METHODS.filter((m) => (entry.used as unknown[]).includes(m))
+        : [];
+      npcs[def.id] = {
+        relationship: clampRelationship(finite(entry.relationship, def.initial)),
+        used,
+        joined: entry.joined === true,
+      };
+    }
+  }
+
+  return {
+    version: SAVE_VERSION,
+    savedAt,
+    playSeconds: Math.max(0, finite(data.playSeconds, 0)),
+    hero: {
+      form: hero.form === 'mermaid' ? 'mermaid' : 'human',
+      x: finite(hero.x, NaN),
+      z: finite(hero.z, NaN),
+      facingX: finite(hero.facingX, 0),
+      facingZ: finite(hero.facingZ, 1),
+    },
+    npcs,
+  };
+}
+
+/** Which of two saves to keep: the newer one; ties keep the local one. */
+export function pickNewer(
+  local: SaveData | null,
+  cloud: SaveData | null,
+): 'local' | 'cloud' | 'none' {
+  if (!local && !cloud) return 'none';
+  if (!cloud) return 'local';
+  if (!local) return 'cloud';
+  return Date.parse(cloud.savedAt) > Date.parse(local.savedAt) ? 'cloud' : 'local';
+}

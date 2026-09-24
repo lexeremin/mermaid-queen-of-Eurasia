@@ -9,6 +9,7 @@ export type NpcRuntime = { relationship: number; used: readonly Method[]; joined
 type NpcState = {
   npcs: Readonly<Record<string, NpcRuntime>>;
   apply: (effect: Effect) => void;
+  hydrate: (saved: Readonly<Record<string, NpcRuntime>>) => void;
   reset: () => void;
 };
 
@@ -18,6 +19,7 @@ const initial = (): Record<string, NpcRuntime> =>
 export const useNpcStore = create<NpcState>((set) => ({
   npcs: initial(),
   reset: () => set({ npcs: initial() }),
+  hydrate: (saved) => set({ npcs: { ...initial(), ...saved } }),
   apply: (effect) =>
     set((state) => {
       const current = state.npcs[effect.npc];

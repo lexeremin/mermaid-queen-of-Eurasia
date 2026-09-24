@@ -3,6 +3,7 @@ import { NPC_BY_ID } from '@/data/npcs';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { DialogueBox } from '@/ui/DialogueBox';
+import { PauseSettings } from '@/ui/PauseSettings';
 import { TouchControls } from '@/ui/TouchControls';
 import { useTouchDevice } from '@/ui/use-touch-device';
 import '@/ui/hud.css';
@@ -72,6 +73,7 @@ export function Hud() {
             <button type="button" className="hud-btn big" onClick={togglePause}>
               RESUME
             </button>
+            <PauseSettings />
           </div>
         </div>
       )}
