@@ -56,7 +56,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 0 complete (docs bootstrap).** Next: **Phase 1 — Project scaffold** (`docs/phases/phase-1.md`).
+**Phase 1 complete (project scaffold).** Next: **Phase 2 — Engine core** (`docs/phases/phase-2.md` — write it first, it does not exist yet).
 
 ---
 
@@ -64,7 +64,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-1.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-2.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -77,8 +77,8 @@ Read these files before starting any work:
 | Phase | Status | Outcome | Notes |
 |---|---|---|---|
 | Phase 0 — Docs bootstrap | ✅ Complete | Description.md rewritten, /docs created | 9f8d3c8 |
-| Phase 1 — Project scaffold | ⬜ Next | Vite + React + TS strict, R3F, Zustand, lint/format, Vitest, folder layout, runs locally | |
-| Phase 2 — Engine core | ⬜ Todo | Fixed top-down camera, game loop, input (WASD + mouse aim, touch joystick + buttons), pause, responsive/safe-area layout | |
+| Phase 1 — Project scaffold | ✅ Complete | Vite + React + TS strict, R3F, Zustand, lint/format, Vitest, folder layout, runs locally | 796bd60 |
+| Phase 2 — Engine core | ⬜ Next | Fixed top-down camera, game loop, input (WASD + mouse aim, touch joystick + buttons), pause, responsive/safe-area layout | |
 | Phase 3 — Asset pipeline PoC | ⬜ Todo | Blender MCP end to end: Rosa placeholder, one house, one tree → GLB under budget, retro texture pass, licence ledger | Validates style + perf before content |
 | Phase 4 — Village map | ⬜ Todo | Terrain, river, houses, collision, forest entrance, Rosa movement/animation | |
 | Phase 5 — NPCs + dialogue | ⬜ Todo | 8 NPCs, dialogue, tap/E interact, relationships, Mermaid Aura persuasion | |
