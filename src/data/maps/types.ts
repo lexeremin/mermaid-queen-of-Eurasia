@@ -28,6 +28,11 @@ export type Water = {
 
 export type NpcSpot = { id: string; x: number; z: number; rotY: number };
 
+export type GatherKind = 'roseHip' | 'moonMint' | 'pearl';
+
+/** A herb plant (regrows) or a hidden pearl (taken once ever). */
+export type Gatherable = { id: string; kind: GatherKind; x: number; z: number };
+
 export type EnemySpawn = { id: string; kind: EnemyKind; x: number; z: number };
 
 export type MapData = {
@@ -42,6 +47,7 @@ export type MapData = {
   zones: readonly Zone[];
   npcs: readonly NpcSpot[];
   enemies: readonly EnemySpawn[];
+  gatherables?: readonly Gatherable[];
   /** Colored ground rectangles (e.g. interior floors). */
   floors?: readonly { cx: number; cz: number; w: number; d: number; color: string; y?: number }[];
   /** Translucent glass roofs. */

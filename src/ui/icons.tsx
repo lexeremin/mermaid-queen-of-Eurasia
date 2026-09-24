@@ -240,6 +240,55 @@ const ITEM_ICONS: Record<ItemId, ReactNode> = {
       />
     </>
   ),
+  roseHip: (
+    <>
+      <path d="M24 10 Q22 4 16 4 Q18 9 21 10" fill="#78c777" {...line} />
+      <path d="M24 10 Q28 5 34 7 Q31 11 27 11" fill="#5fb865" {...line} />
+      <ellipse cx="15" cy="30" rx="8" ry="9.5" fill="#ff7a90" {...line} />
+      <ellipse cx="32" cy="27" rx="9" ry="10.5" fill="#f0506a" {...line} />
+      <path
+        d="M11 26 Q12 22 16 21"
+        fill="none"
+        stroke="#ffd0d8"
+        strokeWidth={2.2}
+        strokeLinecap="round"
+      />
+      <path
+        d="M28 22 Q29 18 33 17"
+        fill="none"
+        stroke="#ffd0d8"
+        strokeWidth={2.2}
+        strokeLinecap="round"
+      />
+      <path d="M27 17 Q24 12 24 10" fill="none" {...line} strokeWidth={2} />
+      <circle cx="15" cy="39.5" r="1.4" fill={INK} />
+      <circle cx="32" cy="37.5" r="1.4" fill={INK} />
+      <Sparkle x={41} y={12} s={2} />
+    </>
+  ),
+  moonMint: (
+    <>
+      <path d="M24 44 V22" stroke={INK} strokeWidth={5.4} strokeLinecap="round" />
+      <path d="M24 44 V22" stroke="#66c29a" strokeWidth={2.6} strokeLinecap="round" />
+      <path d="M24 24 Q10 22 8 10 Q22 8 24 24 Z" fill="#8fe3c4" {...line} />
+      <path d="M24 24 Q38 22 40 10 Q26 8 24 24 Z" fill="#8fe3c4" {...line} />
+      <path d="M24 36 Q13 35 11 26 Q22 24 24 36 Z" fill="#6fd0aa" {...line} />
+      <path d="M24 36 Q35 35 37 26 Q26 24 24 36 Z" fill="#6fd0aa" {...line} />
+      <path
+        d="M14 15 Q17 15 19 19 M34 15 Q31 15 29 19"
+        fill="none"
+        stroke="#e6fff5"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      />
+      <path
+        d="M38 26 a5 5 0 1 0 5 7 a4 4 0 0 1 -5 -7 Z"
+        fill="#fff8d6"
+        {...line}
+        strokeWidth={1.6}
+      />
+    </>
+  ),
   pearl: (
     <>
       <path d="M5 30 Q5 14 24 14 Q43 14 43 30 Q43 42 24 42 Q5 42 5 30 Z" fill="#ffc6dc" {...line} />

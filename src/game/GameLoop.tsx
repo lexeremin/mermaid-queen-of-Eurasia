@@ -6,6 +6,7 @@ import { playAuraSong, stopVoice } from '@/audio/voice';
 import { combat } from '@/game/combat-sim';
 import { loot, spawnDrops } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
+import { prayAtShrine, stepGather } from '@/game/garden-actions';
 import { onEnemyDefeatedForQuests } from '@/game/quest-actions';
 import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
@@ -21,7 +22,7 @@ import { nav } from '@/game/world/nav';
 import { clearPressed, consumePressed, getMove, input } from '@/input/input-state';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { useNpcStore } from '@/store/npc-store';
-import { isSimRunning, useGameStore } from '@/store/game-store';
+import { isSimRunning, useGameStore, type PlaceId } from '@/store/game-store';
 import { currentMap, currentWorld } from '@/game/world/current-map';
 import { PLAYER_SPEED, stepPlayer } from '@/systems/movement';
 import { findPath, steerAlongPath } from '@/systems/pathfinding';
@@ -42,10 +43,20 @@ const raycaster = new Raycaster();
 const stepper = createFixedStepper(SIM_STEP, MAX_STEPS_PER_FRAME);
 const STUCK_SECONDS = 0.5;
 const SPOTS = currentMap.npcs;
-const BOARD_ID = 'board';
-const BOARDS = currentMap.placements
-  .filter((p) => p.asset === 'questBoard')
-  .map((p) => ({ id: BOARD_ID, x: p.x, z: p.z }));
+const PLACE_OF_ASSET = new Map<string, PlaceId>([
+  ['questBoard', 'board'],
+  ['shrine', 'shrine'],
+]);
+/** Things Rosa can walk up to and use: the notice board and the Pearl Shrine. */
+const PLACES = currentMap.placements.flatMap((p) => {
+  const id = PLACE_OF_ASSET.get(p.asset);
+  return id ? [{ id, x: p.x, z: p.z }] : [];
+});
+
+function visitPlace(id: string): void {
+  if (id === 'board') useGameStore.getState().openQuestPanel('board');
+  else if (id === 'shrine') prayAtShrine();
+}
 const NPC_TARGETS = currentMap.npcs.map((n) => ({ id: n.id, pos: { x: n.x, z: n.z } }));
 const STUCK_SPEED_FRACTION = 0.25;
 
@@ -121,10 +132,11 @@ export function GameLoop() {
         useDialogueStore.getState().open(near.id);
         return;
       }
-      if (nearestTalkable(BOARDS, sim.curr.pos)) {
+      const place = nearestTalkable(PLACES, sim.curr.pos);
+      if (place) {
         sim.path = [];
         sim.talkTo = null;
-        useGameStore.getState().openQuestPanel('board');
+        visitPlace(place.id);
         return;
       }
     }
@@ -149,20 +161,20 @@ export function GameLoop() {
           }
           sim.talkTo = npc.id;
           walkTo(approachPoint(npc, sim.curr.pos));
-        } else if (npcAtPoint(BOARDS, target)) {
-          const board = npcAtPoint(BOARDS, target);
+        } else if (npcAtPoint(PLACES, target)) {
+          const place = npcAtPoint(PLACES, target);
           if (
-            board &&
-            Math.hypot(board.x - sim.curr.pos.x, board.z - sim.curr.pos.z) <= TALK_RANGE
+            place &&
+            Math.hypot(place.x - sim.curr.pos.x, place.z - sim.curr.pos.z) <= TALK_RANGE
           ) {
             sim.path = [];
             sim.talkTo = null;
-            useGameStore.getState().openQuestPanel('board');
+            visitPlace(place.id);
             return;
           }
-          if (board) {
-            sim.talkTo = BOARD_ID;
-            walkTo(approachPoint(board, sim.curr.pos));
+          if (place) {
+            sim.talkTo = place.id;
+            walkTo(approachPoint(place, sim.curr.pos));
           }
         } else if (!click.touch) {
           sim.talkTo = null;
@@ -225,6 +237,7 @@ export function GameLoop() {
       } else {
         sim.stuckTime = 0;
       }
+      stepGather(dt, sim.curr.pos);
       const picked = stepPickups(loot.pickups, sim.curr.pos, dt, tryCollect);
       loot.pickups = picked.pickups;
       if (picked.blocked.length > 0) warnBagFull();
@@ -241,15 +254,15 @@ export function GameLoop() {
     const nearId = near?.id ?? null;
     if (nearId !== store.nearbyNpc) store.setNearbyNpc(nearId);
 
-    const nearBoard = nearestTalkable(BOARDS, sim.curr.pos) !== null;
-    if (nearBoard !== store.nearBoard) store.setNearBoard(nearBoard);
+    const nearPlace = (nearestTalkable(PLACES, sim.curr.pos)?.id ?? null) as PlaceId | null;
+    if (nearPlace !== store.nearPlace) store.setNearPlace(nearPlace);
 
     if (sim.talkTo && sim.path.length === 0) {
       const target = spots.find((n) => n.id === sim.talkTo);
-      const toBoard = sim.talkTo === BOARD_ID;
+      const wanted = sim.talkTo;
       sim.talkTo = null;
       if (target && nearId === target.id) useDialogueStore.getState().open(target.id);
-      else if (toBoard && nearBoard) useGameStore.getState().openQuestPanel('board');
+      else if (!target && nearPlace === wanted) visitPlace(wanted);
     }
   });
 

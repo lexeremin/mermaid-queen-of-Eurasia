@@ -33,7 +33,7 @@ export function grantXp(amount: number, label?: string): void {
 }
 
 /** One-time XP for a milestone, keyed so reloads and cloud pulls cannot award it twice. */
-function awardOnce(key: string, amount: number, label: string): void {
+export function awardOnce(key: string, amount: number, label: string): void {
   const result = useProgressStore.getState().award(key, amount);
   if (!result.awarded) return;
   toast(`+${amount} XP  ${label}`, 'xp');

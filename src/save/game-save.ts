@@ -6,7 +6,9 @@ import { parseSave, SAVE_VERSION, type SaveData } from '@/save/save-data';
 import { isSimRunning, useGameStore } from '@/store/game-store';
 import { useNpcStore, type NpcRuntime } from '@/store/npc-store';
 import { useProgressStore, currentStats } from '@/store/progress-store';
+import { useGardenStore } from '@/store/garden-store';
 import { useQuestStore } from '@/store/quest-store';
+import { rebuildGather } from '@/game/gather-sim';
 import { resolveCircle } from '@/systems/collision';
 import { PLAYER_RADIUS } from '@/systems/movement';
 
@@ -46,6 +48,10 @@ export function collectSave(): SaveData {
     npcs,
     progress: collectProgress(),
     quests: collectQuests(),
+    garden: {
+      pearlsTaken: [...useGardenStore.getState().pearlsTaken],
+      shrineGift: useGardenStore.getState().shrineGift,
+    },
   };
 }
 
@@ -94,6 +100,11 @@ export function applySave(save: SaveData): void {
   useQuestStore
     .getState()
     .hydrate({ active: save.quests.active, completed: save.quests.completed });
+  useGardenStore.getState().hydrate({
+    pearlsTaken: [...save.garden.pearlsTaken],
+    shrineGift: save.garden.shrineGift,
+  });
+  rebuildGather();
   useNpcStore.getState().hydrate(npcs);
   useGameStore.getState().setForm(save.hero.form);
   playSeconds = save.playSeconds;
@@ -137,6 +148,8 @@ export function resetProgress(): void {
   playSeconds = 0;
   useProgressStore.getState().reset();
   useQuestStore.getState().reset();
+  useGardenStore.getState().reset();
+  rebuildGather();
   useNpcStore.getState().reset();
   useGameStore.getState().setForm('human');
   resetSim();
@@ -161,6 +174,7 @@ export function startPersistence(): void {
   });
   useProgressStore.subscribe(scheduleSave);
   useQuestStore.subscribe(scheduleSave);
+  useGardenStore.subscribe(scheduleSave);
 
   window.setInterval(() => {
     if (isSimRunning(useGameStore.getState()) && !document.hidden)

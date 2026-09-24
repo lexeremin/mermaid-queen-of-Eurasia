@@ -1,12 +1,13 @@
 import { METHODS, type Method } from '@/data/dialogue-types';
 import { NPCS } from '@/data/npcs';
 import { QUEST_BY_ID } from '@/data/quests';
+import { RED_SQUARE } from '@/data/maps/red-square';
 import { ITEMS, STARTER_EQUIPMENT, isItemId, type EquipSlot, type ItemId } from '@/data/items';
 import { BAG_SIZE } from '@/systems/inventory';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 export type SavedNpc = {
   relationship: number;
@@ -28,6 +29,8 @@ export type SavedQuests = {
   completed: string[];
 };
 
+export type SavedGarden = { pearlsTaken: string[]; shrineGift: boolean };
+
 export type SaveData = {
   version: number;
   savedAt: string;
@@ -36,6 +39,7 @@ export type SaveData = {
   npcs: Record<string, SavedNpc>;
   progress: SavedProgress;
   quests: SavedQuests;
+  garden: SavedGarden;
 };
 
 type Raw = Record<string, unknown>;
@@ -45,7 +49,10 @@ export type Migrations = Readonly<Record<number, (data: Raw) => Raw>>;
 export const MIGRATIONS: Migrations = {
   1: (data) => ({ ...data, progress: defaultSavedProgress() }),
   2: (data) => ({ ...data, quests: defaultSavedQuests() }),
+  3: (data) => ({ ...data, garden: defaultSavedGarden() }),
 };
+
+export const defaultSavedGarden = (): SavedGarden => ({ pearlsTaken: [], shrineGift: false });
 
 export const defaultSavedQuests = (): SavedQuests => ({ active: {}, completed: [] });
 
@@ -126,6 +133,24 @@ function parseProgress(raw: unknown): SavedProgress {
   return { level, xp, awarded, bag, equipment };
 }
 
+const PEARL_IDS: ReadonlySet<string> = new Set(
+  (RED_SQUARE.gatherables ?? []).filter((g) => g.kind === 'pearl').map((g) => g.id),
+);
+
+function parseGarden(raw: unknown): SavedGarden {
+  const result = defaultSavedGarden();
+  if (!isRecord(raw)) return result;
+  if (Array.isArray(raw.pearlsTaken)) {
+    result.pearlsTaken = [
+      ...new Set(
+        raw.pearlsTaken.filter((id): id is string => typeof id === 'string' && PEARL_IDS.has(id)),
+      ),
+    ];
+  }
+  result.shrineGift = raw.shrineGift === true;
+  return result;
+}
+
 function parseQuests(raw: unknown): SavedQuests {
   const result = defaultSavedQuests();
   if (!isRecord(raw)) return result;
@@ -198,6 +223,7 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
     npcs,
     progress: parseProgress(data.progress),
     quests: parseQuests(data.quests),
+    garden: parseGarden(data.garden),
   };
 }
 

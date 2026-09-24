@@ -14,7 +14,7 @@ const RECONNECT_BASE_MS = 30_000;
 const RECONNECT_MAX_MS = 600_000;
 
 const progressKey = (save: SaveData): string =>
-  JSON.stringify([save.hero.form, save.npcs, save.progress, save.quests]);
+  JSON.stringify([save.hero.form, save.npcs, save.progress, save.quests, save.garden]);
 
 /**
  * Cloud sync: anonymous sign-in, pull the newer save, push progress, flush stats.

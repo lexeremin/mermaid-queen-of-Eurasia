@@ -59,20 +59,22 @@ describe('ranks and reputation', () => {
   it('can reach every rank in order, so no quest is permanently locked', () => {
     let log = emptyLog();
     let joined = 0;
-    const doneRank = () => rankIndex(reputation(log, joined));
-    const finish = (id: string) => {
-      log = { active: {}, completed: [...log.completed, id] };
-    };
-    for (let rank = 0; rank < RANKS.length - 1; rank++) {
+    const rankNow = () => rankIndex(reputation(log, joined));
+    let rounds = 0;
+    while (log.completed.length < QUESTS.length) {
       const available = QUESTS.filter(
-        (q) => q.minRank <= doneRank() && !log.completed.includes(q.id),
+        (q) => q.minRank <= rankNow() && !log.completed.includes(q.id),
       );
-      expect(available.length, `stuck at rank ${rank}`).toBeGreaterThan(0);
-      available.forEach((q) => finish(q.id));
+      expect(available.length, `stuck at rank ${rankNow()} after ${rounds} rounds`).toBeGreaterThan(
+        0,
+      );
+      log = { active: {}, completed: [...log.completed, ...available.map((q) => q.id)] };
       joined = Math.min(NPCS.length, joined + 2);
+      rounds += 1;
     }
-    const total = reputation(log, NPCS.length);
-    expect(total).toBeGreaterThanOrEqual(RANKS[RANKS.length - 1]?.min ?? Infinity);
+    expect(reputation(log, NPCS.length)).toBeGreaterThanOrEqual(
+      RANKS[RANKS.length - 1]?.min ?? Infinity,
+    );
   });
 
   it('gives the first tier enough reputation to unlock rank 1 without any recruits', () => {

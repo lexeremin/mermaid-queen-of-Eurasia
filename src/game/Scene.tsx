@@ -8,6 +8,7 @@ import { ClickMarker } from '@/game/entities/ClickMarker';
 import { CombatEffects } from '@/game/entities/CombatEffects';
 import { CompanionActor } from '@/game/entities/CompanionActor';
 import { EnemyActors } from '@/game/entities/EnemyActors';
+import { Gatherables } from '@/game/entities/Gatherables';
 import { Pickups } from '@/game/entities/Pickups';
 import { Player } from '@/game/entities/Player';
 import { MapScene } from '@/game/world/MapScene';
@@ -48,6 +49,7 @@ export function Scene() {
         <ClickMarker />
         <EnemyActors />
         <Pickups />
+        <Gatherables />
         <CombatEffects />
       </Suspense>
 

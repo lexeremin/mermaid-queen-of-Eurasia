@@ -3,7 +3,7 @@ import type { ItemId } from '@/data/items';
 
 export type Objective =
   | { kind: 'kill'; count: number; enemy?: EnemyKind }
-  | { kind: 'visit'; zones: readonly string[] }
+  | { kind: 'visit'; zones: readonly string[]; label: string }
   | { kind: 'mesmerize'; npc: string }
   | { kind: 'recruit'; count: number }
   | { kind: 'collect'; item: ItemId; count: number }
@@ -81,7 +81,13 @@ export const QUESTS: readonly QuestDef[] = [
     title: 'The Grand Tour',
     blurb: 'Show yourself in GUM, on Manezhnaya Square and in Alexander Garden.',
     minRank: 1,
-    objectives: [{ kind: 'visit', zones: ['gum', 'manezh', 'alexander-garden'] }],
+    objectives: [
+      {
+        kind: 'visit',
+        zones: ['gum', 'manezh', 'alexander-garden'],
+        label: 'Visit GUM, Manezhnaya Square and Alexander Garden',
+      },
+    ],
     reward: { xp: 50, rep: 12, items: [{ id: 'amberPendant', qty: 1 }] },
   },
   {
@@ -107,6 +113,41 @@ export const QUESTS: readonly QuestDef[] = [
     minRank: 3,
     objectives: [{ kind: 'recruit', count: 8 }],
     reward: { xp: 150, rep: 25, items: [{ id: 'songbirdWhistle', qty: 1 }] },
+  },
+  {
+    id: 'herbalist-of-the-garden',
+    title: 'Herbalist of the Garden',
+    blurb:
+      'The garden grows what the square cannot buy. Gather three rose hips and three moon mint.',
+    minRank: 1,
+    objectives: [
+      { kind: 'collect', item: 'roseHip', count: 3 },
+      { kind: 'collect', item: 'moonMint', count: 3 },
+    ],
+    reward: { xp: 60, rep: 12, items: [{ id: 'healingTea', qty: 3 }] },
+  },
+  {
+    id: 'the-hidden-shrine',
+    title: 'The Hidden Shrine',
+    blurb: 'Gardeners whisper of a shrine behind the hedges in the far north-east corner. Find it.',
+    minRank: 1,
+    objectives: [{ kind: 'visit', zones: ['pearl-shrine'], label: 'Find the Pearl Shrine' }],
+    reward: { xp: 50, rep: 10, items: [{ id: 'coldKvass', qty: 2 }] },
+  },
+  {
+    id: 'thin-the-thorns',
+    title: 'Thin the Thorns',
+    blurb: 'The garden paths are thick with gloomy men. Send six of them home.',
+    minRank: 1,
+    objectives: [{ kind: 'kill', count: 6 }],
+    reward: {
+      xp: 80,
+      rep: 14,
+      items: [
+        { id: 'healingTea', qty: 2 },
+        { id: 'coldKvass', qty: 1 },
+      ],
+    },
   },
 ];
 

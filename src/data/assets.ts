@@ -67,6 +67,7 @@ export const ASSETS = {
   shopHerbs: { url: '/assets/bld/bld_shop_herbs.glb', clips: [], footprint: [box(1.95, 1.55)] },
   questBoard: { url: '/assets/prop/prop_questboard.glb', clips: [], footprint: [box(1.1, 0.25)] },
   obelisk: { url: '/assets/prop/prop_obelisk.glb', clips: [], footprint: [circle(1.3)] },
+  shrine: { url: '/assets/bld/bld_shrine.glb', clips: [], footprint: [circle(1.5)] },
   hedge: { url: '/assets/prop/prop_hedge.glb', clips: [], footprint: [box(1.0, 0.35)] },
   fountain: { url: '/assets/prop/prop_fountain.glb', clips: [], footprint: [circle(2.75)] },
   kiosk: { url: '/assets/prop/prop_kiosk.glb', clips: [], footprint: [box(0.95, 0.95)] },

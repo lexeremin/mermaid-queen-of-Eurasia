@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 14 complete (quests + kingdom).** Next: **Phase 15 — Alexander Garden content** (`docs/phases/phase-15.md` — write it first, it does not exist yet).
+**Phase 15 complete (Alexander Garden content).** Next: **Phase 16 — Moscow underground + boss** (`docs/phases/phase-16.md` — write it first, it does not exist yet).
 
 ---
 
@@ -65,7 +65,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-15.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-16.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -96,8 +96,8 @@ Read these files before starting any work:
 | Phase 14 — Quests + kingdom | ✅ Complete | Notice board, 9 quests, quest log and tracker, derived kingdom reputation and ranks, save v3 | 4ad2b76 |
 | Phase 14b — Renames, Prince Sasha, spell looks, icons | ✅ Complete | Prince Sasha (handsome prince, next to the start), enemy renames, trident swing, mermaid form during Aura and Surge, sea-wave Surge, bubble-teleport Dash, cute ability and item icons | 59a0f83 |
 | Phase 14c — Companion, voice, menu | ✅ Complete | Prince Sasha likeness and companion (follow option, sword, fights beside Rosa), moved Sergey and Maksim, Rosa's voice (attacks, special attacks, sung Aura) from the songs folder, menu with animated mermaid, title and GitHub link | dcfb5fe |
-| Phase 15 — Alexander Garden content | ⬜ Next | Herbs, pearls, monsters, hidden shrine in the garden | |
-| Phase 16 — Moscow underground + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight | |
+| Phase 15 — Alexander Garden content | ✅ Complete | 12 herbs that regrow, 5 hidden pearls, 7 more monsters, the hidden Pearl Shrine (one-time gift, then heals), quests 10–12, save v4 | HASH15 |
+| Phase 16 — Moscow underground + boss | ⬜ Next | 3 rooms, loot, boss arena + fight | |
 | Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
 | Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings (hero X-ray silhouette already done in Phase 8) | |
 | Phase 19 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |

@@ -78,7 +78,7 @@ export function objectiveState(
     case 'visit': {
       need = objective.zones.length;
       have = objective.zones.filter((z) => progress.visited.includes(z)).length;
-      text = 'Visit GUM, Manezhnaya Square and Alexander Garden';
+      text = objective.label;
       break;
     }
     case 'mesmerize':

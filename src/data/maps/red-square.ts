@@ -146,7 +146,17 @@ const manezhnaya: Placement[] = [
   { asset: 'firTub', x: 43, z: 40 },
 ];
 
+// The hidden Pearl Shrine: a hedge nook in the north-east corner with a 1.6 m gap on its south side.
+const SHRINE = { x: 59.4, z: -27.5 };
+const shrineNook: Placement[] = [
+  { asset: 'shrine', x: SHRINE.x, z: SHRINE.z },
+  ...[-28.7, -26.7, -24.7].map((z) => ({ asset: 'hedge' as const, x: 56.5, z, rotY: HALF_PI })),
+  { asset: 'hedge', x: 57.6, z: -23.5 },
+  { asset: 'hedge', x: 61.2, z: -23.5 },
+];
+
 const alexanderGarden: Placement[] = [
+  ...shrineNook,
   { asset: 'gardenGate', x: PROMENADE_X, z: 40 },
   { asset: 'firTub', x: 49.8, z: 41.5 },
   { asset: 'firTub', x: 56.2, z: 41.5 },
@@ -280,8 +290,35 @@ export const RED_SQUARE: MapData = {
     { id: 'tycoon-garden-1', kind: 'tycoon', x: 52, z: -25 },
     { id: 'demagogue-garden', kind: 'demagogue', x: 53.5, z: -23.5 },
     { id: 'tycoon-garden-2', kind: 'tycoon', x: 52, z: 20 },
+    { id: 'tycoon-garden-3', kind: 'tycoon', x: 60, z: 22.5 },
+    { id: 'demagogue-garden-2', kind: 'demagogue', x: 60.5, z: 16.5 },
+    { id: 'speaker-garden-1', kind: 'speaker', x: 50, z: -20 },
+    { id: 'tycoon-garden-4', kind: 'tycoon', x: 49.5, z: -27.5 },
+    { id: 'speaker-garden-2', kind: 'speaker', x: 55.5, z: 24 },
+    { id: 'speaker-shrine', kind: 'speaker', x: 57.6, z: -21.2 },
+    { id: 'demagogue-shrine', kind: 'demagogue', x: 60.6, z: -21 },
+  ],
+  gatherables: [
+    { id: 'rose-1', kind: 'roseHip', x: 50, z: -14 },
+    { id: 'rose-2', kind: 'roseHip', x: 57, z: -13.2 },
+    { id: 'rose-3', kind: 'roseHip', x: 49.6, z: 4.4 },
+    { id: 'rose-4', kind: 'roseHip', x: 56.4, z: -2 },
+    { id: 'rose-5', kind: 'roseHip', x: 57, z: 19.4 },
+    { id: 'rose-6', kind: 'roseHip', x: 52.4, z: -24.5 },
+    { id: 'mint-1', kind: 'moonMint', x: 48.2, z: -5.6 },
+    { id: 'mint-2', kind: 'moonMint', x: 48.4, z: 8.8 },
+    { id: 'mint-3', kind: 'moonMint', x: 50.6, z: 22.6 },
+    { id: 'mint-4', kind: 'moonMint', x: 56, z: -19 },
+    { id: 'mint-5', kind: 'moonMint', x: 60, z: -8 },
+    { id: 'mint-6', kind: 'moonMint', x: 60.4, z: -1.4 },
+    { id: 'pearl-1', kind: 'pearl', x: 57, z: 15.6 },
+    { id: 'pearl-2', kind: 'pearl', x: 52.6, z: 13.6 },
+    { id: 'pearl-3', kind: 'pearl', x: 61, z: -11 },
+    { id: 'pearl-4', kind: 'pearl', x: 48.3, z: -27.5 },
+    { id: 'pearl-5', kind: 'pearl', x: 61, z: 23.6 },
   ],
   zones: [
+    { id: 'pearl-shrine', label: 'Pearl Shrine', box: { cx: 59.3, cz: -27, hx: 2.7, hz: 3.2 } },
     { id: 'gum', label: 'GUM', box: { cx: GALLERY_X, cz: 0, hx: 4.6, hz: 27 } },
     { id: 'manezh', label: 'Manezhnaya Square', box: { cx: 25, cz: 56.75, hx: 20, hz: 20 } },
     {

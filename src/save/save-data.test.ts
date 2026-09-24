@@ -299,3 +299,32 @@ describe('save: companion following flag', () => {
     expect(save.npcs.mikhalych?.following).toBe(false);
   });
 });
+
+describe('save v4: garden', () => {
+  it('migrates a v3 save to an empty garden', () => {
+    const save = parseSave(
+      good({ version: 3, progress: defaultSavedProgress(), quests: { active: {}, completed: [] } }),
+    )!;
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.garden).toEqual({ pearlsTaken: [], shrineGift: false });
+  });
+
+  it('keeps known pearls and the gift flag, drops everything else', () => {
+    const save = parseSave(
+      good({
+        garden: { pearlsTaken: ['pearl-1', 'pearl-1', 'rose-1', 'nope', 3], shrineGift: true },
+      }),
+    )!;
+    expect(save.garden.pearlsTaken).toEqual(['pearl-1']);
+    expect(save.garden.shrineGift).toBe(true);
+  });
+
+  it('survives hostile garden data', () => {
+    for (const bad of [null, 4, 'x', [], { pearlsTaken: 'all', shrineGift: 'yes' }]) {
+      expect(parseSave(good({ garden: bad }))!.garden).toEqual({
+        pearlsTaken: [],
+        shrineGift: false,
+      });
+    }
+  });
+});

@@ -1,4 +1,4 @@
-"""Manezhnaya Square and Alexander Garden (Phase 9): Kutafya-style tower, Manege-style hall, grotto, obelisk, hedge.
+"""Manezhnaya Square and Alexander Garden (Phases 9 and 15): Kutafya-style tower, Manege-style hall, grotto, obelisk, hedge, pearl shrine.
 
 Exec after lib.py and build_redsquare_assets.py in the same namespace (uses _done, _seams).
     ns["build_all_garden"]()
@@ -99,5 +99,38 @@ def build_hedge():
     return _done("prop_hedge", p)
 
 
+def build_shrine():
+    """The hidden Pearl Shrine (Phase 15): stone circle, two pillars with a rose arch, a scallop-shell altar holding a
+    glowing pearl. Front faces -Y (game +Z). Fits a circle of radius about 2 m."""
+    clear_scene()
+    p = Part("bld_shrine")
+    p.cone(2.0, 1.9, 0.25, (0, 0, 0.125), "stone", segments=12)
+    p.cone(1.6, 1.5, 0.22, (0, 0, 0.36), "cobble_light", segments=12)
+    p.box((1.4, 0.5, 0.14), (0, -1.75, 0.07), "stone")
+    p.box((1.0, 0.4, 0.14), (0, -1.55, 0.2), "cobble_light")
+    for x in (-1.15, 1.15):
+        p.box((0.6, 0.6, 0.2), (x, 0.3, 0.55), "stone")
+        p.cone(0.24, 0.2, 2.5, (x, 0.3, 1.9), "ivory", segments=8)
+        p.box((0.5, 0.5, 0.16), (x, 0.3, 3.2), "stone")
+        for z, c in ((0.9, "rose"), (1.5, "leaf"), (2.1, "rose"), (2.7, "leaf")):
+            p.box((0.14, 0.14, 0.14), (x + (0.2 if x < 0 else -0.2), 0.05, z), c)
+    p.box((3.0, 0.5, 0.3), (0, 0.3, 3.45), "ivory")
+    p.box((0.5, 0.55, 0.42), (0, 0.3, 3.8), "stone")
+    p.cone(0.3, 0.02, 0.5, (0, 0.3, 4.25), "gold", segments=4)
+    for x, c in ((-0.9, "rose"), (-0.55, "blush"), (0.55, "blush"), (0.9, "rose"), (-0.2, "leaf"), (0.25, "leaf")):
+        p.box((0.2, 0.18, 0.22), (x, 0.05, 3.15 + 0.05 * math.sin(x * 9)), c)
+    p.cone(0.6, 0.42, 0.9, (0, 0.3, 0.85), "stone", segments=8)
+    p.cone(0.7, 0.5, 0.12, (0, 0.3, 1.36), "cobble_light", segments=8)
+    p.cone(0.62, 0.14, 0.5, (0, 0.3, 1.66), "blush", segments=7)
+    for k in range(7):
+        a = (k - 3) * 0.42
+        p.box((0.07, 0.5, 0.05), (0.5 * math.sin(a), 0.3 - 0.42 * math.cos(a) * 0.55, 1.62), "pearl", rot=(-0.5, 0, a))
+    p.cone(0.3, 0.02, 0.3, (0, 0.3, 2.1), "pearl", segments=8)
+    p.cone(0.02, 0.3, 0.3, (0, 0.3, 1.8), "pearl", segments=8)
+    for dx, dz in ((0.42, 2.2), (-0.4, 1.95), (0.1, 2.5)):
+        p.box((0.06, 0.06, 0.06), (dx, 0.3, dz), "gold", rot=(0.4, 0.4, 0.4))
+    return _done("bld_shrine", p)
+
+
 def build_all_garden():
-    return [build_kutafya(), build_manege(), build_grotto(), build_obelisk(), build_hedge()]
+    return [build_kutafya(), build_manege(), build_grotto(), build_obelisk(), build_hedge(), build_shrine()]

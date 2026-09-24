@@ -1,4 +1,4 @@
-import { HIT, SWING, WAVE, bubbleBlips, swell, type SfxKind } from '@/audio/recipes';
+import { GATHER, HIT, SWING, WAVE, bubbleBlips, swell, type SfxKind } from '@/audio/recipes';
 import { getContext, log, soundEnabled } from '@/audio/engine';
 
 let noise: AudioBuffer | null = null;
@@ -117,11 +117,28 @@ function wave(ctx: AudioContext, t: number): void {
   }
 }
 
+function gatherChime(ctx: AudioContext, t: number): void {
+  GATHER.notes.forEach((freq, i) => {
+    const start = t + i * GATHER.gap;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.value = freq;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(GATHER.gain, start + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + GATHER.dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + GATHER.dur + 0.02);
+  });
+}
+
 const PLAYERS: Record<SfxKind, (ctx: AudioContext, t: number) => void> = {
   swing,
   hit,
   bubbles,
   wave,
+  gather: gatherChime,
 };
 
 /** Plays one of the synthesized sounds (no sample files needed). */

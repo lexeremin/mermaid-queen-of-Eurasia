@@ -1,6 +1,14 @@
 /** Parameters for the synthesized sounds. Pure data and math so it can be tested; `sfx.ts` plays them. */
 
-export type SfxKind = 'swing' | 'hit' | 'bubbles' | 'wave';
+export type SfxKind = 'swing' | 'hit' | 'bubbles' | 'wave' | 'gather';
+
+/** A soft two-note chime for picking up a herb or pearl. */
+export const GATHER = {
+  notes: [880, 1318.5] as readonly number[],
+  gap: 0.075,
+  dur: 0.22,
+  gain: 0.11,
+} as const;
 
 export const AURA_FILE = '/assets/audio/rosa_aura.mp3';
 /** The sung "ah" is kept quiet so it sits under the game rather than on top of it. */

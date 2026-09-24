@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { Zone } from '@/systems/zones';
 
 export type HeroForm = 'human' | 'mermaid';
+export type PlaceId = 'board' | 'shrine';
 export type QuestPanel = 'log' | 'board' | null;
 
 export type GameState = {
@@ -12,7 +13,8 @@ export type GameState = {
   dialogueOpen: boolean;
   downed: boolean;
   nearbyNpc: string | null;
-  nearBoard: boolean;
+  /** The notice board or shrine Rosa is close enough to use, if any. */
+  nearPlace: PlaceId | null;
   zone: Zone | null;
   form: HeroForm;
   setForm: (form: HeroForm) => void;
@@ -20,7 +22,7 @@ export type GameState = {
   setDialogueOpen: (open: boolean) => void;
   setDowned: (downed: boolean) => void;
   setNearbyNpc: (id: string | null) => void;
-  setNearBoard: (near: boolean) => void;
+  setNearPlace: (place: PlaceId | null) => void;
   openQuestPanel: (panel: 'log' | 'board') => void;
   closeQuestPanel: () => void;
   toggleQuestLog: () => void;
@@ -37,12 +39,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   dialogueOpen: false,
   downed: false,
   nearbyNpc: null,
-  nearBoard: false,
+  nearPlace: null,
   zone: null,
   setDialogueOpen: (dialogueOpen) => set({ dialogueOpen }),
   setDowned: (downed) => set({ downed }),
   setNearbyNpc: (nearbyNpc) => set({ nearbyNpc }),
-  setNearBoard: (nearBoard) => set({ nearBoard }),
+  setNearPlace: (nearPlace) => set({ nearPlace }),
   openQuestPanel: (questPanel) =>
     set((s) => (s.paused || s.dialogueOpen || s.downed ? s : { questPanel, inventoryOpen: false })),
   closeQuestPanel: () => set({ questPanel: null }),

@@ -1,5 +1,6 @@
 import { useGameStore } from '@/store/game-store';
 import { NPC_BY_ID } from '@/data/npcs';
+import { prayAtShrine } from '@/game/garden-actions';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
@@ -20,7 +21,7 @@ export function Hud() {
   const paused = useGameStore((s) => s.paused);
   const inventoryOpen = useGameStore((s) => s.inventoryOpen);
   const questPanel = useGameStore((s) => s.questPanel);
-  const nearBoard = useGameStore((s) => s.nearBoard);
+  const nearPlace = useGameStore((s) => s.nearPlace);
   const openQuestPanel = useGameStore((s) => s.openQuestPanel);
   const toggleQuestLog = useGameStore((s) => s.toggleQuestLog);
   const zone = useGameStore((s) => s.zone);
@@ -60,9 +61,19 @@ export function Hud() {
         </button>
       )}
 
-      {nearBoard && !nearbyNpc && !paused && !inventoryOpen && !questPanel && !dialogueOpen && (
-        <button type="button" className="talk-prompt" onClick={() => openQuestPanel('board')}>
-          {touch ? 'NOTICE BOARD' : 'E · Notice Board'}
+      {nearPlace && !nearbyNpc && !paused && !inventoryOpen && !questPanel && !dialogueOpen && (
+        <button
+          type="button"
+          className="talk-prompt"
+          onClick={() => (nearPlace === 'board' ? openQuestPanel('board') : prayAtShrine())}
+        >
+          {nearPlace === 'board'
+            ? touch
+              ? 'NOTICE BOARD'
+              : 'E · Notice Board'
+            : touch
+              ? 'PEARL SHRINE'
+              : 'E · Pearl Shrine'}
         </button>
       )}
 

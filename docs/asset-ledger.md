@@ -41,6 +41,7 @@ Columns: file, source, licence, commercial use OK, notes.
 | `bld_manege.glb` | Procedural, `tools/blender/build_garden_assets.py` (`build_manege`), 2026-09-24 | Original work, project licence | yes | Manege-style exhibition hall with portico. |
 | `bld_grotto.glb` | Procedural, `tools/blender/build_garden_assets.py` (`build_grotto`), 2026-09-24 | Original work, project licence | yes | Garden "Ruins" grotto arcade. |
 | `prop_obelisk.glb` | Procedural, `tools/blender/build_garden_assets.py` (`build_obelisk`), 2026-09-24 | Original work, project licence | yes | Garden obelisk. |
+| `bld_shrine.glb` | Procedural, `tools/blender/build_garden_assets.py` (`build_shrine`), 2026-09-25 | Original work, project licence | yes | The hidden Pearl Shrine in Alexander Garden: stone circle, rose arch, scallop-shell altar with a pearl. |
 | `prop_hedge.glb` | Procedural, `tools/blender/build_garden_assets.py` (`build_hedge`), 2026-09-24 | Original work, project licence | yes | 2 m hedge segment. |
 | `npc_grisha.glb` | Procedural, `tools/blender/build_npcs.py` (`build_grisha`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Gate guard with ushanka and rifle-less staff. |
 | `npc_tolik.glb` | Procedural, `tools/blender/build_npcs.py` (`build_tolik`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Accordionist. |
