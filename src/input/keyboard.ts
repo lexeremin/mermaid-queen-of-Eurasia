@@ -66,16 +66,19 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
   };
 
   const onPointerDown = (e: PointerEvent) => {
-    if (e.pointerType !== 'mouse' || !(e.target instanceof HTMLCanvasElement)) return;
-    if (e.button === 0) {
-      const rect = e.target.getBoundingClientRect();
-      input.click = {
-        x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
-        y: -((e.clientY - rect.top) / rect.height) * 2 + 1,
-      };
-    } else if (e.button === 2) {
+    if (!(e.target instanceof HTMLCanvasElement)) return;
+    const touch = e.pointerType === 'touch';
+    if (e.pointerType === 'mouse' && e.button === 2) {
       setHeld(input, 'attack', true);
+      return;
     }
+    if (e.button !== 0) return;
+    const rect = e.target.getBoundingClientRect();
+    input.click = {
+      x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      y: -((e.clientY - rect.top) / rect.height) * 2 + 1,
+      touch,
+    };
   };
   const onPointerUp = (e: PointerEvent) => {
     if (e.pointerType === 'mouse' && e.button === 2) setHeld(input, 'attack', false);

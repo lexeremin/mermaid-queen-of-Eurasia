@@ -7,6 +7,7 @@ import { GameLoop } from '@/game/GameLoop';
 import { ClickMarker } from '@/game/entities/ClickMarker';
 import { Player } from '@/game/entities/Player';
 import { MapScene } from '@/game/world/MapScene';
+import { Npcs } from '@/game/world/Npcs';
 import { RenderStatsProbe } from '@/game/RenderStatsProbe';
 import { Suspense } from 'react';
 
@@ -37,6 +38,7 @@ export function Scene() {
 
       <Suspense fallback={null}>
         <MapScene />
+        <Npcs />
         <Player />
         <ClickMarker />
       </Suspense>

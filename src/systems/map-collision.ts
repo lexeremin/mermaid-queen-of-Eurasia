@@ -8,6 +8,7 @@ import {
 } from '@/systems/collision';
 
 const WATER_COLLIDER_INSET = 0.1;
+const NPC_COLLIDER_RADIUS = 0.5;
 
 export function buildCollisionWorld(map: MapData): CollisionWorld {
   const colliders: Collider[] = [];
@@ -30,5 +31,7 @@ export function buildCollisionWorld(map: MapData): CollisionWorld {
     for (const run of water.colliderRuns) colliders.push(...polylineToCapsules(run, radius));
   }
   colliders.push(...map.colliders);
+  for (const npc of map.npcs)
+    colliders.push({ kind: 'circle', x: npc.x, z: npc.z, r: NPC_COLLIDER_RADIUS });
   return { bounds: map.bounds, colliders };
 }

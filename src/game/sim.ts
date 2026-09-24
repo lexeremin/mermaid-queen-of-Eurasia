@@ -13,12 +13,15 @@ export const sim: {
   /** Remaining waypoints of a click-to-move walk; the last one is the destination. */
   path: Vec2[];
   stuckTime: number;
+  /** NPC to talk to once the click-walk arrives. */
+  talkTo: string | null;
 } = {
   prev: createPlayer(currentMap.spawn),
   curr: createPlayer(currentMap.spawn),
   alpha: 0,
   path: [],
   stuckTime: 0,
+  talkTo: null,
 };
 
 export function resetSim(): void {
@@ -27,6 +30,7 @@ export function resetSim(): void {
   sim.alpha = 0;
   sim.path = [];
   sim.stuckTime = 0;
+  sim.talkTo = null;
 }
 
 export function getRenderPosition(out: Vec2): Vec2 {

@@ -16,7 +16,7 @@ Feature list with phase mapping. Status lives in `docs/Task.md`.
 | Walkable GUM gallery under a translucent glass roof: fountain, shop windows, kiosks, iron bridges | 8 |
 | Manezhnaya Square, Kremlin north wall, Manege hall | 9 |
 | Alexander Garden: Kutafya tower, Trinity bridge, paths, grotto, obelisk, lawns and flower beds | 9 |
-| 8 NPCs (Russian men archetypes), dialogue system, relationships, heart-buff icon | 10 |
+| 8 NPCs (Russian men archetypes), dialogue system, relationships, heart-buff icon, click/tap/E interaction | 10 |
 | localStorage save/load (versioned) | 11 |
 | Supabase anonymous auth, stats events, cloud save, RLS, opt-out | 11 |
 | Trident basic attack, dash, singing Mermaid Aura (orbiting notes, mesmerize), AoE spell | 12 |

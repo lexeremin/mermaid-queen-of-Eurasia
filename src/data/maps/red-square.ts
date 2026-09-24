@@ -261,6 +261,16 @@ export const RED_SQUARE: MapData = {
     { cx: -6.5, cz: -1, w: 40, d: 70 },
     { cx: 25, cz: 56.75, w: 40, d: 40.5 },
   ],
+  npcs: [
+    { id: 'grisha', x: 7.7, z: 27.6, rotY: Math.PI },
+    { id: 'tolik', x: 19, z: 54, rotY: HALF_PI },
+    { id: 'lyoha', x: 55.8, z: -9.2, rotY: -HALF_PI },
+    { id: 'mikhalych', x: 8.9, z: 4.8, rotY: -HALF_PI },
+    { id: 'boris', x: -11.5, z: -3.6, rotY: HALF_PI },
+    { id: 'sergei', x: 3.2, z: 18.6, rotY: 0 },
+    { id: 'arkady', x: -20.8, z: 10.5, rotY: -HALF_PI },
+    { id: 'kolya', x: 52.2, z: 6.5, rotY: HALF_PI },
+  ],
   zones: [
     { id: 'gum', label: 'GUM', box: { cx: GALLERY_X, cz: 0, hx: 4.6, hz: 27 } },
     { id: 'manezh', label: 'Manezhnaya Square', box: { cx: 25, cz: 56.75, hx: 20, hz: 20 } },

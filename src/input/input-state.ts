@@ -7,7 +7,7 @@ export type InputState = {
   keyMove: Vec2;
   stickMove: Vec2;
   /** Left-click on the canvas in normalized device coordinates, consumed by the game loop. */
-  click: { x: number; y: number } | null;
+  click: { x: number; y: number; touch: boolean } | null;
   held: Record<Action, boolean>;
   pressed: Record<Action, boolean>;
 };

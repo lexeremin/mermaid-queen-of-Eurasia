@@ -25,6 +25,8 @@ export type Water = {
   colliderRuns: readonly (readonly Point[])[];
 };
 
+export type NpcSpot = { id: string; x: number; z: number; rotY: number };
+
 export type MapData = {
   id: string;
   bounds: Bounds;
@@ -35,6 +37,7 @@ export type MapData = {
   /** Cobblestone rectangles: center and size. */
   plazas: readonly { cx: number; cz: number; w: number; d: number }[];
   zones: readonly Zone[];
+  npcs: readonly NpcSpot[];
   /** Colored ground rectangles (e.g. interior floors). */
   floors?: readonly { cx: number; cz: number; w: number; d: number; color: string; y?: number }[];
   /** Translucent glass roofs. */
