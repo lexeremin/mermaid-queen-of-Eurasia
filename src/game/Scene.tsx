@@ -1,14 +1,13 @@
 import { Canvas } from '@react-three/fiber';
 import { Stats } from '@react-three/drei';
 import { CameraRig } from '@/game/CameraRig';
-import { CAMERA_FOV, CAMERA_OFFSET, BASE_FOG_DENSITY } from '@/game/camera';
+import { ATMOSPHERE } from '@/game/atmosphere';
+import { CAMERA_FOV, CAMERA_OFFSET } from '@/game/camera';
 import { GameLoop } from '@/game/GameLoop';
 import { Player } from '@/game/entities/Player';
 import { MapScene } from '@/game/world/MapScene';
 import { RenderStatsProbe } from '@/game/RenderStatsProbe';
 import { Suspense } from 'react';
-
-const FOG_COLOR = '#0b1220';
 
 export function Scene() {
   return (
@@ -16,10 +15,20 @@ export function Scene() {
       dpr={[1, 2]}
       camera={{ position: [...CAMERA_OFFSET], fov: CAMERA_FOV, near: 1, far: 200 }}
     >
-      <color attach="background" args={[FOG_COLOR]} />
-      <fogExp2 attach="fog" args={[FOG_COLOR, BASE_FOG_DENSITY]} />
-      <hemisphereLight args={['#9db4d6', '#2a2118', 1.1]} />
-      <directionalLight position={[8, 12, 6]} intensity={1.4} />
+      <color attach="background" args={[ATMOSPHERE.background]} />
+      <fogExp2 attach="fog" args={[ATMOSPHERE.fogColor, ATMOSPHERE.fogDensity]} />
+      <hemisphereLight
+        args={[
+          ATMOSPHERE.hemisphere.sky,
+          ATMOSPHERE.hemisphere.ground,
+          ATMOSPHERE.hemisphere.intensity,
+        ]}
+      />
+      <directionalLight
+        position={ATMOSPHERE.sun.position}
+        color={ATMOSPHERE.sun.color}
+        intensity={ATMOSPHERE.sun.intensity}
+      />
 
       <GameLoop />
       <CameraRig />

@@ -72,7 +72,6 @@ def build_kremlin_wall():
         x = -2.4 + i * 1.2
         p.box((0.75, 2.2, 1.0), (x, 0, 5.2), "brick_light")
         p.box((0.85, 2.3, 0.12), (x, 0, 5.76), "stone")
-        p.box((0.45, 2.0, 0.1), (x + 0.6, 0, 4.74), "snow")
     for x in (-1.5, 1.5):
         p.box((0.14, 0.06, 0.6), (x, -1.12, 2.5), "ink")
     return _done("bld_kremlin_wall", p)
@@ -127,7 +126,6 @@ def build_gum():
     p.box((7.4, 3.6, 0.4), (0, 0.4, 7.0), "frost")
     for i in range(6):
         p.box((0.1, 3.6, 0.5), (-3.3 + i * 1.32, 0.4, 7.1), "teal_dark")
-    p.box((3.4, 3.4, 0.1), (1.9, 0.4, 7.3), "snow")
     return _done("bld_gum", p)
 
 
@@ -168,7 +166,6 @@ def build_arch_bridge():
         p.box((3.5, 1.03, 0.1), (0, y, 0.22), "cobble_light" if i % 2 == 0 else "cobble_dark")
     for x in (-1.9, 1.9):
         p.box((0.3, 6.4, 0.7), (x, 0, 0.55), "stone")
-        p.box((0.4, 6.5, 0.1), (x, 0, 0.95), "snow")
         for y in (-3.2, 3.2):
             p.box((0.6, 0.6, 1.3), (x, y, 0.65), "brick_light")
             p.box((0.7, 0.7, 0.12), (x, y, 1.35), "stone")
@@ -192,7 +189,6 @@ def build_garden_gate():
         p.cone(0, 0.16, 0.25, (x, 0, 5.72), "ruby", segments=4)
         p.cone(0.16, 0, 0.3, (x, 0, 5.95), "ruby", segments=4)
     p.box((3.4, 0.8, 0.7), (0, 0, 3.4), "brick_light")
-    p.box((3.4, 0.9, 0.1), (0, 0, 3.8), "snow")
     p.box((1.2, 0.06, 0.4), (0, -0.43, 3.4), "gold")
     for i in range(7):
         p.box((0.06, 0.06, 0.6), (-1.5 + i * 0.5, 0, 2.85), "ink")
@@ -209,7 +205,6 @@ def build_lamppost():
     for x in (-0.65, 0.65):
         p.box((0.3, 0.3, 0.45), (x, 0, 3.35), "candle")
         p.box((0.4, 0.4, 0.08), (x, 0, 3.62), "gold")
-        p.box((0.4, 0.4, 0.06), (x, 0, 3.69), "snow")
     p.cone(0.08, 0, 0.35, (0, 0, 3.85), "gold", segments=4)
     return _done("prop_lamppost", p)
 
@@ -222,7 +217,7 @@ def build_fir_tub():
         p.cone(0.58, 0.55, 0.07, (0, 0, z), "wood_dark", segments=8, caps=False)
     for r, h, z0 in ((0.95, 1.1, 0.6), (0.75, 1.0, 1.3), (0.5, 0.9, 1.95)):
         p.cone(r, 0, h, (0, 0, z0 + h / 2), "spruce_dark", segments=8)
-        p.cone(r * 1.04, r * 0.86, h * 0.16, (0, 0, z0 + h * 0.08), "snow", segments=8)
+        p.cone(r * 1.04, r * 0.86, h * 0.16, (0, 0, z0 + h * 0.08), "spruce", segments=8)
     for a, r, z in ((0, 0.8, 0.9), (2.1, 0.75, 1.1), (4.2, 0.7, 1.2), (1.0, 0.55, 1.7), (3.1, 0.5, 1.8), (5.2, 0.4, 2.2)):
         p.box((0.09, 0.09, 0.09), (r * math.cos(a) * 0.9, r * math.sin(a) * 0.9, z), "candle")
     p.box((0.18, 0.18, 0.18), (0, 0, 2.9), "gold")

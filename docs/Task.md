@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 6 complete (Red Square map).** Next: **Phase 7 — NPCs + dialogue** (`docs/phases/phase-7.md` — write it first, it does not exist yet).
+**Phase 6 complete (Red Square map).** Direction change requested (summer overcast, real layout with detailed GUM and the real Alexander Garden). Next: **Phase 7 — Summer overcast look** (`docs/phases/phase-7.md`).
 
 ---
 
@@ -84,19 +84,22 @@ Read these files before starting any work:
 | Phase 4 — Village map | ✅ Complete | Terrain, river, houses, collision, forest entrance, Rosa movement/animation | 5b9feae. 16 assets total, instanced rendering, ~26 draw calls |
 | Phase 5 — Hero redesign + direction change | ✅ Complete | Person-based Rosa (stylized), mermaid as a transformation model, palette v2, docs for the Red Square setting | bd5e367. Consent + likeness rules in `docs/likeness-and-consent.md` |
 | Phase 6 — Red Square map | ✅ Complete | Replace the village: cathedral, Kremlin-style wall, GUM-style arcade, museum, cobblestone plaza, river + bridge, Alexander Garden entrance | b26d27f. Cobble tile texture; village-only assets retired; 19 assets, ~26 draw calls |
-| Phase 7 — NPCs + dialogue | ⬜ Next | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, Mermaid Aura persuasion | |
-| Phase 8 — Save + Supabase | ⬜ Todo | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
-| Phase 9 — Combat core | ⬜ Todo | Trident attack, dash, Mermaid Aura, AoE spell, damage, 3 enemy types + AI | |
-| Phase 10 — Progression + inventory | ⬜ Todo | HP/mana/XP/levels, inventory + equipment UI (touch), loot | |
-| Phase 11 — Quests + kingdom | ⬜ Todo | Quest board, quest log, kingdom reputation | |
-| Phase 12 — Alexander Garden | ⬜ Todo | Herbs, pearls, monsters, hidden shrine (was "Forest") | |
-| Phase 13 — Moscow underground + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight (was "Dungeon") | |
-| Phase 14 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the Moscow setting | |
-| Phase 15 — Polish | ⬜ Todo | Audio, VFX (mist/snow/particles), HUD juice, title screen, settings, occlusion fade | |
-| Phase 16 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
-| Phase 17 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |
+| Phase 7 — Summer overcast look | ⬜ Next | Moody grey summer: atmosphere config, summer palette, assets rebuilt without snow, new trees, grass ground, Rosa warm light; docs for the singing Aura | Keeps the current layout; Phase 8 re-lays it out |
+| Phase 8 — Real layout + detailed GUM | ⬜ Todo | Red Square in real relative positions (Kremlin right, GUM left, cathedral far end, museum/Kazan/Resurrection Gate near end), detailed GUM facade, walkable GUM gallery under a translucent glass roof | Map rotated 180° from real north |
+| Phase 9 — Manezhnaya Square + Alexander Garden | ⬜ Todo | Through the Resurrection Gate: Manezhnaya Square, Kremlin north wall, the real Alexander Garden outside the west wall (Kutafya tower, grotto, obelisk, paths, lawns) | Same contiguous map |
+| Phase 10 — NPCs + dialogue | ⬜ Todo | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, heart-buff visual | |
+| Phase 11 — Save + Supabase | ⬜ Todo | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
+| Phase 12 — Combat core | ⬜ Todo | Trident attack, dash, singing Mermaid Aura (orbiting notes), AoE spell, damage, 3 enemy types + AI | |
+| Phase 13 — Progression + inventory | ⬜ Todo | HP/mana/XP/levels, inventory + equipment UI (touch), loot | |
+| Phase 14 — Quests + kingdom | ⬜ Todo | Quest board, quest log, kingdom reputation | |
+| Phase 15 — Alexander Garden content | ⬜ Todo | Herbs, pearls, monsters, hidden shrine in the garden | |
+| Phase 16 — Moscow underground + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight | |
+| Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
+| Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings, occlusion fade | |
+| Phase 19 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
+| Phase 20 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |
 
-Order rationale: asset pipeline (3) comes before content so style and performance risk is found early; the direction change (5–6) lands before NPCs so characters are built for the final setting; Supabase (8) comes before gameplay data grows so the save schema stays stable.
+Order rationale: asset pipeline (3) comes before content so style and performance risk is found early; the direction changes (5–9) land before NPCs so characters are built for the final setting; Supabase (11) comes before gameplay data grows so the save schema stays stable.
 
 ---
 

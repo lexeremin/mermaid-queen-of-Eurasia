@@ -1,12 +1,8 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import { FogExp2, Vector3 } from 'three';
-import {
-  BASE_FOG_DENSITY,
-  CAMERA_DAMPING,
-  CAMERA_OFFSET,
-  cameraDistanceScale,
-} from '@/game/camera';
+import { ATMOSPHERE } from '@/game/atmosphere';
+import { CAMERA_DAMPING, CAMERA_OFFSET, cameraDistanceScale } from '@/game/camera';
 import { getRenderPosition } from '@/game/sim';
 
 const DEBUG_ZOOM = import.meta.env.DEV
@@ -44,7 +40,7 @@ export function CameraRig() {
     }
     camera.lookAt(smoothLook.current);
 
-    if (scene.fog instanceof FogExp2) scene.fog.density = BASE_FOG_DENSITY / scale;
+    if (scene.fog instanceof FogExp2) scene.fog.density = ATMOSPHERE.fogDensity / scale;
   });
 
   return null;

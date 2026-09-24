@@ -3,7 +3,6 @@ import { clamp } from '@/utils/math';
 export const CAMERA_OFFSET: readonly [number, number, number] = [0, 11, 8];
 export const CAMERA_FOV = 45;
 export const CAMERA_DAMPING = 6;
-export const BASE_FOG_DENSITY = 0.035;
 
 const REFERENCE_ASPECT = 16 / 9;
 const MAX_DISTANCE_SCALE = 2.5;

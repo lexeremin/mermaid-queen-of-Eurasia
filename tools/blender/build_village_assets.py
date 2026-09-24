@@ -31,8 +31,8 @@ def _gable_roof(p, x_half, run, rise, eave_z, colors, ridge_color="wood_dark"):
         p.box((2 * x_half, length, 0.16), center, "wood_dark", rot=(phi, 0, 0))
         for k, color in enumerate(colors):
             s = (k + 0.5) * width
-            thick = 0.14 if color == "snow" else 0.06
-            off = 0.16 if color == "snow" else 0.1
+            thick = 0.06
+            off = 0.1
             pos = tuple(e + d * s + nn * off for e, d, nn in zip(eave, direction, normal))
             p.box((2 * x_half - 0.1, width - 0.04, thick), pos, color, rot=(phi, 0, 0))
     p.box((2 * x_half + 0.1, 0.3, 0.3), (0, 0, eave_z + rise + 0.05), ridge_color, rot=(math.pi / 4, 0, 0))
@@ -58,7 +58,6 @@ def _shop(name, awning, goods):
         color = awning[i % 2]
         p.box((span - 0.02, length, 0.1), (x, -0.25, 2.65), color, rot=(tilt, 0, 0))
         p.box((span - 0.02, 0.08, 0.3), (x, -1.95, 2.28), color)
-    p.box((3.5, 1.7, 0.1), (0, 0.6, 2.85), "snow", rot=(tilt, 0, 0))
 
     p.box((2.2, 0.08, 0.5), (0, -1.5, 1.95), "wood_light")
     p.box((1.6, 0.1, 0.08), (0, -1.55, 1.95), "gold")
@@ -89,11 +88,10 @@ def build_hut():
             for x in (-1.6, 1.6):
                 p.box((0.3, 3.1, 0.36), (x, 0, z), color)
     p.prism_yz([(-1.3, 1.8), (1.3, 1.8), (0, 3.0)], -1.5, 1.5, "wood_light")
-    _gable_roof(p, 1.9, 1.75, 1.5, 1.75, ("teal", "aqua", "teal", "snow"), "pearl")
+    _gable_roof(p, 1.9, 1.75, 1.5, 1.75, ("teal", "aqua", "teal", "aqua"), "pearl")
     p.box((0.5, 0.06, 0.4), (0, -1.5, 2.3), "pearl")
     p.box((0.3, 0.08, 0.24), (0, -1.53, 2.3), "rose")
     p.box((0.6, 0.6, 1.2), (0.9, 0.7, 2.7), "brick")
-    p.box((0.75, 0.75, 0.14), (0.9, 0.7, 3.35), "snow")
     p.box((0.95, 0.06, 1.55), (-0.5, -1.36, 0.78), "aqua")
     p.box((0.75, 0.1, 1.4), (-0.5, -1.4, 0.7), "teal_dark")
     p.box((0.08, 0.06, 0.08), (-0.25, -1.47, 0.75), "gold")
@@ -101,7 +99,6 @@ def build_hut():
     p.box((0.65, 0.1, 0.55), (0.75, -1.38, 1.05), "candle")
     p.box((0.65, 0.12, 0.06), (0.75, -1.4, 1.05), "wood_dark")
     p.box((1.2, 0.45, 0.14), (-0.5, -1.65, 0.07), "wood_light")
-    p.box((1.5, 0.5, 0.18), (0.9, -1.55, 0.09), "snow")
     return _done("bld_hut", p)
 
 
@@ -115,7 +112,6 @@ def build_questboard():
     for dx, dz, color in ((-0.6, 1.6, "paper"), (0.1, 1.35, "amber"), (0.65, 1.55, "paper"), (-0.15, 1.0, "rose")):
         p.box((0.45, 0.04, 0.4), (dx, -0.08, dz), color)
     p.box((2.6, 0.9, 0.1), (0, -0.1, 2.35), "wood", rot=(0.35, 0, 0))
-    p.box((2.5, 0.8, 0.08), (0, -0.12, 2.42), "snow", rot=(0.35, 0, 0))
     return _done("prop_questboard", p)
 
 
@@ -125,7 +121,7 @@ def build_barrel():
     p.cone(0.4, 0.34, 0.9, (0, 0, 0.45), "wood", segments=8)
     for z in (0.2, 0.7):
         p.cone(0.43 if z < 0.5 else 0.37, 0.42 if z < 0.5 else 0.36, 0.07, (0, 0, z), "wood_dark", segments=8, caps=False)
-    p.cone(0.3, 0.3, 0.05, (0, 0, 0.92), "snow", segments=8)
+    p.cone(0.3, 0.3, 0.05, (0, 0, 0.92), "wood_dark", segments=8)
     return _done("prop_barrel", p)
 
 
@@ -136,7 +132,6 @@ def build_crate():
     for z in (0.08, 0.72):
         p.box((0.94, 0.94, 0.08), (0, 0, z), "wood")
     p.box((0.94, 0.06, 0.5), (0, -0.46, 0.4), "wood_dark", rot=(0, 0.0, 0))
-    p.box((0.8, 0.8, 0.08), (0, 0, 0.84), "snow")
     return _done("prop_crate", p)
 
 
@@ -146,12 +141,41 @@ def build_birch():
     p.cone(0.16, 0.1, 2.6, (0, 0, 1.3), "birch", segments=5)
     for x, y, z in ((0.0, -0.1, 0.7), (-0.05, -0.08, 1.3), (0.05, -0.08, 1.9)):
         p.box((0.09, 0.05, 0.12), (x, y, z), "ink")
-    p.cone(1.0, 0.2, 1.7, (0, 0, 2.6), "birch", segments=8)
-    p.cone(0.7, 0, 1.0, (0, 0, 3.7), "frost", segments=8)
-    p.cone(0.45, 0, 0.5, (0, 0, 4.05), "snow", segments=8)
+    p.cone(1.0, 0.2, 1.7, (0, 0, 2.6), "leaf", segments=8)
+    p.cone(0.7, 0, 1.0, (0, 0, 3.7), "leaf_dark", segments=8)
+    p.cone(0.45, 0, 0.5, (0, 0, 4.05), "leaf", segments=8)
     return _done("tree_birch", p)
 
 
+def build_linden():
+    clear_scene()
+    p = Part("tree_linden")
+    p.cone(0.22, 0.14, 1.7, (0, 0, 0.85), "bark", segments=6)
+    p.cone(0.9, 1.6, 1.0, (0, 0, 2.3), "leaf_dark", segments=8)
+    p.cone(1.6, 1.2, 0.9, (0, 0, 3.25), "leaf", segments=8)
+    p.cone(1.2, 0.3, 0.9, (0, 0, 4.1), "leaf", segments=8)
+    for x, y, z, s in ((0.95, 0.1, 3.0, 0.9), (-0.9, -0.2, 3.1, 0.85), (0.1, 0.9, 3.3, 0.8)):
+        p.box((s, s, s), (x, y, z), "leaf_dark", rot=(0.4, 0.3, math.pi / 4))
+    return _done("tree_linden", p)
+
+
+def build_flowerbed():
+    clear_scene()
+    p = Part("prop_flowerbed")
+    p.box((2.4, 1.2, 0.3), (0, 0, 0.15), "stone")
+    p.box((2.2, 1.0, 0.3), (0, 0, 0.2), "bark")
+    colors = ("flower_red", "flower_yellow", "lilac", "ivory", "flower_red", "flower_yellow")
+    for i in range(8):
+        x = -0.75 + (i % 4) * 0.5
+        y = -0.28 + (i // 4) * 0.56
+        p.box((0.05, 0.05, 0.3), (x, y, 0.5), "leaf_dark")
+        p.box((0.2, 0.2, 0.14), (x, y, 0.72), colors[(i * 5 + i // 6) % len(colors)])
+    return _done("prop_flowerbed", p)
+
+
 def build_all_village():
-    fns = [build_shop, build_shop_herbs, build_hut, build_questboard, build_barrel, build_crate, build_birch]
+    fns = [
+        build_shop, build_shop_herbs, build_hut, build_questboard, build_barrel, build_crate,
+        build_birch, build_linden, build_flowerbed,
+    ]
     return [fn() for fn in fns]

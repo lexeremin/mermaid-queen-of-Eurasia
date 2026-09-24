@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import type { Group } from 'three';
+import { ATMOSPHERE } from '@/game/atmosphere';
 import { RosaModel } from '@/game/entities/RosaModel';
 import { getRenderPosition, sim } from '@/game/sim';
 import { useGameStore } from '@/store/game-store';
@@ -22,6 +23,12 @@ export function Player() {
   return (
     <group ref={group}>
       <RosaModel key={form} form={form} />
+      <pointLight
+        color={ATMOSPHERE.rosaLight.color}
+        intensity={ATMOSPHERE.rosaLight.intensity}
+        distance={ATMOSPHERE.rosaLight.distance}
+        position={[0, ATMOSPHERE.rosaLight.height, 0]}
+      />
     </group>
   );
 }

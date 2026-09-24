@@ -1,4 +1,4 @@
-"""Phase 3 PoC asset that survived the Red Square change: the snowy spruce. Rosa lives in build_hero.py.
+"""Phase 3 PoC asset that survived the Red Square change: the spruce. Rosa lives in build_hero.py.
 
 Inside Blender (after exec-ing lib.py in the same namespace):
     exec(open(REPO + "/tools/blender/build_poc_assets.py").read())
@@ -21,9 +21,9 @@ def build_tree():
     for i, (radius, height, z0) in enumerate(tiers):
         p.cone(radius, 0, height, (0, 0, z0 + height / 2), "spruce", segments=8)
         band = height * 0.16
-        p.cone(radius * 1.06, radius * 0.89, band, (0, 0, z0 + band / 2), "snow", segments=8)
+        p.cone(radius * 1.06, radius * 0.89, band, (0, 0, z0 + band / 2), "spruce_light", segments=8)
         if i == len(tiers) - 1:
             cap = height * 0.4
-            p.cone(radius * 0.6, 0, cap, (0, 0, z0 + height - cap / 2 + 0.02), "snow", segments=8)
+            p.cone(radius * 0.6, 0, cap, (0, 0, z0 + height - cap / 2 + 0.02), "spruce_light", segments=8)
     obj = p.finish()
     return _report("tree_spruce", export_glb("tree_spruce.glb", [obj.name]), [obj])

@@ -71,7 +71,14 @@ const plaza: Placement[] = [
   { asset: 'firTub', x: -5, z: 26 },
   { asset: 'firTub', x: 5, z: 26 },
   { asset: 'firTub', x: 15, z: 24 },
+  { asset: 'flowerbed', x: -6, z: -19 },
+  { asset: 'flowerbed', x: 6, z: -19 },
+  { asset: 'flowerbed', x: -6, z: 23 },
+  { asset: 'flowerbed', x: 6, z: 23 },
 ];
+
+const pickTree = (roll: number): 'linden' | 'birch' | 'spruce' =>
+  roll < 0.45 ? 'linden' : roll < 0.7 ? 'birch' : 'spruce';
 
 function forestBeyondTheWalls(): Placement[] {
   const random = mulberry32(11);
@@ -81,7 +88,7 @@ function forestBeyondTheWalls(): Placement[] {
     const z = (random() * 2 - 1) * 70;
     if (x > -24 && x < 26 && z > -40 && z < 37) continue;
     trees.push({
-      asset: random() < 0.25 ? 'birch' : 'spruce',
+      asset: pickTree(random()),
       x,
       z,
       rotY: random() * Math.PI * 2,

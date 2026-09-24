@@ -51,6 +51,15 @@
     "dome_blue": "#3a6ea8",
     "dome_red": "#c23a3a",
     "cobble_dark": "#6e7a8c",
-    "cobble_light": "#a4afbf"
+    "cobble_light": "#a4afbf",
+    "grass": "#667f4f",
+    "grass_dark": "#4d6440",
+    "leaf": "#5b7a45",
+    "leaf_dark": "#3f5a35",
+    "flower_red": "#c0483f",
+    "flower_yellow": "#d6b04a",
+    "wet_stone": "#5c6673",
+    "wet_dark": "#444d59",
+    "bark": "#6a5a4a"
   }
 }

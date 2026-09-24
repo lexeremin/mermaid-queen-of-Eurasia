@@ -2,6 +2,7 @@ import type { Shape } from '@/data/types';
 
 export const ATLAS_URL = '/assets/atlas/palette_atlas.png';
 export const COBBLE_URL = '/assets/atlas/cobble_tile.png';
+export const GRASS_URL = '/assets/atlas/grass_tile.png';
 
 type AssetDef = {
   url: string;
@@ -40,6 +41,8 @@ export const ASSETS = {
   barrel: { url: '/assets/prop/prop_barrel.glb', clips: [], footprint: [circle(0.42)] },
   crate: { url: '/assets/prop/prop_crate.glb', clips: [], footprint: [box(0.47, 0.47)] },
   spruce: { url: '/assets/tree/tree_spruce.glb', clips: [], footprint: [circle(0.45)] },
+  linden: { url: '/assets/tree/tree_linden.glb', clips: [], footprint: [circle(0.45)] },
+  flowerbed: { url: '/assets/prop/prop_flowerbed.glb', clips: [], footprint: [box(1.2, 0.6)] },
   birch: { url: '/assets/tree/tree_birch.glb', clips: [], footprint: [circle(0.35)] },
 } as const satisfies Record<string, AssetDef>;
 
