@@ -95,7 +95,7 @@ Read these files before starting any work:
 | Phase 13 — Progression + inventory | ✅ Complete | XP and levels 1–10, loot drops, 20-slot bag, 3 equipment slots, quick-use, save v2 | 4e86959 |
 | Phase 14 — Quests + kingdom | ✅ Complete | Notice board, 9 quests, quest log and tracker, derived kingdom reputation and ranks, save v3 | 4ad2b76 |
 | Phase 14b — Renames, Prince Sasha, spell looks, icons | ✅ Complete | Prince Sasha (handsome prince, next to the start), enemy renames, trident swing, mermaid form during Aura and Surge, sea-wave Surge, bubble-teleport Dash, cute ability and item icons | 59a0f83 |
-| Phase 14c — Companion, voice, menu | ✅ Complete | Prince Sasha likeness and companion (follow option, sword, fights beside Rosa), moved Sergey and Maksim, Rosa's voice (attacks, special attacks, sung Aura) from the songs folder, menu with animated mermaid, title and GitHub link | HASH14C |
+| Phase 14c — Companion, voice, menu | ✅ Complete | Prince Sasha likeness and companion (follow option, sword, fights beside Rosa), moved Sergey and Maksim, Rosa's voice (attacks, special attacks, sung Aura) from the songs folder, menu with animated mermaid, title and GitHub link | dcfb5fe |
 | Phase 15 — Alexander Garden content | ⬜ Next | Herbs, pearls, monsters, hidden shrine in the garden | |
 | Phase 16 — Moscow underground + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight | |
 | Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
