@@ -3,22 +3,25 @@ import { KEYS, readJson, writeJson } from '@/save/storage';
 
 type SettingsState = {
   statsOptOut: boolean;
+  soundOn: boolean;
   setStatsOptOut: (value: boolean) => void;
+  setSoundOn: (value: boolean) => void;
 };
 
-function loadOptOut(): boolean {
+function loadSettings(): { statsOptOut: boolean; soundOn: boolean } {
   const raw = readJson(KEYS.settings);
-  return (
-    typeof raw === 'object' &&
-    raw !== null &&
-    (raw as { statsOptOut?: unknown }).statsOptOut === true
-  );
+  const obj = typeof raw === 'object' && raw !== null ? (raw as Record<string, unknown>) : {};
+  return { statsOptOut: obj.statsOptOut === true, soundOn: obj.soundOn !== false };
 }
 
-export const useSettingsStore = create<SettingsState>((set) => ({
-  statsOptOut: loadOptOut(),
+export const useSettingsStore = create<SettingsState>((set, get) => ({
+  ...loadSettings(),
   setStatsOptOut: (statsOptOut) => {
-    writeJson(KEYS.settings, { statsOptOut });
+    writeJson(KEYS.settings, { statsOptOut, soundOn: get().soundOn });
     set({ statsOptOut });
+  },
+  setSoundOn: (soundOn) => {
+    writeJson(KEYS.settings, { statsOptOut: get().statsOptOut, soundOn });
+    set({ soundOn });
   },
 }));

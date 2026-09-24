@@ -17,9 +17,13 @@ export function buildPersuasionTree(npc: NpcDef): DialogueTree {
   const id = npc.id;
   const nodes: Record<string, DialogueNode> = {};
 
+  const lines = npc.companion;
   nodes.start = {
     speaker: 'npc',
     branches: [
+      ...(lines
+        ? [{ when: [{ kind: 'following' as const, npc: id, value: true }], next: 'following' }]
+        : []),
       { when: [{ kind: 'joined', npc: id, value: true }], next: 'joined' },
       { when: [{ kind: 'relationshipAtLeast', npc: id, value: npc.joinAt }], next: 'invite' },
       { when: [{ kind: 'relationshipAtLeast', npc: id, value: MESMERIZED_AT }], next: 'hub_high' },
@@ -39,13 +43,25 @@ export function buildPersuasionTree(npc: NpcDef): DialogueTree {
     ],
   }));
   const leave: Choice = { text: 'Goodbye for now.', next: 'end' };
+  const notFollowing = [{ kind: 'following' as const, npc: id, value: false }];
+  const followChoice: Choice[] = lines
+    ? [
+        {
+          text: lines.offer,
+          next: 'follow_yes',
+          requires: notFollowing,
+          effects: [{ type: 'follow', npc: id, value: true }],
+        },
+      ]
+    : [];
 
   for (const [hub, text] of [
     ['hub_low', npc.greet.low],
     ['hub_mid', npc.greet.mid],
     ['hub_high', npc.greet.high],
   ] as const) {
-    nodes[hub] = { speaker: 'npc', text, choices: [...methodChoices, leave] };
+    const canAsk = hub === 'hub_high' ? followChoice : [];
+    nodes[hub] = { speaker: 'npc', text, choices: [...canAsk, ...methodChoices, leave] };
   }
 
   for (const method of METHODS) {
@@ -57,6 +73,7 @@ export function buildPersuasionTree(npc: NpcDef): DialogueTree {
     text: npc.greet.high,
     choices: [
       { text: 'Join my kingdom, please.', next: 'accepted', effects: [{ type: 'join', npc: id }] },
+      ...followChoice,
       { text: 'Not yet. Stay a while.', next: 'end' },
     ],
   };
@@ -64,8 +81,24 @@ export function buildPersuasionTree(npc: NpcDef): DialogueTree {
   nodes.joined = {
     speaker: 'npc',
     text: npc.joined,
-    choices: [{ text: 'Take care of yourself.', next: 'end' }],
+    choices: [...followChoice, { text: 'Take care of yourself.', next: 'end' }],
   };
+  if (lines) {
+    nodes.follow_yes = { speaker: 'npc', text: lines.accept, next: 'end' };
+    nodes.following = {
+      speaker: 'npc',
+      text: lines.following,
+      choices: [
+        {
+          text: lines.dismiss,
+          next: 'dismissed',
+          effects: [{ type: 'follow', npc: id, value: false }],
+        },
+        { text: 'Onward!', next: 'end' },
+      ],
+    };
+    nodes.dismissed = { speaker: 'npc', text: lines.dismissed, next: 'end' };
+  }
 
   return { id: `persuade-${id}`, start: 'start', nodes };
 }

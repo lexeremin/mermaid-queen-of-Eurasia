@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { stopVoice } from '@/audio/voice';
 import { STATUS_LABEL, useNetStore } from '@/net/net-store';
 import { resetProgress } from '@/save/game-save';
 import { useSettingsStore } from '@/store/settings-store';
@@ -7,12 +8,25 @@ import { useSettingsStore } from '@/store/settings-store';
 export function PauseSettings() {
   const optOut = useSettingsStore((s) => s.statsOptOut);
   const setOptOut = useSettingsStore((s) => s.setStatsOptOut);
+  const soundOn = useSettingsStore((s) => s.soundOn);
+  const setSoundOn = useSettingsStore((s) => s.setSoundOn);
   const status = useNetStore((s) => s.status);
   const [confirming, setConfirming] = useState(false);
 
   return (
     <div className="pause-settings">
       <p className="hint">{STATUS_LABEL[status]}</p>
+      <button
+        type="button"
+        className="hud-btn"
+        aria-pressed={soundOn}
+        onClick={() => {
+          if (soundOn) stopVoice();
+          setSoundOn(!soundOn);
+        }}
+      >
+        SOUND: {soundOn ? 'ON' : 'OFF'}
+      </button>
       <button
         type="button"
         className="hud-btn"

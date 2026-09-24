@@ -15,8 +15,10 @@ import {
   createCooldowns,
   tickCooldowns,
   spendAbility,
+  type AbilityId,
   type Cooldowns,
 } from '@/systems/abilities';
+import { COMPANION, createCompanion, stepCompanion, type Companion } from '@/systems/companion';
 import { aimAssist, directionTo, inCircle, inCone } from '@/systems/combat-math';
 import { resolveCircle, type CollisionWorld } from '@/systems/collision';
 import {
@@ -51,7 +53,9 @@ export type CombatEvent =
   | { type: 'enemyDefeated'; kind: EnemyKind; x: number; z: number }
   | { type: 'playerHurt'; damage: number }
   | { type: 'playerDowned' }
-  | { type: 'npcCharmed'; id: string };
+  | { type: 'npcCharmed'; id: string }
+  /** Rosa used an ability (drives voice and sound). */
+  | { type: 'cast'; ability: AbilityId };
 
 export type CombatState = {
   time: number;
@@ -68,6 +72,8 @@ export type CombatState = {
   enemies: Enemy[];
   projectiles: Projectile[];
   effects: Effect[];
+  /** A companion fighting beside Rosa, or null. */
+  companion: Companion | null;
   /** Seconds left of the trident swing animation. */
   swing: number;
   /** Seconds left of the temporary mermaid look (Aura song, Tide Surge). */
@@ -96,6 +102,7 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     enemies: spawns.map((s) => createEnemy(s.id, s.kind, { x: s.x, z: s.z })),
     projectiles: [],
     effects: [],
+    companion: null,
     swing: 0,
     mermaid: 0,
     charmed: {},
@@ -116,6 +123,8 @@ export type CombatParams = {
   world: CollisionWorld;
   /** Derived player stats (level and equipment); defaults to the base stats. */
   stats?: PlayerStats;
+  /** The NPC currently following Rosa as a companion, if any. */
+  companion?: { id: string } | null;
 };
 
 export type CombatFrame = {
@@ -227,6 +236,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   if (alive) {
     if (p.actions.dash && !s.dash.active && canUse(s.cooldowns, s.mana, 'dash')) {
       spendAbility(s.cooldowns, s.mana, 'dash');
+      events.push({ type: 'cast', ability: 'dash' });
       const dir = isZero(p.move) ? facing : normalize(p.move);
       s.dash = { active: true, t: 0, dir };
       s.invuln = Math.max(s.invuln, DASH.invuln);
@@ -244,6 +254,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
           ? assisted
           : aimAssist(playerPos, facing, targets, AIM_ASSIST.closeRange, Math.PI);
       spendAbility(s.cooldowns, s.mana, 'attack');
+      events.push({ type: 'cast', ability: 'attack' });
       s.attackLock = ATTACK_LOCK;
       s.swing = SWING_TIME;
       frame.faceOverride = facing;
@@ -266,6 +277,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
 
     if (p.actions.spell && canUse(s.cooldowns, s.mana, 'spell')) {
       s.mana = spendAbility(s.cooldowns, s.mana, 'spell') ?? s.mana;
+      events.push({ type: 'cast', ability: 'spell' });
       frame.cancelWalk = true;
       startMermaid(s, SPELL.mermaid, playerPos);
       pushEffect(s, 'wave', playerPos.x, playerPos.z, facing, 0.95, SPELL.radius);
@@ -286,6 +298,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
 
     if (p.actions.aura && !s.aura.active && canUse(s.cooldowns, s.mana, 'aura')) {
       s.mana = spendAbility(s.cooldowns, s.mana, 'aura') ?? s.mana;
+      events.push({ type: 'cast', ability: 'aura' });
       s.aura = { active: true, t: 0, hit: new Set() };
       startMermaid(s, AURA.duration + AURA.mermaidTail, playerPos);
       frame.cancelWalk = true;
@@ -323,6 +336,39 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       }
     }
     if (s.aura.t >= AURA.duration) s.aura.active = false;
+  }
+
+  if (p.companion) {
+    if (s.companion?.id !== p.companion.id) {
+      s.companion = createCompanion(p.companion.id, playerPos, facing);
+    }
+    const targets = s.downed
+      ? []
+      : s.enemies
+          .filter((e) => e.state !== 'dead')
+          .map((e) => ({ id: e.id, pos: e.pos, radius: defOf(e).radius }));
+    const hit = stepCompanion(s.companion, {
+      dt,
+      player: playerPos,
+      playerFacing: facing,
+      targets,
+      world,
+    });
+    const struck = hit ? s.enemies.find((e) => e.id === hit.enemyId) : undefined;
+    if (hit && struck) {
+      const from = s.companion.pos;
+      hitEnemy(
+        s,
+        struck,
+        Math.round(hit.damage * stats.damageMult),
+        from,
+        COMPANION.knockback,
+        events,
+      );
+      pushEffect(s, 'arc', from.x, from.z, hit.dir, 0.16, 1.9);
+    }
+  } else {
+    s.companion = null;
   }
 
   for (const e of s.enemies) {

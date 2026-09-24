@@ -30,7 +30,7 @@ describe('game save', () => {
     applySave(
       save(
         { form: 'mermaid', x: 5, z: 24, facingX: 0, facingZ: -1 },
-        { grisha: { relationship: 66, used: ['song', 'silence'], joined: true } },
+        { grisha: { relationship: 66, used: ['song', 'silence'], joined: true, following: false } },
       ),
     );
     const out = collectSave();
@@ -38,7 +38,12 @@ describe('game save', () => {
     expect(out.hero.x).toBeCloseTo(5);
     expect(out.hero.z).toBeCloseTo(24);
     expect(out.hero.facingZ).toBeCloseTo(-1);
-    expect(out.npcs.grisha).toEqual({ relationship: 66, used: ['song', 'silence'], joined: true });
+    expect(out.npcs.grisha).toEqual({
+      relationship: 66,
+      used: ['song', 'silence'],
+      joined: true,
+      following: false,
+    });
     expect(out.npcs.tolik?.relationship).toBe(8);
     expect(out.playSeconds).toBe(90);
     expect(parseSave(JSON.parse(JSON.stringify(out)))).not.toBeNull();

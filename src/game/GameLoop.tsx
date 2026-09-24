@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { Plane, Raycaster, Vector2, Vector3, type Camera } from 'three';
 import { createFixedStepper } from '@/game/fixed-step';
+import { playVoice, stopVoice } from '@/audio/voice';
 import { combat } from '@/game/combat-sim';
 import { loot, spawnDrops } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
@@ -18,6 +19,7 @@ import { stepCombat, type CombatEvent } from '@/systems/combat';
 import { nav } from '@/game/world/nav';
 import { clearPressed, consumePressed, getMove, input } from '@/input/input-state';
 import { useDialogueStore } from '@/store/dialogue-store';
+import { useNpcStore } from '@/store/npc-store';
 import { isSimRunning, useGameStore } from '@/store/game-store';
 import { currentMap, currentWorld } from '@/game/world/current-map';
 import { PLAYER_SPEED, stepPlayer } from '@/systems/movement';
@@ -81,7 +83,12 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       grantXp(XP_REWARDS.enemy[event.kind], ENEMIES[event.kind].name);
       onEnemyDefeatedForQuests(event.kind);
       spawnDrops(event.kind, { x: event.x, z: event.z });
+    } else if (event.type === 'cast') {
+      if (event.ability === 'attack') playVoice('attack');
+      else if (event.ability === 'spell') playVoice('spell');
+      else if (event.ability === 'aura') playVoice('aura');
     } else if (event.type === 'playerDowned') {
+      stopVoice();
       useGameStore.getState().setDowned(true);
       track('player_downed');
     }
@@ -163,6 +170,8 @@ export function GameLoop() {
     }
 
     const stats = currentStats();
+    const followingId =
+      Object.entries(useNpcStore.getState().npcs).find(([, n]) => n.following)?.[0] ?? null;
     sim.alpha = stepper.advance(delta, (dt) => {
       let move = getMove(input);
       const frame = stepCombat(combat, {
@@ -179,6 +188,7 @@ export function GameLoop() {
         npcs: NPC_TARGETS,
         world: currentWorld,
         stats,
+        companion: followingId ? { id: followingId } : null,
       });
       if (frame.cancelWalk) {
         sim.path = [];

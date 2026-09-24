@@ -5,12 +5,14 @@ export type Condition =
   | { kind: 'relationshipAtLeast'; npc: string; value: number }
   | { kind: 'relationshipBelow'; npc: string; value: number }
   | { kind: 'methodUnused'; npc: string; method: Method }
-  | { kind: 'joined'; npc: string; value: boolean };
+  | { kind: 'joined'; npc: string; value: boolean }
+  | { kind: 'following'; npc: string; value: boolean };
 
 export type Effect =
   | { type: 'relationship'; npc: string; delta: number }
   | { type: 'use'; npc: string; method: Method }
-  | { type: 'join'; npc: string };
+  | { type: 'join'; npc: string }
+  | { type: 'follow'; npc: string; value: boolean };
 
 export type Choice = {
   text: string;

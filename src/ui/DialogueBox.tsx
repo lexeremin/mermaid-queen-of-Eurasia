@@ -1,3 +1,4 @@
+import { clearPressed, input } from '@/input/input-state';
 import { useEffect } from 'react';
 import { NPC_BY_ID } from '@/data/npcs';
 import { methodLabel } from '@/data/persuasion';
@@ -28,12 +29,14 @@ export function DialogueBox() {
         if (n >= 1 && picked) {
           e.preventDefault();
           choose(picked.index);
+          clearPressed(input);
         }
         return;
       }
       if (e.code === 'Space' || e.code === 'Enter' || e.code === 'KeyE') {
         e.preventDefault();
         choose(null);
+        clearPressed(input);
       }
     };
     window.addEventListener('keydown', onKey);

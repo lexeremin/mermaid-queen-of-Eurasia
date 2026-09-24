@@ -25,7 +25,12 @@ export function collectSave(): SaveData {
   const { form } = useGameStore.getState();
   const npcs: SaveData['npcs'] = {};
   for (const [id, n] of Object.entries(useNpcStore.getState().npcs)) {
-    npcs[id] = { relationship: n.relationship, used: [...n.used], joined: n.joined };
+    npcs[id] = {
+      relationship: n.relationship,
+      used: [...n.used],
+      joined: n.joined,
+      following: n.following,
+    };
   }
   return {
     version: SAVE_VERSION,
@@ -72,7 +77,12 @@ function collectProgress(): SaveData['progress'] {
 export function applySave(save: SaveData): void {
   const npcs: Record<string, NpcRuntime> = {};
   for (const [id, n] of Object.entries(save.npcs)) {
-    npcs[id] = { relationship: n.relationship, used: n.used, joined: n.joined };
+    npcs[id] = {
+      relationship: n.relationship,
+      used: n.used,
+      joined: n.joined,
+      following: n.following,
+    };
   }
   useProgressStore.getState().hydrate({
     level: save.progress.level,

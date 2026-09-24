@@ -45,7 +45,8 @@ Columns: file, source, licence, commercial use OK, notes.
 | `npc_grisha.glb` | Procedural, `tools/blender/build_npcs.py` (`build_grisha`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Gate guard with ushanka and rifle-less staff. |
 | `npc_tolik.glb` | Procedural, `tools/blender/build_npcs.py` (`build_tolik`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Accordionist. |
 | `npc_lyoha.glb` | Procedural, `tools/blender/build_npcs.py` (`build_lyoha`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Chess hustler with board. |
-| `npc_mikhalych.glb` | Procedural, `tools/blender/build_npcs.py` (`build_mikhalych`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Prince Sasha (id `mikhalych`): a handsome young prince selling kefir, rebuilt 2026-09-25 (blond swept hair, ruby crown, blue tailcoat, red sash, cape, kefir crate). |
+| `npc_mikhalych.glb` | Procedural, `tools/blender/build_npcs.py` (`build_mikhalych`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Prince Sasha (id `mikhalych`): a prince selling kefir (blue tailcoat, red sash, cape, kefir crate). Face and hair restyled 2026-09-25 as a stylized low-poly likeness of the project owner (swept brown hair, light eyes, light stubble), at their request and with their consent. |
+| `npc_prince_knight.glb` | Procedural, `tools/blender/build_npcs.py` (`build_prince_knight`), 2026-09-25 | Original work, project licence | yes | Prince Sasha as Rosa's companion: rigid parts with `idle`/`walk` clips and a sword arm, no vendor props. Face and hair are a stylized low-poly likeness of the project owner, made at their request and with their consent (no scan, no photo texture). |
 | `npc_boris.glb` | Procedural, `tools/blender/build_npcs.py` (`build_boris`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Clerk with stack of forms. |
 | `npc_sergei.glb` | Procedural, `tools/blender/build_npcs.py` (`build_sergei`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Tour guide with umbrella. |
 | `npc_arkady.glb` | Procedural, `tools/blender/build_npcs.py` (`build_arkady`), 2026-09-24 | Original work, project licence | yes | Fictional archetype, no real person depicted. Watch seller with tray. |
@@ -65,3 +66,13 @@ None yet. AI generators (Hunyuan3D, Hyper3D Rodin) are not enabled in the Blende
 `bld_gum` (Phase 6 arcade segment, replaced by the detailed facade in Phase 8), `bld_izba`, `bld_bridge` (plank bridge), `bld_gate` (village gate), `prop_well`, `prop_fence`, `prop_logs`, `prop_lantern`. Their builders were deleted; the shipped GLBs are gone. Kept from the village era: shops, hut (Rosa's lodge), quest board, barrel, crate, spruce, birch.
 
 Retired in Phase 12b: `enemy_wisp`, `enemy_stamper`, `enemy_memo` (replaced by the satirical politician archetypes above).
+
+## Audio (Rosa's voice)
+`public/assets/audio/*.mp3` (9 files, about 130 KB). Cut by `tools/audio/extract-voice.py` from voice recordings supplied by the project owner (a local songs folder, not committed). The recordings are the owner's own performances and were supplied for this use; "Vocalise" (Rachmaninoff) is a public-domain composition. Note: these clips are recordings of a real voice, so they are visible to anyone who can see this repository.
+
+| File | Source recording | Offset | Use |
+|---|---|---|---|
+| `rosa_attack_1..4.mp3` | four different recordings (0.27–0.41 s notes) | see the script | trident attack cries, pitch varied ±7% on playback |
+| `rosa_spell_1..2.mp3` | two recordings (0.8 s and 1.2 s notes) | see the script | Tide Surge cry |
+| `rosa_aura_1..3.mp3` | "Vocalise" (three 4 s windows) | 22.45 s, 4.91 s, 11.31 s | the Aura song |
+

@@ -11,6 +11,7 @@ export type DialogueContext = {
   relationship: (npc: string) => number;
   methodUsed: (npc: string, method: Method) => boolean;
   joined: (npc: string) => boolean;
+  following: (npc: string) => boolean;
 };
 
 const MAX_ROUTER_HOPS = 12;
@@ -25,6 +26,8 @@ export function isMet(condition: Condition, ctx: DialogueContext): boolean {
       return !ctx.methodUsed(condition.npc, condition.method);
     case 'joined':
       return ctx.joined(condition.npc) === condition.value;
+    case 'following':
+      return ctx.following(condition.npc) === condition.value;
   }
 }
 

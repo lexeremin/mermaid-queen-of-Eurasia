@@ -6,6 +6,7 @@ import { CAMERA_FOV, CAMERA_OFFSET } from '@/game/camera';
 import { GameLoop } from '@/game/GameLoop';
 import { ClickMarker } from '@/game/entities/ClickMarker';
 import { CombatEffects } from '@/game/entities/CombatEffects';
+import { CompanionActor } from '@/game/entities/CompanionActor';
 import { EnemyActors } from '@/game/entities/EnemyActors';
 import { Pickups } from '@/game/entities/Pickups';
 import { Player } from '@/game/entities/Player';
@@ -43,6 +44,7 @@ export function Scene() {
         <MapScene />
         <Npcs />
         <Player />
+        <CompanionActor />
         <ClickMarker />
         <EnemyActors />
         <Pickups />

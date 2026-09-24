@@ -8,7 +8,12 @@ import { clampRelationship } from '@/systems/relationship';
 
 export const SAVE_VERSION = 3;
 
-export type SavedNpc = { relationship: number; used: Method[]; joined: boolean };
+export type SavedNpc = {
+  relationship: number;
+  used: Method[];
+  joined: boolean;
+  following: boolean;
+};
 
 export type SavedProgress = {
   level: number;
@@ -174,6 +179,7 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
         relationship: clampRelationship(finite(entry.relationship, def.initial)),
         used,
         joined: entry.joined === true,
+        following: entry.following === true && def.companion !== undefined,
       };
     }
   }

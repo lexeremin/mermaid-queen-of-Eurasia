@@ -1,6 +1,7 @@
 import { Vector3, type Camera } from 'three';
 import { loot, spawnDrops, spawnPickup } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
+import { voiceLog } from '@/audio/voice';
 import { useQuestStore } from '@/store/quest-store';
 import { useProgressStore } from '@/store/progress-store';
 import { combat } from '@/game/combat-sim';
@@ -26,6 +27,7 @@ declare global {
       dialogue: typeof useDialogueStore;
       world: typeof currentWorld;
       input: typeof input;
+      voiceLog: typeof voiceLog;
       progress: typeof useProgressStore;
       quests: typeof useQuestStore;
       loot: typeof loot;
@@ -41,6 +43,7 @@ export function installDevTools(): void {
   window.__mq = {
     world: currentWorld,
     input,
+    voiceLog,
     progress: useProgressStore,
     quests: useQuestStore,
     loot,

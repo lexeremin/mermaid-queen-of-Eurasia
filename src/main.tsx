@@ -6,6 +6,7 @@ import { startProgressHooks } from '@/game/progress-actions';
 import { startQuestHooks } from '@/game/quest-actions';
 import { startPersistence } from '@/save/game-save';
 import { startSync } from '@/net/sync';
+import { unlockAudio } from '@/audio/voice';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element not found');
@@ -18,6 +19,10 @@ startPersistence();
 startProgressHooks();
 startQuestHooks();
 startSync();
+
+for (const type of ['pointerdown', 'keydown'] as const) {
+  window.addEventListener(type, unlockAudio, { once: true, capture: true });
+}
 
 createRoot(root).render(
   <StrictMode>

@@ -6,10 +6,13 @@ import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
 import { InventoryPanel } from '@/ui/InventoryPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
+import { MenuMermaid } from '@/ui/MenuMermaid';
 import { PauseSettings } from '@/ui/PauseSettings';
 import { TouchControls } from '@/ui/TouchControls';
 import { useTouchDevice } from '@/ui/use-touch-device';
 import '@/ui/hud.css';
+
+const GITHUB_URL = 'https://github.com/lexeremin/mermaid-queen-of-Eurasia';
 
 export function Hud() {
   const touch = useTouchDevice();
@@ -71,18 +74,31 @@ export function Hud() {
 
       {paused && (
         <div className="overlay">
-          <div className="panel">
-            <h2>Paused</h2>
+          <div className="panel menu">
+            <MenuMermaid />
+            <h1 className="menu-title">
+              Mermaid Queen <span>of Eurasia</span>
+            </h1>
+            <p className="menu-sub">Paused</p>
             {!touch && (
               <p className="hint">
                 WASD move · click to walk · click a person to talk · Space / right-click attack ·
-                Shift dash · Q aura · R spell · E interact · I inventory · ESC pause
+                Shift dash · Q aura · R spell · E interact · I bag · J quests · 1 / 2 quick use ·
+                ESC pause
               </p>
             )}
             <button type="button" className="hud-btn big" onClick={togglePause}>
               RESUME
             </button>
             <PauseSettings />
+            <a
+              className="hud-btn menu-link"
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              GITHUB PROJECT
+            </a>
           </div>
         </div>
       )}

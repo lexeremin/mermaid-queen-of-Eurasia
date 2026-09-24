@@ -5,6 +5,7 @@ import { buildPersuasionTree } from '@/data/persuasion';
 import { combat } from '@/game/combat-sim';
 import { useGameStore } from '@/store/game-store';
 import { npcContext, useNpcStore } from '@/store/npc-store';
+import { useToastStore } from '@/store/toast-store';
 import { advance, charmBonus, resolveNode } from '@/systems/dialogue';
 
 export type ActiveDialogue = { npcId: string; nodeId: string };
@@ -50,6 +51,15 @@ export const useDialogueStore = create<DialogueState>((set, get) => ({
     for (const effect of step.effects) {
       const charmed = (combat.charmed[active.npcId] ?? 0) > combat.time;
       useNpcStore.getState().apply(charmed ? charmBonus(effect) : effect);
+      if (effect.type === 'follow') {
+        const name = NPC_BY_ID.get(effect.npc)?.name ?? 'He';
+        useToastStore
+          .getState()
+          .push(
+            effect.value ? `${name} follows you and fights beside you` : `${name} waits here`,
+            'info',
+          );
+      }
     }
     const next = resolveNode(tree, step.next, npcContext());
     if (!next) {

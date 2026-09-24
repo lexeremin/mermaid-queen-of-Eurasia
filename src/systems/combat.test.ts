@@ -401,3 +401,51 @@ describe('spell looks', () => {
     expect(s.swing).toBe(0);
   });
 });
+
+describe('cast events and companion', () => {
+  it('reports each ability Rosa actually uses', () => {
+    const s = createCombatState();
+    const abilities = (events: { type: string; ability?: string }[]) =>
+      events.filter((e) => e.type === 'cast').map((e) => e.ability);
+    expect(abilities(step(s, { actions: { attack: true } }).events)).toEqual(['attack']);
+    expect(abilities(step(s, { actions: { dash: true } }).events)).toEqual(['dash']);
+    expect(abilities(step(s, { actions: { aura: true, spell: true } }).events).sort()).toEqual([
+      'aura',
+      'spell',
+    ]);
+    s.mana = 0;
+    s.cooldowns.attack = 0;
+    s.dash.active = false;
+    expect(abilities(step(s, { actions: { attack: true, spell: true } }).events)).toEqual([
+      'attack',
+    ]);
+  });
+
+  it('a companion fights enemies near Rosa and the kill counts for her', () => {
+    const s = createCombatState([{ id: 'e1', kind: 'tycoon', x: 0, z: -4 }]);
+    s.enemies[0]!.state = 'blinded';
+    s.enemies[0]!.blindedUntil = 999;
+    s.enemies[0]!.hp = 8;
+    const events = run(s, 5, { companion: { id: 'mikhalych' } });
+    expect(s.companion?.id).toBe('mikhalych');
+    expect(events.some((e) => e.type === 'enemyDefeated')).toBe(true);
+    expect(s.kills).toBe(1);
+  });
+
+  it('removes the companion when he stops following', () => {
+    const s = createCombatState();
+    step(s, { companion: { id: 'mikhalych' } });
+    expect(s.companion).not.toBeNull();
+    step(s, { companion: null });
+    expect(s.companion).toBeNull();
+  });
+
+  it('keeps a companion out of fights while Rosa is down', () => {
+    const s = createCombatState([{ id: 'e1', kind: 'tycoon', x: 0, z: -3 }]);
+    s.enemies[0]!.state = 'blinded';
+    s.enemies[0]!.blindedUntil = 999;
+    s.downed = true;
+    run(s, 3, { companion: { id: 'mikhalych' } });
+    expect(s.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
+  });
+});

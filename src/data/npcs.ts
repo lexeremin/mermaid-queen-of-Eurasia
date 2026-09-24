@@ -15,6 +15,18 @@ export type NpcDef = {
   invite: string;
   joined: string;
   methods: Record<Method, MethodLines>;
+  /** If set, this person can be asked to fight beside Rosa once she has won him over. */
+  companion?: CompanionLines;
+};
+
+export type CompanionLines = {
+  /** Model used while he follows Rosa (no vendor props, carries a weapon). */
+  asset: AssetId;
+  offer: string;
+  accept: string;
+  following: string;
+  dismiss: string;
+  dismissed: string;
 };
 
 export const NPCS: readonly NpcDef[] = [
@@ -139,6 +151,14 @@ export const NPCS: readonly NpcDef[] = [
     title: 'Kefir Seller',
     asset: 'npcMikhalych',
     accent: '#6fa0ff',
+    companion: {
+      asset: 'npcPrinceKnight',
+      offer: 'Prince, ride with me and fight beside me.',
+      accept: 'I will follow you, my queen! My sword is yours.',
+      following: 'Lead on, my queen. Point me at the gloom.',
+      dismiss: 'Wait here for me, Prince.',
+      dismissed: 'As you wish. I shall guard this spot and polish my sword.',
+    },
     initial: 10,
     joinAt: 70,
     greet: {

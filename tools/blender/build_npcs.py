@@ -82,15 +82,40 @@ def build_lyoha():
     return _done("npc_lyoha", p)
 
 
-def build_mikhalych():
-    """Prince Sasha (id `mikhalych`): a handsome young prince who sells kefir. Slim, blue tailcoat, red sash, crown, cape."""
-    clear_scene()
-    p = Part("npc_mikhalych")
-    for x in (-0.12, 0.12):
-        p.box((0.2, 0.22, 0.5), (x, 0, 0.62), "ivory")
-        p.box((0.23, 0.26, 0.42), (x, -0.01, 0.21), "ink")
-        p.box((0.25, 0.28, 0.06), (x, -0.01, 0.44), "gold")
-        p.box((0.23, 0.12, 0.1), (x, -0.1, 0.05), "ink")
+def _prince_head(p):
+    """Prince Sasha's head, styled after his real-life inspiration (with his consent): medium brown hair swept up
+    and to the side with volume on top, light grey-blue eyes, straight brows, light stubble, a slight smile.
+    A stylized low-poly likeness, not a scan. Front faces -Y. Coordinates are absolute (head centre z 1.78)."""
+    p.box((0.12, 0.12, 0.1), (0, 0, 1.6), "skin")
+    p.box((0.3, 0.29, 0.34), (0, 0, 1.78), "skin")
+    p.box((0.26, 0.05, 0.08), (0, -0.14, 1.65), "skin_shadow")
+    p.box((0.21, 0.03, 0.09), (0, -0.152, 1.615), "skin_shadow")
+    p.box((0.08, 0.03, 0.06), (0, -0.16, 1.58), "skin_shadow")
+    for x in (-0.15, 0.15):
+        p.box((0.03, 0.06, 0.1), (x, -0.08, 1.7), "skin_shadow")
+    for x in (-0.075, 0.075):
+        p.box((0.075, 0.03, 0.055), (x, -0.148, 1.8), "ivory")
+        p.box((0.042, 0.03, 0.05), (x, -0.153, 1.8), "frost")
+        p.box((0.02, 0.03, 0.03), (x, -0.157, 1.8), "ink")
+        p.box((0.1, 0.03, 0.03), (x, -0.15, 1.875), "hair_brown", rot=(0, 0.12 if x > 0 else -0.12, 0))
+    p.box((0.045, 0.05, 0.1), (0, -0.16, 1.75), "skin_shadow")
+    p.box((0.11, 0.03, 0.025), (0.005, -0.152, 1.675), "brick_light")
+    p.box((0.03, 0.03, 0.025), (0.065, -0.152, 1.69), "brick_light")
+    p.box((0.15, 0.03, 0.02), (0, -0.152, 1.712), "skin_shadow")
+    p.box((0.26, 0.02, 0.05), (0, -0.147, 1.712), "skin_shadow")
+    p.box((0.34, 0.33, 0.13), (0, 0.02, 1.985), "bark")
+    p.box((0.3, 0.16, 0.13), (0.04, -0.12, 2.0), "bark", rot=(0, 0.22, 0))
+    p.box((0.12, 0.14, 0.12), (0.12, -0.16, 2.02), "bark", rot=(0, 0.4, 0))
+    p.box((0.08, 0.1, 0.05), (-0.06, -0.15, 1.955), "hair_brown", rot=(0, -0.2, 0))
+    for x in (-1, 1):
+        p.box((0.05, 0.13, 0.22), (x * 0.175, 0.01, 1.82), "hair_brown")
+        p.box((0.04, 0.1, 0.09), (x * 0.18, 0.0, 1.71), "hair_brown")
+    p.box((0.34, 0.14, 0.3), (0, 0.13, 1.85), "hair_brown")
+    p.box((0.37, 0.36, 0.035), (0, 0.0, 2.06), "gold")
+    p.box((0.05, 0.03, 0.05), (0, -0.19, 2.09), "ruby")
+
+
+def _prince_coat(p):
     p.box((0.5, 0.3, 0.3), (0, 0, 0.98), "dome_blue")
     p.box((0.66, 0.34, 0.5), (0, 0, 1.32), "dome_blue")
     p.box((0.52, 0.32, 0.06), (0, 0, 0.86), "wood_dark")
@@ -101,37 +126,34 @@ def build_mikhalych():
     p.box((0.1, 0.03, 0.8), (-0.02, -0.185, 1.26), "ruby", rot=(0, -0.5, 0))
     for z in (1.12, 1.26, 1.4):
         p.box((0.05, 0.03, 0.05), (0.13, -0.18, z), "gold")
-    for x in (-1, 1):
-        ax = x * 0.42
-        p.box((0.16, 0.18, 0.55), (ax, -0.02, 1.25), "dome_blue")
-        p.box((0.18, 0.2, 0.07), (ax, -0.02, 0.98), "ivory")
-        p.box((0.13, 0.13, 0.13), (ax, -0.03, 0.88), "skin")
-        p.box((0.22, 0.22, 0.06), (ax, -0.02, 1.56), "gold")
     p.box((0.62, 0.08, 0.95), (0, 0.24, 1.15), "ruby")
     p.box((0.72, 0.1, 0.12), (0, 0.22, 1.62), "ivory")
-    p.box((0.12, 0.12, 0.1), (0, 0, 1.6), "skin")
-    p.box((0.3, 0.29, 0.34), (0, 0, 1.78), "skin")
-    p.box((0.26, 0.05, 0.08), (0, -0.14, 1.65), "skin_shadow")
-    for x in (-0.075, 0.075):
-        p.box((0.075, 0.03, 0.06), (x, -0.148, 1.8), "ivory")
-        p.box((0.04, 0.03, 0.05), (x, -0.153, 1.8), "aqua")
-        p.box((0.02, 0.03, 0.03), (x, -0.157, 1.8), "ink")
-        p.box((0.09, 0.03, 0.025), (x, -0.15, 1.88), "hair_brown", rot=(0, 0.18 if x > 0 else -0.18, 0))
-        p.box((0.06, 0.03, 0.05), (x * 1.55, -0.15, 1.71), "blush")
-    p.box((0.04, 0.05, 0.08), (0, -0.16, 1.75), "skin_shadow")
-    p.box((0.1, 0.03, 0.025), (0, -0.152, 1.66), "brick_light")
-    for x in (-0.06, 0.06):
-        p.box((0.03, 0.03, 0.025), (x, -0.152, 1.675), "brick_light")
-    p.box((0.34, 0.33, 0.12), (0, 0.02, 1.98), "straw")
-    p.box((0.3, 0.14, 0.12), (0.03, -0.13, 1.99), "straw", rot=(0, 0.2, 0))
-    p.box((0.1, 0.12, 0.1), (0.12, -0.17, 2.03), "straw", rot=(0, 0.35, 0))
-    for x in (-1, 1):
-        p.box((0.05, 0.1, 0.24), (x * 0.17, 0.0, 1.8), "straw")
-    p.box((0.34, 0.14, 0.3), (0, 0.13, 1.85), "straw")
-    p.box((0.37, 0.36, 0.05), (0, 0.0, 2.07), "gold")
-    for x in (-0.14, -0.07, 0, 0.07, 0.14):
-        p.box((0.04, 0.04, 0.07 if x == 0 else 0.05), (x, -0.17, 2.12), "gold")
-    p.box((0.05, 0.03, 0.06), (0, -0.19, 2.08), "ruby")
+
+
+def _prince_arm(p, x):
+    p.box((0.16, 0.18, 0.55), (x, -0.02, 1.25), "dome_blue")
+    p.box((0.18, 0.2, 0.07), (x, -0.02, 0.98), "ivory")
+    p.box((0.13, 0.13, 0.13), (x, -0.03, 0.88), "skin")
+    p.box((0.22, 0.22, 0.06), (x, -0.02, 1.56), "gold")
+
+
+def _prince_leg(p, x):
+    p.box((0.2, 0.22, 0.5), (x, 0, 0.62), "ivory")
+    p.box((0.23, 0.26, 0.42), (x, -0.01, 0.21), "ink")
+    p.box((0.25, 0.28, 0.06), (x, -0.01, 0.44), "gold")
+    p.box((0.23, 0.12, 0.1), (x, -0.1, 0.05), "ink")
+
+
+def build_mikhalych():
+    """Prince Sasha (id `mikhalych`) selling kefir: a bottle in hand and a crate at his feet. One static mesh."""
+    clear_scene()
+    p = Part("npc_mikhalych")
+    for x in (-0.12, 0.12):
+        _prince_leg(p, x)
+    _prince_coat(p)
+    for x in (-0.42, 0.42):
+        _prince_arm(p, x)
+    _prince_head(p)
     p.box((0.15, 0.15, 0.32), (0.5, -0.06, 0.92), "ivory")
     p.box((0.1, 0.1, 0.08), (0.5, -0.06, 1.12), "aqua")
     p.box((0.16, 0.16, 0.1), (0.5, -0.06, 0.88), "dome_blue")
@@ -140,6 +162,70 @@ def build_mikhalych():
         p.box((0.11, 0.11, 0.24), (x, -0.32, 0.38), "ivory")
         p.box((0.08, 0.08, 0.06), (x, -0.32, 0.53), "aqua")
     return _done("npc_mikhalych", p)
+
+
+def build_prince_knight():
+    """Prince Sasha as Rosa's companion: no bottles, a sword in his right hand. Rigid parts (torso, head, arms, legs)
+    with idle and walk clips; the sword arm is `arm_sword` so the game can swing it."""
+    clear_scene()
+    root = Empty("npc_prince_knight")
+    for name, x in (("leg_l", 0.12), ("leg_r", -0.12)):
+        leg = Part(name, (x, 0, 0.95), root)
+        _prince_leg(leg, x)
+        leg.finish()
+    torso = Part("torso", (0, 0, 0.95), root)
+    _prince_coat(torso)
+    torso.finish()
+    head = Part("head", (0, 0, 1.6), torso)
+    _prince_head(head)
+    head.finish()
+    arm_l = Part("arm_l", (0.42, 0, 1.56), torso)
+    _prince_arm(arm_l, 0.42)
+    arm_l.finish()
+    arm_sword = Part("arm_sword", (-0.42, 0, 1.56), torso)
+    _prince_arm(arm_sword, -0.42)
+    arm_sword.finish()
+    sword = Part("sword", (-0.42, -0.06, 0.9), arm_sword)
+    sx, sy, sz = -0.42, -0.06, 0.9
+    sword.box((0.05, 0.05, 0.26), (sx, sy, sz), "wood_dark")
+    sword.box((0.3, 0.06, 0.05), (sx, sy, sz + 0.14), "gold")
+    sword.box((0.08, 0.08, 0.08), (sx, sy, sz - 0.13), "gold")
+    sword.box((0.09, 0.03, 0.95), (sx, sy, sz + 0.65), "frost")
+    sword.box((0.03, 0.035, 0.9), (sx, sy, sz + 0.65), "snow")
+    sword.box((0.07, 0.03, 0.1), (sx, sy, sz + 1.16), "frost", rot=(0, 0, 0.0))
+    sword.finish()
+
+    walk = 0.5
+    author_clips(
+        {
+            "idle": {
+                "frames": 60,
+                "tracks": [
+                    {"obj": "torso", "kind": "bob", "amp": 0.012},
+                    {"obj": "head", "kind": "rot", "axis": 0, "amp": 0.03, "phase": 0.6},
+                    {"obj": "arm_l", "kind": "rot", "axis": 0, "amp": 0.03},
+                    {"obj": "arm_sword", "kind": "rot", "axis": 0, "amp": 0.01, "phase": math.pi},
+                ],
+            },
+            "walk": {
+                "frames": 30,
+                "tracks": [
+                    {"obj": "torso", "kind": "bob", "amp": 0.04},
+                    {"obj": "head", "kind": "rot", "axis": 0, "amp": 0.05, "phase": 0.6},
+                    {"obj": "leg_l", "kind": "rot", "axis": 0, "amp": walk},
+                    {"obj": "leg_r", "kind": "rot", "axis": 0, "amp": walk, "phase": math.pi},
+                    {"obj": "arm_l", "kind": "rot", "axis": 0, "amp": 0.45, "phase": math.pi},
+                    {"obj": "arm_sword", "kind": "rot", "axis": 0, "amp": 0.15},
+                ],
+            },
+        }
+    )
+    objs = list(bpy.data.objects)
+    return {
+        "name": "npc_prince_knight",
+        "tris": triangle_count(objs),
+        "path": export_glb("npc_prince_knight.glb", ["npc_prince_knight"], animations=True),
+    }
 
 
 def build_boris():

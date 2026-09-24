@@ -28,6 +28,7 @@ describe('parseSave', () => {
       relationship: 58,
       used: ['kindness', 'song'],
       joined: false,
+      following: false,
     });
     expect(save.npcs.tolik?.joined).toBe(true);
     expect(save.playSeconds).toBe(120.5);
@@ -75,8 +76,18 @@ describe('parseSave', () => {
     expect(save.hero.form).toBe('human');
     expect(Number.isNaN(save.hero.x)).toBe(true);
     expect(save.hero.facingZ).toBe(1);
-    expect(save.npcs.grisha).toEqual({ relationship: 100, used: ['song'], joined: false });
-    expect(save.npcs.tolik).toEqual({ relationship: 0, used: [], joined: false });
+    expect(save.npcs.grisha).toEqual({
+      relationship: 100,
+      used: ['song'],
+      joined: false,
+      following: false,
+    });
+    expect(save.npcs.tolik).toEqual({
+      relationship: 0,
+      used: [],
+      joined: false,
+      following: false,
+    });
     expect(save.npcs).not.toHaveProperty('stranger');
     expect(save.npcs).not.toHaveProperty('lyoha');
   });
@@ -264,5 +275,27 @@ describe('save v3: quests', () => {
     for (const bad of [null, 5, 'x', [], { active: 4, completed: 'y' }]) {
       expect(parseSave(good({ quests: bad }))!.quests).toEqual({ active: {}, completed: [] });
     }
+  });
+});
+
+describe('save: companion following flag', () => {
+  it('keeps following for an NPC who can be a companion and drops it for anyone else', () => {
+    const save = parseSave(
+      good({
+        npcs: {
+          mikhalych: { relationship: 80, used: [], joined: false, following: true },
+          grisha: { relationship: 80, used: [], joined: false, following: true },
+        },
+      }),
+    )!;
+    expect(save.npcs.mikhalych?.following).toBe(true);
+    expect(save.npcs.grisha?.following).toBe(false);
+  });
+
+  it('defaults to not following for older saves', () => {
+    const save = parseSave(
+      good({ npcs: { mikhalych: { relationship: 80, used: [], joined: true } } }),
+    )!;
+    expect(save.npcs.mikhalych?.following).toBe(false);
   });
 });

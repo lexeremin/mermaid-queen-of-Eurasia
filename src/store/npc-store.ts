@@ -4,7 +4,13 @@ import { NPCS } from '@/data/npcs';
 import type { DialogueContext } from '@/systems/dialogue';
 import { clampRelationship } from '@/systems/relationship';
 
-export type NpcRuntime = { relationship: number; used: readonly Method[]; joined: boolean };
+export type NpcRuntime = {
+  relationship: number;
+  used: readonly Method[];
+  joined: boolean;
+  /** Fights beside Rosa as a companion (only NPCs with a `companion` definition). */
+  following: boolean;
+};
 
 type NpcState = {
   npcs: Readonly<Record<string, NpcRuntime>>;
@@ -14,7 +20,9 @@ type NpcState = {
 };
 
 const initial = (): Record<string, NpcRuntime> =>
-  Object.fromEntries(NPCS.map((n) => [n.id, { relationship: n.initial, used: [], joined: false }]));
+  Object.fromEntries(
+    NPCS.map((n) => [n.id, { relationship: n.initial, used: [], joined: false, following: false }]),
+  );
 
 export const useNpcStore = create<NpcState>((set) => ({
   npcs: initial(),
@@ -31,6 +39,8 @@ export const useNpcStore = create<NpcState>((set) => ({
         next = current.used.includes(effect.method)
           ? current
           : { ...current, used: [...current.used, effect.method] };
+      } else if (effect.type === 'follow') {
+        next = { ...current, following: effect.value };
       } else {
         next = { ...current, joined: true };
       }
@@ -44,5 +54,6 @@ export function npcContext(): DialogueContext {
     relationship: (id) => npcs()[id]?.relationship ?? 0,
     methodUsed: (id, method) => npcs()[id]?.used.includes(method) ?? false,
     joined: (id) => npcs()[id]?.joined ?? false,
+    following: (id) => npcs()[id]?.following ?? false,
   };
 }

@@ -5,11 +5,17 @@ import { buildPersuasionTree } from '@/data/persuasion';
 import { advance, resolveNode, visibleChoices, type DialogueContext } from '@/systems/dialogue';
 import { MESMERIZED_AT } from '@/systems/relationship';
 
-function makeContext(state: { rel: number; used: Set<string>; joined: boolean }): DialogueContext {
+function makeContext(state: {
+  rel: number;
+  used: Set<string>;
+  joined: boolean;
+  following?: boolean;
+}): DialogueContext {
   return {
     relationship: () => state.rel,
     methodUsed: (_npc, method) => state.used.has(method),
     joined: () => state.joined,
+    following: () => state.following === true,
   };
 }
 
@@ -100,6 +106,68 @@ describe('persuasion tree', () => {
         for (const target of targets)
           expect(target === 'end' || t.nodes[target], `${def.id}:${target}`).toBeTruthy();
       }
+    }
+  });
+});
+
+describe('companion option (Prince Sasha)', () => {
+  const prince = NPCS.find((n) => n.id === 'mikhalych')!;
+  const tree = buildPersuasionTree(prince);
+  const texts = (ctx: DialogueContext) => {
+    const resolved = resolveNode(tree, tree.start, ctx)!;
+    return {
+      id: resolved.id,
+      options: visibleChoices(resolved.node, ctx).map((c) => c.choice.text),
+    };
+  };
+
+  it('only offers it once he is mesmerized', () => {
+    const low = texts(makeContext({ rel: 10, used: new Set(), joined: false }));
+    expect(low.options).not.toContain(prince.companion!.offer);
+    const high = texts(makeContext({ rel: MESMERIZED_AT, used: new Set(), joined: false }));
+    expect(high.options).toContain(prince.companion!.offer);
+  });
+
+  it('is also offered after he joined the kingdom', () => {
+    const joined = texts(makeContext({ rel: 90, used: new Set(), joined: true }));
+    expect(joined.id).toBe('joined');
+    expect(joined.options).toContain(prince.companion!.offer);
+  });
+
+  it('sets him following and he answers with his promise', () => {
+    const ctx = makeContext({ rel: 90, used: new Set(), joined: true });
+    const resolved = resolveNode(tree, tree.start, ctx)!;
+    const index = visibleChoices(resolved.node, ctx).find(
+      (c) => c.choice.text === prince.companion!.offer,
+    )!.index;
+    const step = advance(resolved.node, index);
+    expect(step.effects).toContainEqual({ type: 'follow', npc: 'mikhalych', value: true });
+    expect(tree.nodes[step.next]?.text).toBe(prince.companion!.accept);
+    expect(prince.companion!.accept).toContain('I will follow you, my queen');
+  });
+
+  it('while following, asks what to do and lets Rosa send him back', () => {
+    const ctx = makeContext({ rel: 90, used: new Set(), joined: true, following: true });
+    const shown = texts(ctx);
+    expect(shown.id).toBe('following');
+    expect(shown.options).not.toContain(prince.companion!.offer);
+    expect(shown.options).toContain(prince.companion!.dismiss);
+    const node = resolveNode(tree, tree.start, ctx)!.node;
+    const index = visibleChoices(node, ctx).find(
+      (c) => c.choice.text === prince.companion!.dismiss,
+    )!.index;
+    expect(advance(node, index).effects).toContainEqual({
+      type: 'follow',
+      npc: 'mikhalych',
+      value: false,
+    });
+  });
+
+  it('no one else can be asked to follow', () => {
+    for (const npc of NPCS.filter((n) => n.id !== 'mikhalych')) {
+      const other = buildPersuasionTree(npc);
+      expect(other.nodes.following).toBeUndefined();
+      expect(other.nodes.follow_yes).toBeUndefined();
     }
   });
 });

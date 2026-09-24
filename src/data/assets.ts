@@ -39,6 +39,7 @@ export const ASSETS = {
   npcGrisha: { url: '/assets/npc/npc_grisha.glb', clips: [] },
   npcTolik: { url: '/assets/npc/npc_tolik.glb', clips: [] },
   npcLyoha: { url: '/assets/npc/npc_lyoha.glb', clips: [] },
+  npcPrinceKnight: { url: '/assets/npc/npc_prince_knight.glb', clips: ['idle', 'walk'] },
   npcMikhalych: { url: '/assets/npc/npc_mikhalych.glb', clips: [] },
   npcBoris: { url: '/assets/npc/npc_boris.glb', clips: [] },
   npcSergei: { url: '/assets/npc/npc_sergei.glb', clips: [] },
