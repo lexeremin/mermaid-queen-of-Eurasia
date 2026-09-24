@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 9 complete (Manezhnaya Square + Alexander Garden).** The map direction changes (summer, real layout, GUM, garden) are done. Next: **Phase 10 — NPCs + dialogue** (`docs/phases/phase-10.md` — write it first, it does not exist yet).
+**Phase 10 complete (NPCs + dialogue).** Next: **Phase 11 — Save + Supabase** (`docs/phases/phase-11.md` — write it first, it does not exist yet). Note: needs a Supabase project (URL + anon key) from the user.
 
 ---
 
@@ -65,7 +65,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-10.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-11.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -88,8 +88,8 @@ Read these files before starting any work:
 | Phase 8 — Real layout + detailed GUM | ✅ Complete | Red Square in real relative positions (Kremlin right, GUM left, cathedral far end, museum/Kazan/Resurrection Gate near end), detailed GUM facade, walkable GUM gallery under a translucent glass roof | 889482d. Map rotated 180° from real north; hero X-ray silhouette; 31 assets, ~45 draw calls |
 | Phase 9 — Manezhnaya Square + Alexander Garden | ✅ Complete | Through the Resurrection Gate: Manezhnaya Square, Kremlin north wall, the real Alexander Garden outside the west wall (Kutafya tower, grotto, obelisk, paths, lawns) | cd9d2f0. Same contiguous map; 36 assets; up to 56 draw calls |
 | Phase 9b — Desktop controls rework | ✅ Complete | Click-to-move with pathfinding, WASD facing turns naturally, no mouse aim; attack Space/right-click, dash Shift | 21acc18 |
-| Phase 10 — NPCs + dialogue | ⬜ Next | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, heart-buff visual | |
-| Phase 11 — Save + Supabase | ⬜ Todo | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
+| Phase 10 — NPCs + dialogue | ✅ Complete | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, heart-buff visual | 10d002e. 44 assets, ~53 draw calls |
+| Phase 11 — Save + Supabase | ⬜ Next | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
 | Phase 12 — Combat core | ⬜ Todo | Trident attack, dash, singing Mermaid Aura (orbiting notes), AoE spell, damage, 3 enemy types + AI | |
 | Phase 13 — Progression + inventory | ⬜ Todo | HP/mana/XP/levels, inventory + equipment UI (touch), loot | |
 | Phase 14 — Quests + kingdom | ⬜ Todo | Quest board, quest log, kingdom reputation | |
