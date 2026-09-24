@@ -1,21 +1,21 @@
 import { describe, expect, it } from 'vitest';
-import { VILLAGE } from '@/data/maps/village';
+import { RED_SQUARE } from '@/data/maps/red-square';
 import { resolveCircle } from '@/systems/collision';
 import { buildCollisionWorld } from '@/systems/map-collision';
 import { PLAYER_RADIUS } from '@/systems/movement';
 import { zoneAt } from '@/systems/zones';
 
-const world = buildCollisionWorld(VILLAGE);
+const world = buildCollisionWorld(RED_SQUARE);
 const STEP = 0.4;
-const { bounds } = VILLAGE;
+const { bounds } = RED_SQUARE;
 
 const walkable = (x: number, z: number): boolean => {
   const p = resolveCircle({ x, z }, PLAYER_RADIUS, world);
   return Math.abs(p.x - x) < 1e-6 && Math.abs(p.z - z) < 1e-6;
 };
 
-function riverCenterZ(x: number): number {
-  const pts = VILLAGE.river.ribbon.points;
+function canalCenterZ(x: number): number {
+  const pts = RED_SQUARE.river.ribbon.points;
   for (let i = 0; i < pts.length - 1; i++) {
     const a = pts[i];
     const b = pts[i + 1];
@@ -25,7 +25,7 @@ function riverCenterZ(x: number): number {
   return NaN;
 }
 
-function floodFromSpawn(): Set<string> {
+function floodFromSpawn(): { x: number; z: number }[] {
   const cols = Math.floor((bounds.maxX - bounds.minX) / STEP);
   const rows = Math.floor((bounds.maxZ - bounds.minZ) / STEP);
   const key = (i: number, j: number) => `${i},${j}`;
@@ -34,13 +34,16 @@ function floodFromSpawn(): Set<string> {
     bounds.minZ + j * STEP,
   ];
   const start = [
-    Math.round((VILLAGE.spawn.x - bounds.minX) / STEP),
-    Math.round((VILLAGE.spawn.z - bounds.minZ) / STEP),
+    Math.round((RED_SQUARE.spawn.x - bounds.minX) / STEP),
+    Math.round((RED_SQUARE.spawn.z - bounds.minZ) / STEP),
   ] as const;
   const seen = new Set<string>([key(...start)]);
   const queue: (readonly [number, number])[] = [start];
+  const points: { x: number; z: number }[] = [];
   while (queue.length > 0) {
     const [i, j] = queue.pop() as readonly [number, number];
+    const [x, z] = toWorld(i, j);
+    points.push({ x, z });
     for (const [di, dj] of [
       [1, 0],
       [-1, 0],
@@ -55,16 +58,16 @@ function floodFromSpawn(): Set<string> {
       queue.push([ni, nj]);
     }
   }
-  return seen;
+  return points;
 }
 
-describe('village map', () => {
+describe('Red Square map', () => {
   it('spawns Rosa on free ground inside the bounds', () => {
-    expect(walkable(VILLAGE.spawn.x, VILLAGE.spawn.z)).toBe(true);
+    expect(walkable(RED_SQUARE.spawn.x, RED_SQUARE.spawn.z)).toBe(true);
   });
 
   it('keeps colliding placements inside the walkable bounds', () => {
-    for (const p of VILLAGE.placements) {
+    for (const p of RED_SQUARE.placements) {
       if (p.collide === false) continue;
       expect(p.x).toBeGreaterThan(bounds.minX);
       expect(p.x).toBeLessThan(bounds.maxX);
@@ -73,29 +76,36 @@ describe('village map', () => {
     }
   });
 
-  it('blocks the river and the buildings', () => {
-    expect(walkable(-10, riverCenterZ(-10))).toBe(false);
-    expect(walkable(20, riverCenterZ(20))).toBe(false);
-    expect(walkable(-11, -7)).toBe(false);
-    expect(walkable(0, 2)).toBe(false);
+  it('places every non-colliding backdrop piece outside the walkable bounds', () => {
+    for (const p of RED_SQUARE.placements) {
+      if (p.collide !== false) continue;
+      const inside =
+        p.x > bounds.minX && p.x < bounds.maxX && p.z > bounds.minZ && p.z < bounds.maxZ;
+      expect(inside).toBe(false);
+    }
   });
 
-  it('lets Rosa reach the forest entrance, and only across the bridge', () => {
-    const reached = floodFromSpawn();
-    const cells = [...reached].map((k) => k.split(',').map(Number) as [number, number]);
-    const points = cells.map(([i, j]) => ({
-      x: bounds.minX + (i ?? 0) * STEP,
-      z: bounds.minZ + (j ?? 0) * STEP,
-    }));
+  it('blocks the canal, stalls, lodge, gate posts and lampposts', () => {
+    expect(walkable(-10, canalCenterZ(-10))).toBe(false);
+    expect(walkable(10, canalCenterZ(10))).toBe(false);
+    expect(walkable(13, -4)).toBe(false);
+    expect(walkable(-11, 23)).toBe(false);
+    expect(walkable(-14.5, 14 - 2.1)).toBe(false);
+    expect(walkable(-14.5, 14 + 2.1)).toBe(false);
+    expect(walkable(-8, 12)).toBe(false);
+  });
 
-    expect(points.some((p) => zoneAt(VILLAGE.zones, p)?.id === 'forest-entrance')).toBe(true);
-    expect(points.some((p) => p.z < riverCenterZ(0) - 4)).toBe(true);
+  it('lets Rosa reach the Alexander Garden gate and the cathedral forecourt, only across the bridge', () => {
+    const points = floodFromSpawn();
 
-    const inRiverBand = points.filter(
-      (p) => Math.abs(p.x) > 3.5 && Math.abs(p.z - riverCenterZ(p.x)) < 1.5,
+    expect(points.some((p) => zoneAt(RED_SQUARE.zones, p)?.id === 'garden-entrance')).toBe(true);
+    expect(points.some((p) => p.z < canalCenterZ(0) - 4)).toBe(true);
+
+    const inCanalBand = points.filter(
+      (p) => Math.abs(p.x) > 4.5 && Math.abs(p.z - canalCenterZ(p.x)) < 1.5,
     );
-    expect(inRiverBand).toHaveLength(0);
-    const onBridge = points.filter((p) => Math.abs(p.x) < 1 && Math.abs(p.z - riverCenterZ(0)) < 1);
+    expect(inCanalBand).toHaveLength(0);
+    const onBridge = points.filter((p) => Math.abs(p.x) < 1 && Math.abs(p.z - canalCenterZ(0)) < 1);
     expect(onBridge.length).toBeGreaterThan(0);
   });
 });

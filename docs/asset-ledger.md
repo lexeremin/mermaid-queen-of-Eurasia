@@ -8,22 +8,29 @@ Columns: file, source, licence, commercial use OK, notes.
 |---|---|---|---|---|
 | `char_rosa.glb` | Procedural, `tools/blender/build_hero.py` (`build_rosa_human`), 2026-09-24 | Original work, project licence | yes | Hero, human form: stylized low-poly character inspired by the look of a consenting real person (styling only, no face scan or photo texture). See `docs/likeness-and-consent.md`. `idle`/`walk` clips. |
 | `char_rosa_mermaid.glb` | Procedural, `tools/blender/build_hero.py` (`build_rosa_mermaid`), 2026-09-24 | Original work, project licence | yes | Hero, mermaid transformation: same head, hair and roses with a tail chain. `idle`/`walk` clips. |
-| `bld_izba.glb` | Procedural, `tools/blender/build_poc_assets.py` (`build_izba`), 2026-09-24 | Original work, project licence | yes | Slavic wooden house, warm lit window. |
 | `tree_spruce.glb` | Procedural, `tools/blender/build_poc_assets.py` (`build_tree`), 2026-09-24 | Original work, project licence | yes | Snow-dusted spruce. |
 | `bld_shop.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_shop`), 2026-09-24 | Original work, project licence | yes | Market stall, rose/paper striped awning. |
 | `bld_shop_herbs.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_shop_herbs`), 2026-09-24 | Original work, project licence | yes | Herbalist stall, teal/paper awning. |
 | `bld_hut.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_hut`), 2026-09-24 | Original work, project licence | yes | Rosa's small house, teal roof, pearl ridge. |
-| `bld_bridge.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_bridge`), 2026-09-24 | Original work, project licence | yes | Wooden bridge, length along Z (river crossing). |
-| `bld_gate.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_gate`), 2026-09-24 | Original work, project licence | yes | Forest entrance gate with banners and lantern. |
 | `prop_questboard.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_questboard`), 2026-09-24 | Original work, project licence | yes | Notice board (prop only until Phase 9). |
-| `prop_fence.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_fence`), 2026-09-24 | Original work, project licence | yes | 2 m fence section. |
-| `prop_well.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_well`), 2026-09-24 | Original work, project licence | yes | Village well. |
-| `prop_lantern.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_lantern`), 2026-09-24 | Original work, project licence | yes | Post lantern (flat candle color, no real light). |
 | `prop_barrel.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_barrel`), 2026-09-24 | Original work, project licence | yes | Barrel. |
 | `prop_crate.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_crate`), 2026-09-24 | Original work, project licence | yes | Crate. |
-| `prop_logs.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_logs`), 2026-09-24 | Original work, project licence | yes | Log pile. |
 | `tree_birch.glb` | Procedural, `tools/blender/build_village_assets.py` (`build_birch`), 2026-09-24 | Original work, project licence | yes | Frosty birch. |
+| `lmk_basil.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_basil`), 2026-09-24 | Original work, project licence | yes | St. Basil's-style cathedral: stylized, surreal, no real-building plans used. |
+| `bld_kremlin_wall.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_kremlin_wall`), 2026-09-24 | Original work, project licence | yes | Crenellated wall segment (6 m). |
+| `bld_kremlin_tower.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_kremlin_tower`), 2026-09-24 | Original work, project licence | yes | Clock tower with a fantasy ruby-crystal spire (no state star). |
+| `bld_gum.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_gum`), 2026-09-24 | Original work, project licence | yes | Arcade facade segment (8 m), lit windows, string lights. |
+| `bld_museum.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_museum`), 2026-09-24 | Original work, project licence | yes | Red-brick museum with two tent-roofed towers. |
+| `bld_arch_bridge.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_arch_bridge`), 2026-09-24 | Original work, project licence | yes | Stone bridge, deck flush with the ground. |
+| `bld_garden_gate.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_garden_gate`), 2026-09-24 | Original work, project licence | yes | Alexander Garden gate: brick posts with spires. |
+| `prop_lamppost.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_lamppost`), 2026-09-24 | Original work, project licence | yes | Ornate double lamp (flat candle color, no real light). |
+| `prop_fir_tub.glb` | Procedural, `tools/blender/build_redsquare_assets.py` (`build_fir_tub`), 2026-09-24 | Original work, project licence | yes | Fir tree in a tub with string lights. |
 | `palette_atlas.png` | Generated by `tools/blender/lib.py` (`get_atlas`) from `tools/palette.json`, 2026-09-24 | Original work, project licence | yes | 128×128 flat palette atlas, shared by all assets. |
+| `cobble_tile.png` | Generated by `tools/make-cobble.py` from `tools/palette.json`, 2026-09-24 | Original work, project licence | yes | 32×32 tiling cobblestone, palette colors, used on the plaza ground. |
+
 
 ## Third-party / generated sources
 None yet. AI generators (Hunyuan3D, Hyper3D Rodin) are not enabled in the Blender addon. When one is used, record the service, prompt, date and the terms that allow commercial use.
+
+## Retired (removed in Phase 6 with the winter village)
+`bld_izba`, `bld_bridge` (plank bridge), `bld_gate` (village gate), `prop_well`, `prop_fence`, `prop_logs`, `prop_lantern`. Their builders were deleted; the shipped GLBs are gone. Kept from the village era: shops, hut (Rosa's lodge), quest board, barrel, crate, spruce, birch.

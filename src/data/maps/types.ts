@@ -25,7 +25,8 @@ export type MapData = {
   placements: readonly Placement[];
   river: { ribbon: Ribbon; iceWidth: number; colliderRuns: readonly (readonly Point[])[] };
   paths: readonly Ribbon[];
-  square: { x: number; z: number; r: number };
+  /** Cobblestone rectangle: center and size. */
+  plaza: { cx: number; cz: number; w: number; d: number };
   zones: readonly Zone[];
   colliders: readonly Collider[];
 };

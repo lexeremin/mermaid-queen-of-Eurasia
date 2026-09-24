@@ -1,4 +1,6 @@
-"""Phase 4 village assets. Same usage as build_poc_assets.py:
+"""Village-era assets kept for the Red Square map: market stalls, Rosa's lodge, quest board, barrel, crate, birch.
+
+    Same usage as build_redsquare_assets.py:
 
     exec(open(REPO + "/tools/blender/lib.py").read(), ns)
     exec(open(REPO + "/tools/blender/build_village_assets.py").read(), ns)
@@ -103,48 +105,6 @@ def build_hut():
     return _done("bld_hut", p)
 
 
-def build_bridge():
-    """Deck is nearly flush with the ground (the river is a flat ribbon); only railings rise."""
-    clear_scene()
-    p = Part("bld_bridge")
-    for i in range(7):
-        y0 = -2.76 + i * 0.92
-        p.box((2.5, 0.88, 0.1), (0, y0, 0.07), "wood" if i % 2 == 0 else "wood_light")
-    for x in (-1.15, 1.15):
-        p.box((0.28, 6.4, 0.2), (x, 0, 0.1), "wood_dark")
-        for y in (-3.0, -1.0, 1.0, 3.0):
-            p.box((0.16, 0.16, 1.0), (x, y, 0.62), "wood")
-        p.box((0.12, 6.4, 0.12), (x, 0, 1.05), "wood_light")
-        p.box((0.2, 6.2, 0.1), (x, 0, 1.16), "snow")
-    for y in (-3.0, 3.0):
-        for x in (-1.25, 1.25):
-            p.box((0.5, 0.5, 0.4), (x, y * 1.05, 0.2), "slate")
-    return _done("bld_bridge", p)
-
-
-def build_gate():
-    clear_scene()
-    p = Part("bld_gate")
-    for x in (-1.9, 1.9):
-        p.box((0.9, 0.9, 0.4), (x, 0, 0.2), "slate")
-        p.box((0.5, 0.5, 3.4), (x, 0, 2.1), "wood_dark")
-        p.box((0.7, 0.7, 0.2), (x, 0, 3.9), "wood")
-        p.cone(0.3, 0, 0.6, (x, 0, 4.3), "teal", segments=4)
-        p.box((0.16, 0.16, 0.16), (x, 0, 4.7), "pearl")
-        p.box((0.56, 0.56, 0.12), (x, 0, 3.6), "gold")
-    p.box((4.8, 0.45, 0.42), (0, 0, 3.5), "wood")
-    p.box((4.7, 0.3, 0.14), (0, 0, 3.78), "snow")
-    p.box((3.3, 0.3, 0.28), (0, 0, 2.95), "teal_dark")
-    for x in (-1.2, -0.4, 0.4, 1.2):
-        p.box((0.14, 0.34, 0.14), (x, -0.02, 2.95), "aqua")
-    p.box((0.05, 0.05, 0.5), (0, 0, 2.55), "wood_dark")
-    p.box((0.3, 0.3, 0.36), (0, 0, 2.2), "candle")
-    p.box((0.4, 0.4, 0.08), (0, 0, 2.42), "gold")
-    for x, color in ((-1.3, "rose"), (1.3, "aqua")):
-        p.box((0.32, 0.05, 0.9), (x, -0.25, 2.35), color)
-    return _done("bld_gate", p)
-
-
 def build_questboard():
     clear_scene()
     p = Part("prop_questboard")
@@ -157,44 +117,6 @@ def build_questboard():
     p.box((2.6, 0.9, 0.1), (0, -0.1, 2.35), "wood", rot=(0.35, 0, 0))
     p.box((2.5, 0.8, 0.08), (0, -0.12, 2.42), "snow", rot=(0.35, 0, 0))
     return _done("prop_questboard", p)
-
-
-def build_fence():
-    clear_scene()
-    p = Part("prop_fence")
-    for x in (-0.9, 0.9):
-        p.box((0.14, 0.14, 1.0), (x, 0, 0.5), "wood_dark")
-        p.box((0.2, 0.2, 0.08), (x, 0, 1.04), "snow")
-    for z in (0.35, 0.75):
-        p.box((2.0, 0.08, 0.12), (0, 0, z), "wood_light")
-    p.box((1.9, 0.1, 0.06), (0, 0, 0.86), "snow")
-    return _done("prop_fence", p)
-
-
-def build_well():
-    clear_scene()
-    p = Part("prop_well")
-    p.cone(0.9, 0.85, 0.8, (0, 0, 0.4), "slate", segments=8)
-    p.cone(0.6, 0.6, 0.05, (0, 0, 0.78), "teal_dark", segments=8, caps=True)
-    p.cone(0.95, 0.95, 0.1, (0, 0, 0.83), "frost", segments=8, caps=False)
-    for x in (-0.75, 0.75):
-        p.box((0.14, 0.14, 1.9), (x, 0, 1.35), "wood_dark")
-    p.box((0.1, 0.1, 0.1), (0, 0, 2.0), "wood")
-    _gable_roof(p, 0.95, 0.75, 0.55, 2.1, ("wood_light", "snow"), "wood_dark")
-    p.box((0.06, 0.06, 0.6), (0, 0, 1.7), "wood_dark")
-    p.box((0.3, 0.3, 0.3), (0, 0, 1.3), "wood")
-    return _done("prop_well", p)
-
-
-def build_lantern():
-    clear_scene()
-    p = Part("prop_lantern")
-    p.cone(0.12, 0.08, 2.4, (0, 0, 1.2), "wood_dark", segments=4)
-    p.box((0.5, 0.06, 0.06), (0.15, 0, 2.3), "wood_dark")
-    p.box((0.3, 0.3, 0.4), (0.4, 0, 2.05), "candle")
-    p.box((0.4, 0.4, 0.08), (0.4, 0, 2.3), "gold")
-    p.box((0.38, 0.38, 0.1), (0.4, 0, 2.4), "snow")
-    return _done("prop_lantern", p)
 
 
 def build_barrel():
@@ -218,18 +140,6 @@ def build_crate():
     return _done("prop_crate", p)
 
 
-def build_logs():
-    clear_scene()
-    p = Part("prop_logs")
-    rows = ((3, 0.22, 0.0), (2, 0.6, 0.2), (1, 0.98, 0.4))
-    for count, z, off in rows:
-        for i in range(count):
-            x = (i - (count - 1) / 2) * 0.42
-            p.cone(0.19, 0.19, 1.5, (x, 0, z), "wood_light" if (i + count) % 2 else "wood", segments=6, rot=(math.pi / 2, 0, 0))
-    p.box((1.3, 0.5, 0.1), (0, 0, 1.2), "snow")
-    return _done("prop_logs", p)
-
-
 def build_birch():
     clear_scene()
     p = Part("tree_birch")
@@ -243,8 +153,5 @@ def build_birch():
 
 
 def build_all_village():
-    fns = [
-        build_shop, build_shop_herbs, build_hut, build_bridge, build_gate, build_questboard,
-        build_fence, build_well, build_lantern, build_barrel, build_crate, build_logs, build_birch,
-    ]
+    fns = [build_shop, build_shop_herbs, build_hut, build_questboard, build_barrel, build_crate, build_birch]
     return [fn() for fn in fns]

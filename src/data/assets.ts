@@ -1,6 +1,7 @@
 import type { Shape } from '@/data/types';
 
 export const ATLAS_URL = '/assets/atlas/palette_atlas.png';
+export const COBBLE_URL = '/assets/atlas/cobble_tile.png';
 
 type AssetDef = {
   url: string;
@@ -15,27 +16,29 @@ const circle = (r: number, x = 0, z = 0): Shape => ({ kind: 'circle', x, z, r })
 export const ASSETS = {
   rosa: { url: '/assets/char/char_rosa.glb', clips: ['idle', 'walk'] },
   rosaMermaid: { url: '/assets/char/char_rosa_mermaid.glb', clips: ['idle', 'walk'] },
-  izba: { url: '/assets/bld/bld_izba.glb', clips: [], footprint: [box(2.2, 1.9)] },
+  basil: { url: '/assets/lmk/lmk_basil.glb', clips: [], footprint: [box(6.7, 5.2)] },
+  kremlinWall: { url: '/assets/bld/bld_kremlin_wall.glb', clips: [], footprint: [box(3.0, 1.2)] },
+  kremlinTower: { url: '/assets/bld/bld_kremlin_tower.glb', clips: [], footprint: [box(2.2, 2.2)] },
+  gum: { url: '/assets/bld/bld_gum.glb', clips: [], footprint: [box(4.1, 2.6)] },
+  museum: { url: '/assets/bld/bld_museum.glb', clips: [], footprint: [box(7.2, 2.7)] },
+  archBridge: {
+    url: '/assets/bld/bld_arch_bridge.glb',
+    clips: [],
+    footprint: [box(0.3, 3.2, -1.9), box(0.3, 3.2, 1.9)],
+  },
+  gardenGate: {
+    url: '/assets/bld/bld_garden_gate.glb',
+    clips: [],
+    footprint: [circle(0.55, -2.1), circle(0.55, 2.1)],
+  },
+  hut: { url: '/assets/bld/bld_hut.glb', clips: [], footprint: [box(1.7, 1.45)] },
   shop: { url: '/assets/bld/bld_shop.glb', clips: [], footprint: [box(1.95, 1.55)] },
   shopHerbs: { url: '/assets/bld/bld_shop_herbs.glb', clips: [], footprint: [box(1.95, 1.55)] },
-  hut: { url: '/assets/bld/bld_hut.glb', clips: [], footprint: [box(1.7, 1.45)] },
-  bridge: {
-    url: '/assets/bld/bld_bridge.glb',
-    clips: [],
-    footprint: [box(0.12, 3.2, -1.15), box(0.12, 3.2, 1.15)],
-  },
-  gate: {
-    url: '/assets/bld/bld_gate.glb',
-    clips: [],
-    footprint: [circle(0.4, -1.9), circle(0.4, 1.9)],
-  },
   questBoard: { url: '/assets/prop/prop_questboard.glb', clips: [], footprint: [box(1.1, 0.25)] },
-  fence: { url: '/assets/prop/prop_fence.glb', clips: [], footprint: [box(1.0, 0.12)] },
-  well: { url: '/assets/prop/prop_well.glb', clips: [], footprint: [circle(0.95)] },
-  lantern: { url: '/assets/prop/prop_lantern.glb', clips: [], footprint: [circle(0.2)] },
+  lamppost: { url: '/assets/prop/prop_lamppost.glb', clips: [], footprint: [circle(0.28)] },
+  firTub: { url: '/assets/prop/prop_fir_tub.glb', clips: [], footprint: [circle(0.6)] },
   barrel: { url: '/assets/prop/prop_barrel.glb', clips: [], footprint: [circle(0.42)] },
   crate: { url: '/assets/prop/prop_crate.glb', clips: [], footprint: [box(0.47, 0.47)] },
-  logs: { url: '/assets/prop/prop_logs.glb', clips: [], footprint: [box(0.65, 0.8)] },
   spruce: { url: '/assets/tree/tree_spruce.glb', clips: [], footprint: [circle(0.45)] },
   birch: { url: '/assets/tree/tree_birch.glb', clips: [], footprint: [circle(0.35)] },
 } as const satisfies Record<string, AssetDef>;

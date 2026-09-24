@@ -1,11 +1,52 @@
 {
-  "char": { "maxTris": 3000, "maxKB": 600, "maxTexture": 128 },
-  "npc": { "maxTris": 1500, "maxKB": 300, "maxTexture": 128 },
-  "enemy": { "maxTris": 1500, "maxKB": 300, "maxTexture": 128 },
-  "boss": { "maxTris": 4000, "maxKB": 600, "maxTexture": 128 },
-  "bld": { "maxTris": 1500, "maxKB": 300, "maxTexture": 128 },
-  "prop": { "maxTris": 300, "maxKB": 100, "maxTexture": 128 },
-  "tree": { "maxTris": 300, "maxKB": 100, "maxTexture": 128 },
-  "terrain": { "maxTris": 20000, "maxKB": 600, "maxTexture": 256 },
-  "fx": { "maxTris": 500, "maxKB": 100, "maxTexture": 128 }
+  "char": {
+    "maxTris": 3000,
+    "maxKB": 600,
+    "maxTexture": 128
+  },
+  "npc": {
+    "maxTris": 1500,
+    "maxKB": 300,
+    "maxTexture": 128
+  },
+  "enemy": {
+    "maxTris": 1500,
+    "maxKB": 300,
+    "maxTexture": 128
+  },
+  "boss": {
+    "maxTris": 4000,
+    "maxKB": 600,
+    "maxTexture": 128
+  },
+  "bld": {
+    "maxTris": 1500,
+    "maxKB": 300,
+    "maxTexture": 128
+  },
+  "prop": {
+    "maxTris": 300,
+    "maxKB": 100,
+    "maxTexture": 128
+  },
+  "tree": {
+    "maxTris": 300,
+    "maxKB": 100,
+    "maxTexture": 128
+  },
+  "terrain": {
+    "maxTris": 20000,
+    "maxKB": 600,
+    "maxTexture": 256
+  },
+  "fx": {
+    "maxTris": 500,
+    "maxKB": 100,
+    "maxTexture": 128
+  },
+  "lmk": {
+    "maxTris": 4000,
+    "maxKB": 300,
+    "maxTexture": 128
+  }
 }

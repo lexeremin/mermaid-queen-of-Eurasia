@@ -4,7 +4,7 @@ import { CameraRig } from '@/game/CameraRig';
 import { CAMERA_FOV, CAMERA_OFFSET, BASE_FOG_DENSITY } from '@/game/camera';
 import { GameLoop } from '@/game/GameLoop';
 import { Player } from '@/game/entities/Player';
-import { Village } from '@/game/world/Village';
+import { MapScene } from '@/game/world/MapScene';
 import { RenderStatsProbe } from '@/game/RenderStatsProbe';
 import { Suspense } from 'react';
 
@@ -25,7 +25,7 @@ export function Scene() {
       <CameraRig />
 
       <Suspense fallback={null}>
-        <Village />
+        <MapScene />
         <Player />
       </Suspense>
 
