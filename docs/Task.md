@@ -87,7 +87,7 @@ Read these files before starting any work:
 | Phase 7 — Summer overcast look | ✅ Complete | Moody grey summer: atmosphere config, summer palette, assets rebuilt without snow, new trees, grass ground, Rosa warm light; docs for the singing Aura | 275e8a0. Keeps the Phase 6 layout |
 | Phase 8 — Real layout + detailed GUM | ✅ Complete | Red Square in real relative positions (Kremlin right, GUM left, cathedral far end, museum/Kazan/Resurrection Gate near end), detailed GUM facade, walkable GUM gallery under a translucent glass roof | 889482d. Map rotated 180° from real north; hero X-ray silhouette; 31 assets, ~45 draw calls |
 | Phase 9 — Manezhnaya Square + Alexander Garden | ✅ Complete | Through the Resurrection Gate: Manezhnaya Square, Kremlin north wall, the real Alexander Garden outside the west wall (Kutafya tower, grotto, obelisk, paths, lawns) | cd9d2f0. Same contiguous map; 36 assets; up to 56 draw calls |
-| Phase 9b — Desktop controls rework | ✅ Complete | Click-to-move with pathfinding, WASD facing turns naturally, no mouse aim; attack Space/right-click, dash Shift | HASH9B |
+| Phase 9b — Desktop controls rework | ✅ Complete | Click-to-move with pathfinding, WASD facing turns naturally, no mouse aim; attack Space/right-click, dash Shift | 21acc18 |
 | Phase 10 — NPCs + dialogue | ⬜ Next | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, heart-buff visual | |
 | Phase 11 — Save + Supabase | ⬜ Todo | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
 | Phase 12 — Combat core | ⬜ Todo | Trident attack, dash, singing Mermaid Aura (orbiting notes), AoE spell, damage, 3 enemy types + AI | |
