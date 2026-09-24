@@ -95,7 +95,7 @@ Read these files before starting any work:
 | Phase 15 — Alexander Garden content | ⬜ Todo | Herbs, pearls, monsters, hidden shrine in the garden | |
 | Phase 16 — Moscow underground + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight | |
 | Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
-| Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings, occlusion fade | |
+| Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings (hero X-ray silhouette already done in Phase 8) | |
 | Phase 19 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
 | Phase 20 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |
 

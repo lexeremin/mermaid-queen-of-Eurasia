@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import type { Group } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
-import { applyRetroMaterial } from '@/game/assets/retro-material';
+import { applyHeroLook } from '@/game/assets/xray';
 import { renderStats } from '@/game/render-stats';
 import { sim } from '@/game/sim';
 import type { HeroForm } from '@/store/game-store';
@@ -24,7 +24,9 @@ export function RosaModel({ form }: { form: HeroForm }) {
   const scene = useMemo(() => clone(gltf.scene) as Group, [gltf.scene]);
   const { actions } = useAnimations(gltf.animations, root);
 
-  useEffect(() => applyRetroMaterial(scene), [scene]);
+  useEffect(() => {
+    applyHeroLook(scene);
+  }, [scene]);
 
   useEffect(() => {
     const idle = actions.idle;

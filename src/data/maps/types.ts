@@ -28,5 +28,17 @@ export type MapData = {
   /** Cobblestone rectangle: center and size. */
   plaza: { cx: number; cz: number; w: number; d: number };
   zones: readonly Zone[];
+  /** Colored ground rectangles (e.g. interior floors). */
+  floors?: readonly { cx: number; cz: number; w: number; d: number; color: string; y?: number }[];
+  /** Translucent glass roofs. */
+  glass?: readonly { cx: number; cz: number; w: number; d: number; y: number }[];
+  lights?: readonly {
+    x: number;
+    y: number;
+    z: number;
+    color: string;
+    intensity: number;
+    distance: number;
+  }[];
   colliders: readonly Collider[];
 };

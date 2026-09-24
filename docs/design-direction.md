@@ -20,6 +20,9 @@ A single shared palette (32 colors) lives in `tools/palette.json` (mirrored by `
 - Magic (Aura, trident, spells): teal/aquamarine and pearl pink.
 - Menace (corrupt/bureaucratic enemies): sickly yellow-green, ink black, paper cream.
 
+## Occlusion
+- The camera is top-down, so tall buildings can hide the hero. The hero shows through them as a pink X-ray silhouette (`src/game/assets/xray.ts`). Trees and props are low enough not to need it.
+
 ## Aura (singing) VFX direction
 - Rings of small musical notes orbit Rosa in expanding circles (rose, gold and pearl colors, additive-looking but cheap: instanced sprites or tiny meshes).
 - Mesmerized men get a floating heart icon above their heads while the buff lasts.

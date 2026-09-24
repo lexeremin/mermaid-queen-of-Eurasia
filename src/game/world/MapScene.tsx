@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import {
   BufferGeometry,
+  DoubleSide,
   Float32BufferAttribute,
   MeshLambertMaterial,
   NearestFilter,
@@ -21,6 +22,8 @@ const PLAZA_Y = 0.02;
 const ICE_Y = 0.03;
 const WATER_Y = 0.04;
 const PATH_Y = 0.05;
+const GLASS_COLOR = '#c4d6dc';
+const GLASS_OPACITY = 0.22;
 
 function groupByAsset(placements: readonly Placement[]): [AssetId, Transform[]][] {
   const groups = new Map<AssetId, Transform[]>();
@@ -81,6 +84,38 @@ function TiledGround({
   );
 }
 
+function Floors({ map }: { map: typeof currentMap }) {
+  return (
+    <>
+      {(map.floors ?? []).map((f, i) => (
+        <mesh key={i} rotation-x={-Math.PI / 2} position={[f.cx, f.y ?? 0.03, f.cz]}>
+          <planeGeometry args={[f.w, f.d]} />
+          <meshLambertMaterial color={f.color} />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
+function GlassRoofs({ map }: { map: typeof currentMap }) {
+  return (
+    <>
+      {(map.glass ?? []).map((g, i) => (
+        <mesh key={i} rotation-x={-Math.PI / 2} position={[g.cx, g.y, g.cz]}>
+          <planeGeometry args={[g.w, g.d]} />
+          <meshLambertMaterial
+            color={GLASS_COLOR}
+            transparent
+            opacity={GLASS_OPACITY}
+            depthWrite={false}
+            side={DoubleSide}
+          />
+        </mesh>
+      ))}
+    </>
+  );
+}
+
 export function MapScene() {
   const map = currentMap;
   const groups = useMemo(() => groupByAsset(map.placements), [map]);
@@ -109,9 +144,20 @@ export function MapScene() {
       {map.paths.length > 0 && <RibbonMeshView data={paths} color={PALETTE.frost} />}
       <RibbonMeshView data={ice} color={PALETTE.slate_light} />
       <RibbonMeshView data={water} color={PALETTE.slate} />
+      <Floors map={map} />
+      {(map.lights ?? []).map((l, i) => (
+        <pointLight
+          key={i}
+          position={[l.x, l.y, l.z]}
+          color={l.color}
+          intensity={l.intensity}
+          distance={l.distance}
+        />
+      ))}
       {groups.map(([id, transforms]) => (
         <InstancedModel key={id} id={id} transforms={transforms} />
       ))}
+      <GlassRoofs map={map} />
     </>
   );
 }

@@ -106,29 +106,6 @@ def build_kremlin_tower():
     return _done("bld_kremlin_tower", p)
 
 
-def build_gum():
-    clear_scene()
-    p = Part("bld_gum")
-    p.box((8.2, 5.2, 0.6), (0, 0, 0.3), "slate")
-    p.box((8, 5, 5.8), (0, 0, 3.5), "stone")
-    p.box((8.2, 5.3, 0.4), (0, 0, 6.6), "brick_light")
-    for x in (-4.0, -1.33, 1.33, 4.0):
-        p.box((0.36, 0.2, 5.6), (x, -2.55, 3.4), "blush")
-    for x in (-2.66, 0, 2.66):
-        p.box((1.3, 0.1, 2.7), (x, -2.53, 2.2), "brick_dark")
-        p.box((0.98, 0.12, 2.4), (x, -2.56, 2.2), "candle")
-        p.box((1.5, 0.14, 0.22), (x, -2.55, 3.65), "brick_light")
-        p.box((0.98, 0.12, 0.06), (x, -2.58, 2.2), "brick_dark")
-        p.box((0.9, 0.1, 1.5), (x, -2.53, 5.0), "brick_dark")
-        p.box((0.7, 0.12, 1.3), (x, -2.56, 5.0), "candle")
-    for i in range(14):
-        p.box((0.14, 0.14, 0.14), (-3.9 + i * 0.6, -2.7, 6.3), "candle")
-    p.box((7.4, 3.6, 0.4), (0, 0.4, 7.0), "frost")
-    for i in range(6):
-        p.box((0.1, 3.6, 0.5), (-3.3 + i * 1.32, 0.4, 7.1), "teal_dark")
-    return _done("bld_gum", p)
-
-
 def build_museum():
     clear_scene()
     p = Part("bld_museum")
@@ -226,7 +203,7 @@ def build_fir_tub():
 
 def build_all_redsquare():
     fns = [
-        build_basil, build_kremlin_wall, build_kremlin_tower, build_gum, build_museum,
+        build_basil, build_kremlin_wall, build_kremlin_tower, build_museum,
         build_arch_bridge, build_garden_gate, build_lamppost, build_fir_tub,
     ]
     return [fn() for fn in fns]

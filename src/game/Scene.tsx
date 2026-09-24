@@ -13,6 +13,7 @@ export function Scene() {
   return (
     <Canvas
       dpr={[1, 2]}
+      gl={{ stencil: true }}
       camera={{ position: [...CAMERA_OFFSET], fov: CAMERA_FOV, near: 1, far: 200 }}
     >
       <color attach="background" args={[ATMOSPHERE.background]} />

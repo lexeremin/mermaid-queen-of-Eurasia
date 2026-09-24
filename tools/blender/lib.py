@@ -157,6 +157,19 @@ class Part:
         self._paint(faces, color)
         return self
 
+    def prism_xz(self, points, y0, y1, color):
+        """Extrude a polygon given as (x, z) points along Y from y0 to y1."""
+        front = [self.bm.verts.new(Vector((x, y0, z)) - self.pivot) for x, z in points]
+        back = [self.bm.verts.new(Vector((x, y1, z)) - self.pivot) for x, z in points]
+        faces = [self.bm.faces.new(front), self.bm.faces.new(back[::-1])]
+        n = len(points)
+        for i in range(n):
+            j = (i + 1) % n
+            faces.append(self.bm.faces.new((front[j], front[i], back[i], back[j])))
+        bmesh.ops.recalc_face_normals(self.bm, faces=faces)
+        self._paint(faces, color)
+        return self
+
     def finish(self):
         mesh = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(mesh)
