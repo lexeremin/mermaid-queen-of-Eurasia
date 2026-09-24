@@ -93,7 +93,7 @@ Read these files before starting any work:
 | Phase 12 — Combat core | ✅ Complete | Trident attack, dash, singing Mermaid Aura (orbiting notes), AoE spell, damage, 3 enemy types + AI | 1845ab7. 47 assets, ~50 draw calls |
 | Phase 12b — Satirical politicians + blind debuff | ✅ Complete | Enemies replaced by three original caricatures with different weapons; the Aura blinds enemies (blindfold icon, missed attacks) | bc6741b |
 | Phase 13 — Progression + inventory | ✅ Complete | XP and levels 1–10, loot drops, 20-slot bag, 3 equipment slots, quick-use, save v2 | 4e86959 |
-| Phase 14 — Quests + kingdom | ✅ Complete | Notice board, 9 quests, quest log and tracker, derived kingdom reputation and ranks, save v3 | HASH14 |
+| Phase 14 — Quests + kingdom | ✅ Complete | Notice board, 9 quests, quest log and tracker, derived kingdom reputation and ranks, save v3 | 4ad2b76 |
 | Phase 15 — Alexander Garden content | ⬜ Next | Herbs, pearls, monsters, hidden shrine in the garden | |
 | Phase 16 — Moscow underground + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight | |
 | Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
