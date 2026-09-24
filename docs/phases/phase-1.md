@@ -1,6 +1,18 @@
 # Phase 1 — Project scaffold
 
-**Status:** ⬜ Next
+**Status:** ✅ Complete
+
+## Result
+- Installed: react 19.3, three 0.186, @react-three/fiber 9.8, @react-three/drei 10.7, zustand 5, vite 8, vitest 5, typescript 6, eslint 10 (flat config) + typescript-eslint + react-hooks, prettier.
+- `eslint-plugin-import` skipped: no ESLint 10 support yet. `consistent-type-imports` is enforced instead.
+- Zustand is installed but not used yet (first store arrives in Phase 2).
+- Placeholder scene in `src/game/Scene.tsx`; fixed camera constants in `src/game/camera.ts` (pitch ≈ 54°, tested).
+- Verified: typecheck, lint, prettier, test, build all pass; renders at desktop and 375×812 with no console errors and no page scroll. Dev-only R3F `THREE.Clock` deprecation warning comes from R3F itself.
+
+## Notes for later phases
+- Portrait viewport crops horizontally with a fixed vertical FOV. Phase 2 must make the camera responsive (adjust distance/FOV by aspect).
+- Production bundle is ~1.1 MB (309 KB gzip) with three.js. Revisit code-splitting in Phase 14.
+- `.claude/launch.json` (local preview config) is intentionally untracked.
 
 ## Goal
 A runnable, empty-but-correct project: Vite + React + TypeScript (strict) + React Three Fiber, with lint, format, tests and the target folder layout. `npm install && npm run dev` shows a canvas with a placeholder scene on desktop and a mobile viewport.
