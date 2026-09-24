@@ -5,6 +5,8 @@ import { ATMOSPHERE } from '@/game/atmosphere';
 import { CAMERA_FOV, CAMERA_OFFSET } from '@/game/camera';
 import { GameLoop } from '@/game/GameLoop';
 import { ClickMarker } from '@/game/entities/ClickMarker';
+import { CombatEffects } from '@/game/entities/CombatEffects';
+import { EnemyActors } from '@/game/entities/EnemyActors';
 import { Player } from '@/game/entities/Player';
 import { MapScene } from '@/game/world/MapScene';
 import { Npcs } from '@/game/world/Npcs';
@@ -41,6 +43,8 @@ export function Scene() {
         <Npcs />
         <Player />
         <ClickMarker />
+        <EnemyActors />
+        <CombatEffects />
       </Suspense>
 
       {import.meta.env.DEV && (

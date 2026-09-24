@@ -55,3 +55,43 @@ describe('NPC placement', () => {
     }
   });
 });
+
+describe('enemy placement', () => {
+  const bare = buildCollisionWorld({ ...RED_SQUARE, npcs: [] });
+
+  it('has unique ids and all three enemy kinds', () => {
+    const ids = RED_SQUARE.enemies.map((e) => e.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(new Set(RED_SQUARE.enemies.map((e) => e.kind))).toEqual(
+      new Set(['paperWisp', 'stampGolem', 'memoThrower']),
+    );
+  });
+
+  it('spawns on free ground inside the bounds', () => {
+    const { bounds } = RED_SQUARE;
+    for (const e of RED_SQUARE.enemies) {
+      expect(e.x).toBeGreaterThan(bounds.minX);
+      expect(e.x).toBeLessThan(bounds.maxX);
+      expect(e.z).toBeGreaterThan(bounds.minZ);
+      expect(e.z).toBeLessThan(bounds.maxZ);
+      const p = resolveCircle({ x: e.x, z: e.z }, 1, bare);
+      expect(Math.hypot(p.x - e.x, p.z - e.z), e.id).toBeLessThan(0.01);
+    }
+  });
+
+  it('keeps enemies out of aggro range of every NPC and of the player spawn', () => {
+    for (const e of RED_SQUARE.enemies) {
+      for (const n of RED_SQUARE.npcs)
+        expect(Math.hypot(e.x - n.x, e.z - n.z), `${e.id}/${n.id}`).toBeGreaterThan(12);
+      expect(Math.hypot(e.x - RED_SQUARE.spawn.x, e.z - RED_SQUARE.spawn.z), e.id).toBeGreaterThan(
+        12,
+      );
+    }
+  });
+
+  it('lets Rosa walk to every enemy spawn', () => {
+    for (const e of RED_SQUARE.enemies) {
+      expect(findPath(grid, RED_SQUARE.spawn, { x: e.x, z: e.z }), e.id).not.toBeNull();
+    }
+  });
+});

@@ -143,7 +143,7 @@
 
 .debug-overlay {
   position: absolute;
-  top: 56px;
+  top: 108px;
   left: 8px;
   margin: 0;
   padding: 6px 8px;
@@ -395,4 +395,120 @@
 .hud-btn.danger {
   border-color: #ff8fa0;
   color: #ffd3da;
+}
+
+.vitals {
+  position: absolute;
+  top: calc(var(--safe-top) + 12px);
+  left: calc(var(--safe-left) + 12px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: min(190px, 42vw);
+  pointer-events: none;
+}
+
+.bar {
+  position: relative;
+  height: 20px;
+  border: 2px solid #e8f3f1;
+  border-radius: 6px;
+  background: rgba(11, 18, 32, 0.8);
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  transition: width 0.15s;
+}
+
+.bar-hp .bar-fill {
+  background: linear-gradient(90deg, #b3344b, #ff6b86);
+}
+
+.bar-mana .bar-fill {
+  background: linear-gradient(90deg, #2f7bb8, #6be3d1);
+}
+
+.bar span {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font:
+    700 12px/1 ui-monospace,
+    Menlo,
+    monospace;
+  text-shadow: 0 1px 2px #000;
+}
+
+.ability-bar {
+  position: absolute;
+  left: 50%;
+  bottom: calc(var(--safe-bottom) + 16px);
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.ability-slot {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  height: 64px;
+  border: 2px solid #9fd8cf;
+  border-radius: 10px;
+  background: rgba(11, 18, 32, 0.78);
+  overflow: hidden;
+  font-family: ui-monospace, Menlo, monospace;
+}
+
+.ability-slot b {
+  font-size: 14px;
+}
+
+.ability-slot em {
+  font-size: 11px;
+  font-style: normal;
+  opacity: 0.8;
+}
+
+.ability-slot i {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  font-size: 11px;
+  font-style: normal;
+  color: #6be3d1;
+}
+
+.cooldown-sweep {
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 4, 8, 0.72);
+  transform-origin: bottom;
+  transform: scaleY(0);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.cooldown-sweep[data-low-mana='1'] {
+  transform: scaleY(1) !important;
+  background: rgba(20, 40, 90, 0.7);
+}
+
+.action-btn {
+  overflow: hidden;
+}
+
+.hurt-vignette {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 45%, rgba(210, 30, 60, 0.55) 100%);
 }

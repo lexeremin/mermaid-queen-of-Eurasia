@@ -1,12 +1,13 @@
 import { useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Group } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
 import type { NpcDef } from '@/data/npcs';
 import type { NpcSpot } from '@/data/maps/types';
 import { applyRetroMaterial } from '@/game/assets/retro-material';
+import { combat } from '@/game/combat-sim';
 import { HeartBuff } from '@/game/entities/HeartBuff';
 import { sim } from '@/game/sim';
 import { useNpcStore } from '@/store/npc-store';
@@ -28,6 +29,8 @@ export function NpcActor({ def, spot }: { def: NpcDef; spot: NpcSpot }) {
     return n ? showsHeart(n.relationship, n.joined) : false;
   });
 
+  const [charmed, setCharmed] = useState(false);
+
   useEffect(() => applyRetroMaterial(scene), [scene]);
 
   useFrame(({ clock }, delta) => {
@@ -45,6 +48,8 @@ export function NpcActor({ def, spot }: { def: NpcDef; spot: NpcSpot }) {
       TURN_RATE * delta,
     );
     g.rotation.y = Math.atan2(facing.current.x, facing.current.z);
+    const isCharmed = (combat.charmed[def.id] ?? 0) > combat.time;
+    if (isCharmed !== charmed) setCharmed(isCharmed);
     const t = clock.elapsedTime * 1.6 + phase;
     b.position.y = Math.sin(t) * 0.012;
     b.rotation.z = Math.sin(t * 0.5) * 0.015;
@@ -55,7 +60,7 @@ export function NpcActor({ def, spot }: { def: NpcDef; spot: NpcSpot }) {
       <group ref={body}>
         <primitive object={scene} />
       </group>
-      {heart && <HeartBuff />}
+      {(heart || charmed) && <HeartBuff />}
     </group>
   );
 }

@@ -1,4 +1,5 @@
 import type { AssetId } from '@/data/assets';
+import type { EnemyKind } from '@/data/enemies';
 import type { Bounds, Collider } from '@/systems/collision';
 import type { Zone } from '@/systems/zones';
 import type { Vec2 } from '@/utils/vec2';
@@ -27,6 +28,8 @@ export type Water = {
 
 export type NpcSpot = { id: string; x: number; z: number; rotY: number };
 
+export type EnemySpawn = { id: string; kind: EnemyKind; x: number; z: number };
+
 export type MapData = {
   id: string;
   bounds: Bounds;
@@ -38,6 +41,7 @@ export type MapData = {
   plazas: readonly { cx: number; cz: number; w: number; d: number }[];
   zones: readonly Zone[];
   npcs: readonly NpcSpot[];
+  enemies: readonly EnemySpawn[];
   /** Colored ground rectangles (e.g. interior floors). */
   floors?: readonly { cx: number; cz: number; w: number; d: number; color: string; y?: number }[];
   /** Translucent glass roofs. */

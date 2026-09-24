@@ -1,3 +1,4 @@
+import { resetCombat } from '@/game/combat-sim';
 import { currentWorld } from '@/game/world/current-map';
 import { resetSim, sim } from '@/game/sim';
 import { KEYS, readJson, removeKey, writeJson } from '@/save/storage';
@@ -81,6 +82,7 @@ export function resetProgress(): void {
   useNpcStore.getState().reset();
   useGameStore.getState().setForm('human');
   resetSim();
+  resetCombat();
   writeLocalSave();
 }
 

@@ -2,6 +2,7 @@ import { useGameStore } from '@/store/game-store';
 import { NPC_BY_ID } from '@/data/npcs';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
+import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
 import { PauseSettings } from '@/ui/PauseSettings';
 import { TouchControls } from '@/ui/TouchControls';
@@ -22,6 +23,8 @@ export function Hud() {
   return (
     <div className="hud">
       {import.meta.env.DEV && <DebugOverlay />}
+
+      <CombatHud touch={touch} />
 
       <div className="hud-top">
         <button type="button" className="hud-btn" onClick={toggleInventory} aria-label="Inventory">

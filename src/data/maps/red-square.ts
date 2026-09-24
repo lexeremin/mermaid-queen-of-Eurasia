@@ -271,6 +271,16 @@ export const RED_SQUARE: MapData = {
     { id: 'arkady', x: -20.8, z: 10.5, rotY: -HALF_PI },
     { id: 'kolya', x: 52.2, z: 6.5, rotY: HALF_PI },
   ],
+  enemies: [
+    { id: 'wisp-basil-1', kind: 'paperWisp', x: -3, z: -26 },
+    { id: 'stamper-basil', kind: 'stampGolem', x: 4, z: -21 },
+    { id: 'wisp-manezh-1', kind: 'paperWisp', x: 14, z: 70 },
+    { id: 'memo-manezh', kind: 'memoThrower', x: 28, z: 64 },
+    { id: 'stamper-manezh', kind: 'stampGolem', x: 36, z: 46 },
+    { id: 'wisp-garden-1', kind: 'paperWisp', x: 52, z: -25 },
+    { id: 'memo-garden', kind: 'memoThrower', x: 53.5, z: -23.5 },
+    { id: 'wisp-garden-2', kind: 'paperWisp', x: 52, z: 20 },
+  ],
   zones: [
     { id: 'gum', label: 'GUM', box: { cx: GALLERY_X, cz: 0, hx: 4.6, hz: 27 } },
     { id: 'manezh', label: 'Manezhnaya Square', box: { cx: 25, cz: 56.75, hx: 20, hz: 20 } },

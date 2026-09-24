@@ -1,7 +1,11 @@
 import { useFrame } from '@react-three/fiber';
 import { Plane, Raycaster, Vector2, Vector3, type Camera } from 'three';
 import { createFixedStepper } from '@/game/fixed-step';
+import { combat } from '@/game/combat-sim';
 import { MAX_STEPS_PER_FRAME, SIM_STEP, sim } from '@/game/sim';
+import { track } from '@/net/stats';
+import { useCombatStore } from '@/store/combat-store';
+import { stepCombat, type CombatEvent } from '@/systems/combat';
 import { nav } from '@/game/world/nav';
 import { clearPressed, consumePressed, getMove, input } from '@/input/input-state';
 import { useDialogueStore } from '@/store/dialogue-store';
@@ -26,6 +30,7 @@ const raycaster = new Raycaster();
 const stepper = createFixedStepper(SIM_STEP, MAX_STEPS_PER_FRAME);
 const STUCK_SECONDS = 0.5;
 const SPOTS = currentMap.npcs;
+const NPC_TARGETS = currentMap.npcs.map((n) => ({ id: n.id, pos: { x: n.x, z: n.z } }));
 const STUCK_SPEED_FRACTION = 0.25;
 
 function groundPoint(camera: Camera, click: { x: number; y: number }): Vec2 | null {
@@ -39,6 +44,16 @@ export function walkTo(target: Vec2): boolean {
   sim.path = path ?? [];
   sim.stuckTime = 0;
   return path !== null;
+}
+
+function handleCombatEvents(events: readonly CombatEvent[]): void {
+  for (const event of events) {
+    if (event.type === 'enemyDefeated') track('enemy_defeated', { kind: event.kind });
+    else if (event.type === 'playerDowned') {
+      useGameStore.getState().setDowned(true);
+      track('player_downed');
+    }
+  }
 }
 
 export function GameLoop() {
@@ -96,15 +111,39 @@ export function GameLoop() {
 
     sim.alpha = stepper.advance(delta, (dt) => {
       let move = getMove(input);
-      const walking = isZero(move) && sim.path.length > 0;
+      const frame = stepCombat(combat, {
+        dt,
+        playerPos: sim.curr.pos,
+        playerFacing: sim.curr.facing,
+        move,
+        actions: {
+          attack: input.held.attack || input.pressed.attack,
+          dash: input.pressed.dash,
+          aura: input.pressed.aura,
+          spell: input.pressed.spell,
+        },
+        npcs: NPC_TARGETS,
+        world: currentWorld,
+      });
+      if (frame.cancelWalk) {
+        sim.path = [];
+        sim.talkTo = null;
+      }
+      handleCombatEvents(frame.events);
+
+      const walking = isZero(move) && sim.path.length > 0 && !frame.moveOverride;
       if (walking) {
         const step = steerAlongPath(sim.curr.pos, sim.path);
         sim.path = step.path;
         move = step.move;
       }
+      if (frame.moveOverride) move = frame.moveOverride;
+      else if (frame.moveScale !== 1)
+        move = { x: move.x * frame.moveScale, z: move.z * frame.moveScale };
 
       sim.prev = sim.curr;
       sim.curr = stepPlayer(sim.curr, { move }, dt, currentWorld);
+      if (frame.faceOverride) sim.curr = { ...sim.curr, facing: frame.faceOverride };
 
       if (walking && sim.path.length > 0) {
         const moved = Math.hypot(sim.curr.pos.x - sim.prev.pos.x, sim.curr.pos.z - sim.prev.pos.z);
@@ -118,6 +157,8 @@ export function GameLoop() {
       }
       clearPressed(input);
     });
+
+    useCombatStore.getState().set(combat.hp, combat.mana);
 
     const store = useGameStore.getState();
     const zone = zoneAt(currentMap.zones, sim.curr.pos);

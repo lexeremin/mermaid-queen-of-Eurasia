@@ -72,3 +72,11 @@ export function advance(node: DialogueNode, choiceIndex: number | null): Advance
   }
   return { effects: [], next: node.next ?? 'end' };
 }
+
+export const CHARM_PERSUASION_BONUS = 1.5;
+
+/** While an NPC is charmed by the Aura, positive relationship gains are multiplied. */
+export function charmBonus(effect: Effect): Effect {
+  if (effect.type !== 'relationship' || effect.delta <= 0) return effect;
+  return { ...effect, delta: Math.round(effect.delta * CHARM_PERSUASION_BONUS) };
+}

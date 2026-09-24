@@ -1,5 +1,15 @@
 import type { CSSProperties } from 'react';
 import { input, setHeld, type Action } from '@/input/input-state';
+import type { AbilityId } from '@/systems/abilities';
+import { CooldownSweep } from '@/ui/CombatHud';
+
+const ABILITY_OF: Record<Action, AbilityId | undefined> = {
+  attack: 'attack',
+  dash: 'dash',
+  aura: 'aura',
+  spell: 'spell',
+  interact: undefined,
+};
 
 type Props = { action: Action; label: string; size: number; style: CSSProperties };
 
@@ -19,6 +29,7 @@ export function ActionButton({ action, label, size, style }: Props) {
       onPointerCancel={release}
     >
       {label}
+      {ABILITY_OF[action] && <CooldownSweep id={ABILITY_OF[action]} />}
     </button>
   );
 }
