@@ -1,6 +1,6 @@
 # Phase 11 — Save + Supabase
 
-**Status:** ✅ Complete (local save verified; live cloud check pending the two dashboard steps)
+**Status:** ✅ Complete (local save and live cloud sync verified)
 
 ## Goal
 Progress survives a reload (local save, offline-first), and — when Supabase is configured and reachable — the save and anonymous play stats sync to the cloud without ever blocking play.
@@ -40,10 +40,10 @@ Progress survives a reload (local save, offline-first), and — when Supabase is
 - Cloud states against the real project: anonymous sign-ins disabled → pause menu says so, exactly one sign-in request per page load (8 loads, 8 requests, no loop); blocked network → "offline, will retry", 1 request in 6 s, game plays normally.
 - No console errors from the app (the browser logs the failed sign-in HTTP request itself).
 
-## Pending (needs the user)
-1. Enable **Anonymous sign-ins** (currently disabled; `signInAnonymously` returns `anonymous_provider_disabled`).
-2. Run the migration SQL (the three tables do not exist yet; the REST API returns 404 for them).
-3. Then `npm run supabase:check` (expect all PASS) and a live sync test (progress row appears in `saves`, events in `stat_events`).
+## Live cloud verification (2026-09-24, real project)
+- User enabled anonymous sign-ins and ran the migration. `npm run supabase:check`: **16/16 PASS** (sign-in, own read/write, other user cannot read or forge saves or events, events immutable, idempotent duplicates, oversize rejected, signed-out client sees nothing).
+- Browser end to end: status "Cloud: synced"; `players` row created (desktop, opt-out false); joining an NPC pushes the save within seconds (row: version 1, joined, relationship 66, position); events `session_started`, `npc_method_used:grisha`, `npc_mesmerized:grisha`, `npc_joined:tolik` reached `stat_events` and the local queue drained to 0; a second browser context with the same anonymous session and empty local progress **restored the save from the cloud** (joined NPC, relationship, position); opting out emptied the queue and stopped collection. No app console errors.
+- Bug found and fixed during this run: the forced push on "NPC joins" used a stale snapshot, so nothing was uploaded until the 15 s tick. It now takes a fresh snapshot.
 
 ## Notes
 - The first probe wrongly reported the tables as existing (a `head` count request swallowed the 404); the REST API spec check showed they do not.

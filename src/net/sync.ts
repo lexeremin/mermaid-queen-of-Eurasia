@@ -33,7 +33,7 @@ export function startSync(): void {
 
   const push = async (force: boolean): Promise<void> => {
     const userId = currentUserId();
-    const save = latest;
+    const save = force ? (latest = collectSave()) : latest;
     if (!userId || !save || progressKey(save) === lastPushed) return;
     if (!force && Date.now() - lastPushAt < PUSH_MIN_INTERVAL_MS) return;
     lastPushAt = Date.now();

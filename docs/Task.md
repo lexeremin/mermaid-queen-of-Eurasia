@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 11 complete (save + Supabase; live cloud check pending the user's dashboard steps).** Next: **Phase 12 — Combat core** (`docs/phases/phase-12.md` — write it first, it does not exist yet).
+**Phase 11 complete (save + Supabase, live-verified).** Next: **Phase 12 — Combat core** (`docs/phases/phase-12.md` — write it first, it does not exist yet).
 
 ---
 
@@ -89,7 +89,7 @@ Read these files before starting any work:
 | Phase 9 — Manezhnaya Square + Alexander Garden | ✅ Complete | Through the Resurrection Gate: Manezhnaya Square, Kremlin north wall, the real Alexander Garden outside the west wall (Kutafya tower, grotto, obelisk, paths, lawns) | cd9d2f0. Same contiguous map; 36 assets; up to 56 draw calls |
 | Phase 9b — Desktop controls rework | ✅ Complete | Click-to-move with pathfinding, WASD facing turns naturally, no mouse aim; attack Space/right-click, dash Shift | 21acc18 |
 | Phase 10 — NPCs + dialogue | ✅ Complete | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, heart-buff visual | 10d002e. 44 assets, ~53 draw calls |
-| Phase 11 — Save + Supabase | ✅ Complete | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | f2122cd. Live cloud check pending: enable anonymous sign-ins + run `supabase/migrations/20260924120000_init.sql`, then `npm run supabase:check` |
+| Phase 11 — Save + Supabase | ✅ Complete | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | f2122cd. Live cloud verified (16/16 RLS checks, sync + restore) |
 | Phase 12 — Combat core | ⬜ Next | Trident attack, dash, singing Mermaid Aura (orbiting notes), AoE spell, damage, 3 enemy types + AI | |
 | Phase 13 — Progression + inventory | ⬜ Todo | HP/mana/XP/levels, inventory + equipment UI (touch), loot | |
 | Phase 14 — Quests + kingdom | ⬜ Todo | Quest board, quest log, kingdom reputation | |
