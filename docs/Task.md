@@ -56,7 +56,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 2 complete (engine core).** Next: **Phase 3 — Asset pipeline PoC** (`docs/phases/phase-3.md` — write it first, it does not exist yet).
+**Phase 3 complete (asset pipeline PoC).** Next: **Phase 4 — Village map** (`docs/phases/phase-4.md` — write it first, it does not exist yet).
 
 ---
 
@@ -64,7 +64,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-3.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-4.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -79,8 +79,8 @@ Read these files before starting any work:
 | Phase 0 — Docs bootstrap | ✅ Complete | Description.md rewritten, /docs created | 9f8d3c8 |
 | Phase 1 — Project scaffold | ✅ Complete | Vite + React + TS strict, R3F, Zustand, lint/format, Vitest, folder layout, runs locally | 796bd60 |
 | Phase 2 — Engine core | ✅ Complete | Fixed top-down camera, game loop, input (WASD + mouse aim, touch joystick + buttons), pause, responsive/safe-area layout | 5b29ffc |
-| Phase 3 — Asset pipeline PoC | ⬜ Next | Blender MCP end to end: Rosa placeholder, one house, one tree → GLB under budget, retro texture pass, licence ledger | Validates style + perf before content |
-| Phase 4 — Village map | ⬜ Todo | Terrain, river, houses, collision, forest entrance, Rosa movement/animation | |
+| Phase 3 — Asset pipeline PoC | ✅ Complete | Blender MCP end to end: Rosa placeholder, one house, one tree → GLB under budget, retro texture pass, licence ledger | ea0000c. Procedural assets; AI generators not enabled (needs user opt-in/keys) |
+| Phase 4 — Village map | ⬜ Next | Terrain, river, houses, collision, forest entrance, Rosa movement/animation | |
 | Phase 5 — NPCs + dialogue | ⬜ Todo | 8 NPCs, dialogue, tap/E interact, relationships, Mermaid Aura persuasion | |
 | Phase 6 — Save + Supabase | ⬜ Todo | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | Needs user-created Supabase project |
 | Phase 7 — Combat core | ⬜ Todo | Trident attack, dash, Mermaid Aura, AoE spell, damage, 3 enemy types + AI | |
