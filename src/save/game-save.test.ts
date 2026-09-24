@@ -5,6 +5,7 @@ import { applySave, collectSave } from '@/save/game-save';
 import { parseSave, SAVE_VERSION } from '@/save/save-data';
 import { useGameStore } from '@/store/game-store';
 import { useNpcStore } from '@/store/npc-store';
+import { useProgressStore } from '@/store/progress-store';
 
 const save = (hero: Record<string, unknown>, npcs: Record<string, unknown> = {}) =>
   parseSave({
@@ -19,6 +20,7 @@ describe('game save', () => {
   beforeEach(() => {
     resetSim();
     useNpcStore.getState().reset();
+    useProgressStore.getState().reset();
     useGameStore.getState().setForm('human');
   });
 
@@ -55,5 +57,26 @@ describe('game save', () => {
   it('normalizes a zero facing vector', () => {
     applySave(save({ form: 'human', x: 0, z: 24, facingX: 0, facingZ: 0 }));
     expect(Math.hypot(sim.curr.facing.x, sim.curr.facing.z)).toBeCloseTo(1);
+  });
+
+  it('round-trips level, xp, bag, equipment and awarded keys', () => {
+    const p = useProgressStore.getState();
+    p.gainXp(60);
+    p.award('mes:grisha', 25);
+    p.addItem('healingTea', 3);
+    p.addItem('silverTrident', 1);
+    p.equip(1);
+    const out = collectSave();
+    expect(out.progress.level).toBe(2);
+    expect(out.progress.equipment.weapon).toBe('silverTrident');
+    expect(out.progress.awarded).toEqual(['mes:grisha']);
+    useProgressStore.getState().reset();
+    applySave(parseSave(JSON.parse(JSON.stringify(out)))!);
+    const restored = useProgressStore.getState();
+    expect(restored.level).toBe(out.progress.level);
+    expect(restored.xp).toBe(out.progress.xp);
+    expect(restored.equipment.weapon).toBe('silverTrident');
+    expect(restored.bag.filter((s) => s?.id === 'healingTea')[0]?.qty).toBe(3);
+    expect(restored.awarded).toEqual(['mes:grisha']);
   });
 });

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMIES } from '@/data/enemies';
 import { AURA, DASH, HURT_INVULN, MAX_HP, MAX_MANA, SPELL, TRIDENT } from '@/systems/abilities';
+import { BASE_STATS } from '@/systems/progression';
 import type { CollisionWorld } from '@/systems/collision';
 import {
   createCombatState,
@@ -85,7 +86,9 @@ describe('trident attack', () => {
     const s = createCombatState([wisp(0, -1.2)]);
     s.enemies[0]!.hp = 5;
     const frame = step(s, { actions: { attack: true } });
-    expect(frame.events).toContainEqual({ type: 'enemyDefeated', kind: 'tycoon' });
+    expect(frame.events).toContainEqual(
+      expect.objectContaining({ type: 'enemyDefeated', kind: 'tycoon', x: 0, z: -1.2 }),
+    );
     expect(frame.moveScale).toBeLessThan(1);
     expect(s.kills).toBe(1);
     expect(run(s, 1).filter((e) => e.type === 'enemyDefeated')).toHaveLength(0);
@@ -273,5 +276,64 @@ describe('regeneration and respawn', () => {
     run(s, 41, { playerPos: { x: 90, z: 90 } });
     expect(s.enemies[0]?.state).not.toBe('dead');
     expect(s.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
+  });
+});
+
+describe('player stats', () => {
+  const strong = {
+    ...BASE_STATS,
+    maxHp: 150,
+    maxMana: 140,
+    damageMult: 1.5,
+    reduction: 0.25,
+    manaRegen: 8,
+  };
+
+  it('scales attack and spell damage by the damage multiplier', () => {
+    const a = createCombatState([wisp(0, -1.6)]);
+    a.enemies[0]!.state = 'blinded';
+    a.enemies[0]!.blindedUntil = 99;
+    step(a, { actions: { attack: true }, stats: strong });
+    expect(a.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp - Math.round(TRIDENT.damage * 1.5));
+    const b = createCombatState([wisp(2, 0)]);
+    b.enemies[0]!.state = 'blinded';
+    b.enemies[0]!.blindedUntil = 99;
+    step(b, { actions: { spell: true }, stats: strong });
+    expect(b.enemies[0]?.hp).toBe(
+      Math.max(0, ENEMIES.tycoon.maxHp - Math.round(SPELL.damage * 1.5)),
+    );
+  });
+
+  it('damage reduction lowers hits but never below 1', () => {
+    const s = createCombatState([{ id: 'g', kind: 'speaker', x: 0, z: -1.5 }]);
+    s.hp = 150;
+    s.enemies[0]!.state = 'chase';
+    run(s, 1, { stats: strong });
+    expect(s.hp).toBeCloseTo(150 - Math.round(ENEMIES.speaker.damage * 0.75), 0);
+    const tiny = createCombatState([{ id: 'g', kind: 'speaker', x: 0, z: -0.6 }]);
+    tiny.enemies[0]!.state = 'blinded';
+    tiny.enemies[0]!.blindedUntil = 99;
+    tiny.enemies[0]!.wander = { x: 0, z: -1 };
+    tiny.enemies[0]!.wanderTimer = 99;
+    tiny.enemies[0]!.swingTimer = 0.01;
+    run(tiny, 0.2, { stats: { ...strong, reduction: 0.6 } });
+    expect(tiny.hp).toBeCloseTo(MAX_HP - Math.round(ENEMIES.speaker.damage * 0.4), 0);
+  });
+
+  it('regenerates mana faster and up to the higher maximum; clamps down when gear is removed', () => {
+    const s = createCombatState();
+    s.mana = 100;
+    run(s, 6, { stats: strong });
+    expect(s.mana).toBeCloseTo(140, 0);
+    run(s, 0.1, { stats: BASE_STATS });
+    expect(s.mana).toBeLessThanOrEqual(100);
+  });
+
+  it('reviving uses the current maximums', () => {
+    const s = createCombatState();
+    s.downed = true;
+    revive(s, strong);
+    expect(s.hp).toBe(90);
+    expect(s.mana).toBe(140);
   });
 });

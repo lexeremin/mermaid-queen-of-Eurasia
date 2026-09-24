@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { migrateSave, parseSave, pickNewer, SAVE_VERSION, type SaveData } from '@/save/save-data';
+import {
+  defaultSavedProgress,
+  migrateSave,
+  parseSave,
+  pickNewer,
+  SAVE_VERSION,
+  type SaveData,
+} from '@/save/save-data';
 
 const good = (over: Record<string, unknown> = {}) => ({
   version: SAVE_VERSION,
@@ -107,5 +114,92 @@ describe('pickNewer', () => {
     expect(pickNewer(null, at('2026-01-02T00:00:00Z'))).toBe('cloud');
     expect(pickNewer(at('2026-01-02T00:00:00Z'), null)).toBe('local');
     expect(pickNewer(null, null)).toBe('none');
+  });
+});
+
+describe('save v2: progress', () => {
+  const v1 = () => ({
+    version: 1,
+    savedAt: '2026-09-24T12:00:00.000Z',
+    playSeconds: 30,
+    hero: { form: 'human', x: 1, z: 1, facingX: 0, facingZ: 1 },
+    npcs: { grisha: { relationship: 70, used: ['song'], joined: false } },
+  });
+
+  it('migrates a v1 save: NPC state kept, progress defaults added', () => {
+    const save = parseSave(v1())!;
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.npcs.grisha?.relationship).toBe(70);
+    expect(save.progress).toEqual(defaultSavedProgress());
+    expect(save.progress.equipment).toEqual({
+      weapon: 'trident',
+      outfit: 'tweedJacket',
+      charm: null,
+    });
+    expect(save.progress.bag).toHaveLength(20);
+  });
+
+  it('keeps valid progress', () => {
+    const bag = Array.from({ length: 20 }, () => null) as unknown[];
+    bag[0] = { id: 'healingTea', qty: 4 };
+    bag[7] = { id: 'silverTrident', qty: 1 };
+    const save = parseSave(
+      good({
+        progress: {
+          level: 4,
+          xp: 50,
+          awarded: ['mes:grisha', 'join:tolik'],
+          bag,
+          equipment: { weapon: 'pearlTrident', outfit: 'rainCloak', charm: null },
+        },
+      }),
+    )!;
+    expect(save.progress.level).toBe(4);
+    expect(save.progress.xp).toBe(50);
+    expect(save.progress.awarded).toEqual(['mes:grisha', 'join:tolik']);
+    expect(save.progress.bag[0]).toEqual({ id: 'healingTea', qty: 4 });
+    expect(save.progress.bag[7]).toEqual({ id: 'silverTrident', qty: 1 });
+    expect(save.progress.equipment.weapon).toBe('pearlTrident');
+  });
+
+  it('sanitizes hostile progress instead of trusting it', () => {
+    const save = parseSave(
+      good({
+        progress: {
+          level: 999,
+          xp: -5,
+          awarded: ['a', 'a', 7, 'x'.repeat(200)],
+          bag: [
+            { id: 'healingTea', qty: 9999 },
+            { id: 'hackerSword', qty: 1 },
+            'nope',
+            { id: 'silverTrident', qty: -3 },
+            ...Array.from({ length: 50 }, () => ({ id: 'pearl', qty: 1 })),
+          ],
+          equipment: { weapon: 'rainCloak', outfit: 'velvetGown', charm: 'healingTea' },
+        },
+      }),
+    )!;
+    expect(save.progress.level).toBe(10);
+    expect(save.progress.xp).toBe(0);
+    expect(save.progress.awarded).toEqual(['a']);
+    expect(save.progress.bag).toHaveLength(20);
+    expect(save.progress.bag[0]).toEqual({ id: 'healingTea', qty: 9 });
+    expect(save.progress.bag[1]).toBeNull();
+    expect(save.progress.bag[3]).toEqual({ id: 'silverTrident', qty: 1 });
+    expect(save.progress.equipment).toEqual({
+      weapon: 'trident',
+      outfit: 'velvetGown',
+      charm: null,
+    });
+  });
+
+  it('caps xp below the next level threshold', () => {
+    const save = parseSave(good({ progress: { level: 2, xp: 500 } }))!;
+    expect(save.progress.xp).toBe(69);
+  });
+
+  it('falls back to defaults when progress is junk', () => {
+    expect(parseSave(good({ progress: 'junk' }))!.progress).toEqual(defaultSavedProgress());
   });
 });

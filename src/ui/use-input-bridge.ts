@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { input } from '@/input/input-state';
 import { attachKeyboardMouse } from '@/input/keyboard';
 import { useDialogueStore } from '@/store/dialogue-store';
+import { canQuickUse, quickUse } from '@/game/progress-actions';
 import { useGameStore } from '@/store/game-store';
 
 export function useInputBridge(): void {
@@ -14,6 +15,9 @@ export function useInputBridge(): void {
         else handleEscape();
       },
       onInventory: toggleInventory,
+      onQuickUse: (slot) => {
+        if (canQuickUse()) quickUse(slot === 0 ? 'healingTea' : 'coldKvass');
+      },
     });
     const onVisibility = () => {
       if (document.hidden) setPaused(true);

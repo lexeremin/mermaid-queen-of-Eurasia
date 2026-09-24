@@ -1,4 +1,7 @@
 import { Vector3, type Camera } from 'three';
+import { loot, spawnDrops, spawnPickup } from '@/game/loot-sim';
+import { grantXp } from '@/game/progress-actions';
+import { useProgressStore } from '@/store/progress-store';
 import { combat } from '@/game/combat-sim';
 import { walkTo } from '@/game/GameLoop';
 import { sim } from '@/game/sim';
@@ -22,6 +25,11 @@ declare global {
       dialogue: typeof useDialogueStore;
       world: typeof currentWorld;
       input: typeof input;
+      progress: typeof useProgressStore;
+      loot: typeof loot;
+      spawnDrops: typeof spawnDrops;
+      spawnPickup: typeof spawnPickup;
+      grantXp: typeof grantXp;
     };
   }
 }
@@ -31,6 +39,11 @@ export function installDevTools(): void {
   window.__mq = {
     world: currentWorld,
     input,
+    progress: useProgressStore,
+    loot,
+    spawnDrops,
+    spawnPickup,
+    grantXp,
     project(x, y, z) {
       const camera = (window as { __mqCamera?: Camera }).__mqCamera;
       if (!camera) return { x: 0, y: 0 };

@@ -1,10 +1,11 @@
-import { resetCombat } from '@/game/combat-sim';
+import { combat, resetCombat } from '@/game/combat-sim';
 import { currentWorld } from '@/game/world/current-map';
 import { resetSim, sim } from '@/game/sim';
 import { KEYS, readJson, removeKey, writeJson } from '@/save/storage';
 import { parseSave, SAVE_VERSION, type SaveData } from '@/save/save-data';
 import { isSimRunning, useGameStore } from '@/store/game-store';
 import { useNpcStore, type NpcRuntime } from '@/store/npc-store';
+import { useProgressStore, currentStats } from '@/store/progress-store';
 import { resolveCircle } from '@/systems/collision';
 import { PLAYER_RADIUS } from '@/systems/movement';
 
@@ -37,6 +38,18 @@ export function collectSave(): SaveData {
       facingZ: sim.curr.facing.z,
     },
     npcs,
+    progress: collectProgress(),
+  };
+}
+
+function collectProgress(): SaveData['progress'] {
+  const p = useProgressStore.getState();
+  return {
+    level: p.level,
+    xp: p.xp,
+    awarded: [...p.awarded],
+    bag: p.bag.map((s) => (s ? { ...s } : null)),
+    equipment: { ...p.equipment },
   };
 }
 
@@ -46,9 +59,17 @@ export function applySave(save: SaveData): void {
   for (const [id, n] of Object.entries(save.npcs)) {
     npcs[id] = { relationship: n.relationship, used: n.used, joined: n.joined };
   }
+  useProgressStore.getState().hydrate({
+    level: save.progress.level,
+    xp: save.progress.xp,
+    awarded: [...save.progress.awarded],
+    bag: save.progress.bag.map((s) => (s ? { ...s } : null)),
+    equipment: { ...save.progress.equipment },
+  });
   useNpcStore.getState().hydrate(npcs);
   useGameStore.getState().setForm(save.hero.form);
   playSeconds = save.playSeconds;
+  refreshVitals();
 
   const { x, z } = save.hero;
   if (Number.isFinite(x) && Number.isFinite(z)) {
@@ -62,6 +83,13 @@ export function applySave(save: SaveData): void {
       sim.curr = { pos, facing: safeFacing };
     }
   }
+}
+
+/** Health and mana are not saved: start every load at the maximums of the loaded level and gear. */
+function refreshVitals(): void {
+  const stats = currentStats();
+  combat.hp = stats.maxHp;
+  combat.mana = stats.maxMana;
 }
 
 export function loadLocalSave(): SaveData | null {
@@ -79,10 +107,12 @@ export function writeLocalSave(): SaveData {
 export function resetProgress(): void {
   removeKey(KEYS.save);
   playSeconds = 0;
+  useProgressStore.getState().reset();
   useNpcStore.getState().reset();
   useGameStore.getState().setForm('human');
   resetSim();
   resetCombat();
+  refreshVitals();
   writeLocalSave();
 }
 
@@ -100,6 +130,7 @@ export function startPersistence(): void {
   useGameStore.subscribe((state, prev) => {
     if (state.form !== prev.form) scheduleSave();
   });
+  useProgressStore.subscribe(scheduleSave);
 
   window.setInterval(() => {
     if (isSimRunning(useGameStore.getState()) && !document.hidden)

@@ -2,7 +2,11 @@ import { useEffect, useRef } from 'react';
 import { combat, reviveAtSpawn } from '@/game/combat-sim';
 import { useCombatStore } from '@/store/combat-store';
 import { useGameStore } from '@/store/game-store';
-import { ABILITIES, MAX_HP, MAX_MANA, cooldownFraction, type AbilityId } from '@/systems/abilities';
+import { useProgressStore, selectStats } from '@/store/progress-store';
+import { xpToNext, MAX_LEVEL } from '@/systems/progression';
+import { ABILITIES, cooldownFraction, type AbilityId } from '@/systems/abilities';
+import { QuickUse } from '@/ui/QuickUse';
+import { Toasts } from '@/ui/Toasts';
 
 const SLOTS: { id: AbilityId; key: string; label: string }[] = [
   { id: 'attack', key: 'Space', label: 'Trident' },
@@ -50,20 +54,38 @@ export function CombatHud({ touch }: { touch: boolean }) {
   const hp = useCombatStore((s) => s.hp);
   const mana = useCombatStore((s) => s.mana);
   const downed = useGameStore((s) => s.downed);
+  const level = useProgressStore((s) => s.level);
+  const xp = useProgressStore((s) => s.xp);
+  const equipment = useProgressStore((s) => s.equipment);
+  const stats = selectStats({ level, equipment });
+  const xpFraction = level >= MAX_LEVEL ? 1 : xp / xpToNext(level);
 
   return (
     <>
       <HurtVignette />
       <div className="vitals" aria-label={`Health ${hp}, mana ${mana}`}>
         <div className="bar bar-hp">
-          <div className="bar-fill" style={{ width: `${(hp / MAX_HP) * 100}%` }} />
+          <div
+            className="bar-fill"
+            style={{ width: `${Math.min(100, (hp / stats.maxHp) * 100)}%` }}
+          />
           <span>{hp}</span>
         </div>
         <div className="bar bar-mana">
-          <div className="bar-fill" style={{ width: `${(mana / MAX_MANA) * 100}%` }} />
+          <div
+            className="bar-fill"
+            style={{ width: `${Math.min(100, (mana / stats.maxMana) * 100)}%` }}
+          />
           <span>{mana}</span>
         </div>
+        <div className="bar bar-xp" aria-label={`Level ${level}`}>
+          <div className="bar-fill" style={{ width: `${xpFraction * 100}%` }} />
+          <span>{level >= MAX_LEVEL ? `LV ${level} MAX` : `LV ${level}`}</span>
+        </div>
       </div>
+
+      <QuickUse touch={touch} />
+      <Toasts />
 
       {!touch && (
         <div className="ability-bar">

@@ -6,7 +6,6 @@ import {
   HP_REGEN,
   HP_REGEN_DELAY,
   HURT_INVULN,
-  MANA_REGEN,
   MAX_HP,
   MAX_MANA,
   SPELL,
@@ -30,6 +29,7 @@ import {
   type Enemy,
 } from '@/systems/enemy-ai';
 import { PLAYER_RADIUS, PLAYER_SPEED } from '@/systems/movement';
+import { BASE_STATS, type PlayerStats } from '@/systems/progression';
 import { isZero, normalize, type Vec2 } from '@/utils/vec2';
 
 export type Projectile = { id: number; pos: Vec2; vel: Vec2; damage: number; age: number };
@@ -47,7 +47,7 @@ export type Effect = {
 };
 
 export type CombatEvent =
-  | { type: 'enemyDefeated'; kind: EnemyKind }
+  | { type: 'enemyDefeated'; kind: EnemyKind; x: number; z: number }
   | { type: 'playerHurt'; damage: number }
   | { type: 'playerDowned' }
   | { type: 'npcCharmed'; id: string };
@@ -107,6 +107,8 @@ export type CombatParams = {
   actions: CombatActions;
   npcs: readonly { id: string; pos: Vec2 }[];
   world: CollisionWorld;
+  /** Derived player stats (level and equipment); defaults to the base stats. */
+  stats?: PlayerStats;
 };
 
 export type CombatFrame = {
@@ -135,8 +137,14 @@ const pushEffect = (
   size: number,
 ) => s.effects.push({ id: s.nextId++, type, x, z, dir, age: 0, life, size });
 
-function hurtPlayer(s: CombatState, damage: number, events: CombatEvent[]): void {
+function hurtPlayer(
+  s: CombatState,
+  rawDamage: number,
+  events: CombatEvent[],
+  reduction: number,
+): void {
   if (s.downed || s.invuln > 0) return;
+  const damage = Math.max(1, Math.round(rawDamage * (1 - reduction)));
   s.hp = Math.max(0, s.hp - damage);
   s.invuln = HURT_INVULN;
   s.sinceHurt = 0;
@@ -162,7 +170,7 @@ function hitEnemy(
   const dir = directionTo(from, e.pos);
   if (damageEnemy(e, damage, dir, knockback, s.time)) {
     s.kills += 1;
-    events.push({ type: 'enemyDefeated', kind: e.kind });
+    events.push({ type: 'enemyDefeated', kind: e.kind, x: e.pos.x, z: e.pos.z });
     pushEffect(s, 'puff', e.pos.x, e.pos.z, dir, 0.5, defOf(e).radius * 2.2);
   }
 }
@@ -170,6 +178,7 @@ function hitEnemy(
 /** Advances combat by one fixed step. Mutates `s`. */
 export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   const { dt, playerPos, world } = p;
+  const stats = p.stats ?? BASE_STATS;
   const events: CombatEvent[] = [];
   const frame: CombatFrame = {
     moveOverride: null,
@@ -188,9 +197,11 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
 
   for (const [id, until] of Object.entries(s.charmed)) if (s.time >= until) delete s.charmed[id];
 
+  s.hp = Math.min(s.hp, stats.maxHp);
+  s.mana = Math.min(s.mana, stats.maxMana);
   if (!s.downed) {
-    s.mana = Math.min(MAX_MANA, s.mana + MANA_REGEN * dt);
-    if (s.sinceHurt >= HP_REGEN_DELAY) s.hp = Math.min(MAX_HP, s.hp + HP_REGEN * dt);
+    s.mana = Math.min(stats.maxMana, s.mana + stats.manaRegen * dt);
+    if (s.sinceHurt >= HP_REGEN_DELAY) s.hp = Math.min(stats.maxHp, s.hp + HP_REGEN * dt);
   }
 
   const alive = !s.downed;
@@ -223,7 +234,14 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       for (const e of s.enemies) {
         if (e.state === 'dead') continue;
         if (inCone(playerPos, facing, e.pos, defOf(e).radius, TRIDENT.range, TRIDENT.halfAngle)) {
-          hitEnemy(s, e, TRIDENT.damage, playerPos, TRIDENT.knockback, events);
+          hitEnemy(
+            s,
+            e,
+            Math.round(TRIDENT.damage * stats.damageMult),
+            playerPos,
+            TRIDENT.knockback,
+            events,
+          );
         }
       }
     }
@@ -235,7 +253,14 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       for (const e of s.enemies) {
         if (e.state === 'dead') continue;
         if (inCircle(playerPos, e.pos, defOf(e).radius, SPELL.radius)) {
-          hitEnemy(s, e, SPELL.damage, playerPos, SPELL.knockback, events);
+          hitEnemy(
+            s,
+            e,
+            Math.round(SPELL.damage * stats.damageMult),
+            playerPos,
+            SPELL.knockback,
+            events,
+          );
         }
       }
     }
@@ -284,7 +309,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     if (action.kind === 'melee') {
       const reach = action.blind ? BLIND_MELEE_REACH : action.range + PLAYER_RADIUS;
       if (Math.hypot(playerPos.x - action.origin.x, playerPos.z - action.origin.z) <= reach) {
-        hurtPlayer(s, action.damage, events);
+        hurtPlayer(s, action.damage, events, stats.reduction);
       }
     } else {
       s.projectiles.push({
@@ -308,7 +333,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       Math.hypot(playerPos.x - next.x, playerPos.z - next.z) <=
       PLAYER_RADIUS + PROJECTILE_RADIUS
     ) {
-      hurtPlayer(s, proj.damage, events);
+      hurtPlayer(s, proj.damage, events, stats.reduction);
       return false;
     }
     return true;
@@ -323,10 +348,10 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
 export const REVIVE_HP_FRACTION = 0.6;
 
 /** Get up after fainting: partial health, full mana, everything calm. */
-export function revive(s: CombatState): void {
+export function revive(s: CombatState, stats: PlayerStats = BASE_STATS): void {
   s.downed = false;
-  s.hp = MAX_HP * REVIVE_HP_FRACTION;
-  s.mana = MAX_MANA;
+  s.hp = Math.round(stats.maxHp * REVIVE_HP_FRACTION);
+  s.mana = stats.maxMana;
   s.invuln = 2;
   s.sinceHurt = 0;
   s.projectiles = [];

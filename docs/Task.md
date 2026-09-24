@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 12 complete (combat core).** Next: **Phase 13 — Progression + inventory** (`docs/phases/phase-13.md` — write it first, it does not exist yet).
+**Phase 13 complete (progression + inventory).** Next: **Phase 14 — Quests + kingdom** (`docs/phases/phase-14.md` — write it first, it does not exist yet).
 
 ---
 
@@ -65,7 +65,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-13.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-14.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -92,8 +92,8 @@ Read these files before starting any work:
 | Phase 11 — Save + Supabase | ✅ Complete | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | f2122cd. Live cloud verified (16/16 RLS checks, sync + restore) |
 | Phase 12 — Combat core | ✅ Complete | Trident attack, dash, singing Mermaid Aura (orbiting notes), AoE spell, damage, 3 enemy types + AI | 1845ab7. 47 assets, ~50 draw calls |
 | Phase 12b — Satirical politicians + blind debuff | ✅ Complete | Enemies replaced by three original caricatures with different weapons; the Aura blinds enemies (blindfold icon, missed attacks) | bc6741b |
-| Phase 13 — Progression + inventory | ⬜ Next | HP/mana/XP/levels, inventory + equipment UI (touch), loot | |
-| Phase 14 — Quests + kingdom | ⬜ Todo | Quest board, quest log, kingdom reputation | |
+| Phase 13 — Progression + inventory | ✅ Complete | XP and levels 1–10, loot drops, 20-slot bag, 3 equipment slots, quick-use, save v2 | HASH13 |
+| Phase 14 — Quests + kingdom | ⬜ Next | Quest board, quest log, kingdom reputation | |
 | Phase 15 — Alexander Garden content | ⬜ Todo | Herbs, pearls, monsters, hidden shrine in the garden | |
 | Phase 16 — Moscow underground + boss | ⬜ Todo | 3 rooms, loot, boss arena + fight | |
 | Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |

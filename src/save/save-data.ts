@@ -1,10 +1,21 @@
 import { METHODS, type Method } from '@/data/dialogue-types';
 import { NPCS } from '@/data/npcs';
+import { ITEMS, STARTER_EQUIPMENT, isItemId, type EquipSlot, type ItemId } from '@/data/items';
+import { BAG_SIZE } from '@/systems/inventory';
+import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export type SavedNpc = { relationship: number; used: Method[]; joined: boolean };
+
+export type SavedProgress = {
+  level: number;
+  xp: number;
+  awarded: string[];
+  bag: ({ id: ItemId; qty: number } | null)[];
+  equipment: Record<EquipSlot, ItemId | null>;
+};
 
 export type SaveData = {
   version: number;
@@ -12,13 +23,24 @@ export type SaveData = {
   playSeconds: number;
   hero: { form: 'human' | 'mermaid'; x: number; z: number; facingX: number; facingZ: number };
   npcs: Record<string, SavedNpc>;
+  progress: SavedProgress;
 };
 
 type Raw = Record<string, unknown>;
 export type Migrations = Readonly<Record<number, (data: Raw) => Raw>>;
 
-/** `MIGRATIONS[n]` upgrades a version-n save to version n + 1. Empty while the format is v1. */
-export const MIGRATIONS: Migrations = {};
+/** `MIGRATIONS[n]` upgrades a version-n save to version n + 1. */
+export const MIGRATIONS: Migrations = {
+  1: (data) => ({ ...data, progress: defaultSavedProgress() }),
+};
+
+export const defaultSavedProgress = (): SavedProgress => ({
+  level: 1,
+  xp: 0,
+  awarded: [],
+  bag: Array.from({ length: BAG_SIZE }, () => null),
+  equipment: { ...STARTER_EQUIPMENT },
+});
 
 const isRecord = (value: unknown): value is Raw =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -47,6 +69,46 @@ export function migrateSave(
     version += 1;
   }
   return data;
+}
+
+const SLOTS: readonly EquipSlot[] = ['weapon', 'outfit', 'charm'];
+
+function parseProgress(raw: unknown): SavedProgress {
+  const fallback = defaultSavedProgress();
+  if (!isRecord(raw)) return fallback;
+
+  const level = Math.min(MAX_LEVEL, Math.max(1, Math.floor(finite(raw.level, 1))));
+  const xp =
+    level >= MAX_LEVEL
+      ? 0
+      : Math.min(xpToNext(level) - 1, Math.max(0, Math.floor(finite(raw.xp, 0))));
+  const awarded = Array.isArray(raw.awarded)
+    ? [
+        ...new Set(raw.awarded.filter((k): k is string => typeof k === 'string' && k.length < 60)),
+      ].slice(0, 64)
+    : [];
+
+  const bag = fallback.bag;
+  if (Array.isArray(raw.bag)) {
+    raw.bag.slice(0, BAG_SIZE).forEach((entry, i) => {
+      if (!isRecord(entry) || !isItemId(entry.id)) return;
+      const qty = Math.min(ITEMS[entry.id].stack, Math.max(1, Math.floor(finite(entry.qty, 1))));
+      bag[i] = { id: entry.id, qty };
+    });
+  }
+
+  const equipment = { ...fallback.equipment };
+  if (isRecord(raw.equipment)) {
+    for (const slot of SLOTS) {
+      const id = raw.equipment[slot];
+      if (id === null) equipment[slot] = null;
+      else if (isItemId(id)) {
+        const def = ITEMS[id];
+        if (def.kind === 'equipment' && def.slot === slot) equipment[slot] = id;
+      }
+    }
+  }
+  return { level, xp, awarded, bag, equipment };
 }
 
 /** Turns untrusted data into a valid SaveData, or null if it is not a usable save. */
@@ -85,6 +147,7 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
       facingZ: finite(hero.facingZ, 1),
     },
     npcs,
+    progress: parseProgress(data.progress),
   };
 }
 

@@ -2,9 +2,17 @@ import { useFrame } from '@react-three/fiber';
 import { Plane, Raycaster, Vector2, Vector3, type Camera } from 'three';
 import { createFixedStepper } from '@/game/fixed-step';
 import { combat } from '@/game/combat-sim';
+import { loot, spawnDrops } from '@/game/loot-sim';
+import { grantXp } from '@/game/progress-actions';
+import { currentStats, useProgressStore } from '@/store/progress-store';
+import { useToastStore } from '@/store/toast-store';
+import { ITEMS } from '@/data/items';
+import { XP_REWARDS } from '@/systems/progression';
+import { stepPickups } from '@/systems/pickups';
 import { MAX_STEPS_PER_FRAME, SIM_STEP, sim } from '@/game/sim';
 import { track } from '@/net/stats';
 import { useCombatStore } from '@/store/combat-store';
+import { ENEMIES } from '@/data/enemies';
 import { stepCombat, type CombatEvent } from '@/systems/combat';
 import { nav } from '@/game/world/nav';
 import { clearPressed, consumePressed, getMove, input } from '@/input/input-state';
@@ -46,10 +54,28 @@ export function walkTo(target: Vec2): boolean {
   return path !== null;
 }
 
+function tryCollect(item: (typeof ITEMS)[keyof typeof ITEMS]['id']): boolean {
+  const result = useProgressStore.getState().addItem(item);
+  if (result.added === 0) return false;
+  useToastStore.getState().push(`Picked up ${ITEMS[item].name}`, 'item');
+  return true;
+}
+
+let lastBagWarning = 0;
+function warnBagFull(): void {
+  const now = performance.now();
+  if (now - lastBagWarning < 3000) return;
+  lastBagWarning = now;
+  useToastStore.getState().push('Bag full', 'warn');
+}
+
 function handleCombatEvents(events: readonly CombatEvent[]): void {
   for (const event of events) {
-    if (event.type === 'enemyDefeated') track('enemy_defeated', { kind: event.kind });
-    else if (event.type === 'playerDowned') {
+    if (event.type === 'enemyDefeated') {
+      track('enemy_defeated', { kind: event.kind });
+      grantXp(XP_REWARDS.enemy[event.kind], ENEMIES[event.kind].name);
+      spawnDrops(event.kind, { x: event.x, z: event.z });
+    } else if (event.type === 'playerDowned') {
       useGameStore.getState().setDowned(true);
       track('player_downed');
     }
@@ -109,6 +135,7 @@ export function GameLoop() {
       sim.talkTo = null;
     }
 
+    const stats = currentStats();
     sim.alpha = stepper.advance(delta, (dt) => {
       let move = getMove(input);
       const frame = stepCombat(combat, {
@@ -124,6 +151,7 @@ export function GameLoop() {
         },
         npcs: NPC_TARGETS,
         world: currentWorld,
+        stats,
       });
       if (frame.cancelWalk) {
         sim.path = [];
@@ -155,6 +183,9 @@ export function GameLoop() {
       } else {
         sim.stuckTime = 0;
       }
+      const picked = stepPickups(loot.pickups, sim.curr.pos, dt, tryCollect);
+      loot.pickups = picked.pickups;
+      if (picked.blocked.length > 0) warnBagFull();
       clearPressed(input);
     });
 

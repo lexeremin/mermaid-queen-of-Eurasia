@@ -30,6 +30,7 @@ export function keysToMove(held: ReadonlySet<string>): Vec2 {
 export type KeyboardHandlers = {
   onEscape: () => void;
   onInventory: () => void;
+  onQuickUse: (slot: 0 | 1) => void;
 };
 
 export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandlers): () => void {
@@ -42,6 +43,10 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
     }
     if (e.code === 'KeyI') {
       if (!e.repeat) handlers.onInventory();
+      return;
+    }
+    if (e.code === 'Digit1' || e.code === 'Digit2') {
+      if (!e.repeat) handlers.onQuickUse(e.code === 'Digit1' ? 0 : 1);
       return;
     }
     const action = ACTION_CODES[e.code];

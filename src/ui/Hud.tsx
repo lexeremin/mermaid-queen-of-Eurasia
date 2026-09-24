@@ -4,6 +4,7 @@ import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
+import { InventoryPanel } from '@/ui/InventoryPanel';
 import { PauseSettings } from '@/ui/PauseSettings';
 import { TouchControls } from '@/ui/TouchControls';
 import { useTouchDevice } from '@/ui/use-touch-device';
@@ -51,17 +52,7 @@ export function Hud() {
 
       <DialogueBox />
 
-      {inventoryOpen && (
-        <div className="overlay">
-          <div className="panel">
-            <h2>Inventory</h2>
-            <p>Items and equipment arrive in a later phase.</p>
-            <button type="button" className="hud-btn big" onClick={toggleInventory}>
-              CLOSE
-            </button>
-          </div>
-        </div>
-      )}
+      {inventoryOpen && <InventoryPanel />}
 
       {paused && (
         <div className="overlay">

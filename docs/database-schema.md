@@ -22,7 +22,7 @@ Supabase **anonymous sign-in**. `auth.uid()` is the player id; the session is ke
 ### `stat_events` (append-only)
 `id uuid pk` (client-generated, makes retries idempotent), `player_id → auth.users`, `type text (1–40 chars)`, `payload jsonb` (**≤ 2 KB**), `client_ts`, `created_at`. Index on `(player_id, created_at desc)`.
 
-Events sent today: `session_started {device}`, `npc_method_used {npc, method}`, `npc_mesmerized {npc}`, `npc_joined {npc}`, `enemy_defeated {kind}`, `player_downed`.
+Events sent today: `session_started {device}`, `npc_method_used {npc, method}`, `npc_mesmerized {npc}`, `npc_joined {npc}`, `enemy_defeated {kind}`, `player_downed`, `level_up {level}`.
 
 ## Row-level security
 - RLS is enabled on every table; the `anon` role has **no** privileges, signed-in (including anonymous) users get only what the policies allow.
