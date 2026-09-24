@@ -7,11 +7,16 @@ import { ASSETS, type AssetId } from '@/data/assets';
 import { NPC_BY_ID } from '@/data/npcs';
 import { applyRetroMaterial } from '@/game/assets/retro-material';
 import { combat } from '@/game/combat-sim';
+import { renderStats } from '@/game/render-stats';
+import { SIM_STEP, sim } from '@/game/sim';
 import { swingAngle } from '@/game/entities/RosaModel';
 import { useNpcStore } from '@/store/npc-store';
 import { COMPANION } from '@/systems/companion';
+import { turnToward } from '@/systems/movement';
 
-const WALK_SPEED_THRESHOLD = 0.6;
+const WALK_SPEED_THRESHOLD = 0.5;
+const TURN_RATE = 14;
+const IDLE_GRACE_SECONDS = 0.15;
 const CROSSFADE_SECONDS = 0.18;
 
 type Clip = 'idle' | 'walk';
@@ -22,7 +27,8 @@ function CompanionModel({ asset }: { asset: AssetId }) {
   const model = useRef<Group>(null);
   const arm = useRef<Object3D | null>(null);
   const current = useRef<Clip | null>(null);
-  const last = useRef({ x: 0, z: 0, ready: false });
+  const facing = useRef<{ x: number; z: number } | null>(null);
+  const stillFor = useRef(0);
 
   const gltf = useGLTF(ASSETS[asset].url);
   const scene = useMemo(() => clone(gltf.scene) as Group, [gltf.scene]);
@@ -44,26 +50,24 @@ function CompanionModel({ asset }: { asset: AssetId }) {
     if (!g) return;
     g.visible = c !== null;
     if (!c) {
-      last.current.ready = false;
+      facing.current = null;
       return;
     }
-    g.position.set(c.pos.x, 0, c.pos.z);
-    g.rotation.y = Math.atan2(c.facing.x, c.facing.z);
+    const a = sim.alpha;
+    g.position.set(c.prev.x + (c.pos.x - c.prev.x) * a, 0, c.prev.z + (c.pos.z - c.prev.z) * a);
+    facing.current = turnToward(facing.current ?? c.facing, c.facing, TURN_RATE * delta);
+    g.rotation.y = Math.atan2(facing.current.x, facing.current.z);
     if (arm.current && c.swing > 0) {
       arm.current.rotation.x += swingAngle(1 - c.swing / COMPANION.swingTime);
     }
-    const prev = last.current;
-    const speed = prev.ready
-      ? Math.hypot(c.pos.x - prev.x, c.pos.z - prev.z) / Math.max(delta, 1e-4)
-      : 0;
-    prev.x = c.pos.x;
-    prev.z = c.pos.z;
-    prev.ready = true;
-    const next: Clip = speed > WALK_SPEED_THRESHOLD ? 'walk' : 'idle';
+    const speed = Math.hypot(c.pos.x - c.prev.x, c.pos.z - c.prev.z) / SIM_STEP;
+    stillFor.current = speed > WALK_SPEED_THRESHOLD ? 0 : stillFor.current + delta;
+    const next: Clip = stillFor.current > IDLE_GRACE_SECONDS ? 'idle' : 'walk';
     if (current.current === next) return;
     actions[next]?.reset().fadeIn(CROSSFADE_SECONDS).play();
     if (current.current) actions[current.current]?.fadeOut(CROSSFADE_SECONDS);
     current.current = next;
+    renderStats.companionClip = next;
   });
 
   return (

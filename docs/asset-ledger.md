@@ -67,12 +67,6 @@ None yet. AI generators (Hunyuan3D, Hyper3D Rodin) are not enabled in the Blende
 
 Retired in Phase 12b: `enemy_wisp`, `enemy_stamper`, `enemy_memo` (replaced by the satirical politician archetypes above).
 
-## Audio (Rosa's voice)
-`public/assets/audio/*.mp3` (9 files, about 130 KB). Cut by `tools/audio/extract-voice.py` from voice recordings supplied by the project owner (a local songs folder, not committed). The recordings are the owner's own performances and were supplied for this use; "Vocalise" (Rachmaninoff) is a public-domain composition. Note: these clips are recordings of a real voice, so they are visible to anyone who can see this repository.
-
-| File | Source recording | Offset | Use |
-|---|---|---|---|
-| `rosa_attack_1..4.mp3` | four different recordings (0.27–0.41 s notes) | see the script | trident attack cries, pitch varied ±7% on playback |
-| `rosa_spell_1..2.mp3` | two recordings (0.8 s and 1.2 s notes) | see the script | Tide Surge cry |
-| `rosa_aura_1..3.mp3` | "Vocalise" (three 4 s windows) | 22.45 s, 4.91 s, 11.31 s | the Aura song |
-
+## Audio
+- `public/assets/audio/rosa_aura.mp3` (32 KB): the only recorded sample. 4 s of sustained "ah" singing from "Vocalise" (Rachmaninoff, a public-domain composition) at 22.45 s, cut by `tools/audio/extract-voice.py` from a recording supplied by the project owner (their own performance, supplied for this use). Played quietly (gain 0.32). Note: it is a recording of a real voice, so it is audible to anyone who can see this repository.
+- Every other sound is synthesized at runtime with WebAudio (`src/audio/sfx.ts`): trident swing whoosh, hit thud, cute bubble pops (dash), soft rolling wave (Tide Surge). No sample files.

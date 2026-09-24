@@ -120,3 +120,31 @@ describe('fighting', () => {
     expect(c.state).toBe('follow');
   });
 });
+
+describe('stopping and starting', () => {
+  it('does not stutter between walking and standing while keeping pace with a walking Rosa', () => {
+    const c = createCompanion('p', { x: 0, z: 0 }, north);
+    const player = { x: 0, z: 0 };
+    let switches = 0;
+    let wasMoving = false;
+    for (let t = 0; t < 8; t += DT) {
+      player.z -= 5 * DT;
+      const before = { ...c.pos };
+      stepCompanion(c, ctx({ player: { ...player } }));
+      const moving = dist(before, c.pos) > 0.001;
+      if (t > 1 && moving !== wasMoving) switches++;
+      wasMoving = moving;
+    }
+    expect(switches).toBeLessThanOrEqual(2);
+  });
+
+  it('settles beside Rosa and stays still once she stops', () => {
+    const c = createCompanion('p', { x: 0, z: 0 }, north);
+    c.pos = { x: 4, z: 4 };
+    run(c, 4, { player: { x: 0, z: 0 } });
+    const rest = { ...c.pos };
+    run(c, 1, { player: { x: 0, z: 0 } });
+    expect(dist(c.pos, rest)).toBeLessThan(0.01);
+    expect(dist(c.pos, followSpot({ x: 0, z: 0 }, north))).toBeLessThan(COMPANION.startDistance);
+  });
+});

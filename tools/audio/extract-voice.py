@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
-"""Cuts Rosa's voice samples out of recordings in a local songs folder (not committed).
+"""Cuts the one voice sample the game uses (the sung "ah" of the Aura) from a local songs folder (not committed).
 
 Usage: python3 tools/audio/extract-voice.py "/path/to/songs"
-Needs ffmpeg. Output: public/assets/audio/*.mp3 (mono, 32 kHz, 64 kbps, peak -2 dB).
+Needs ffmpeg. Output: public/assets/audio/rosa_aura.mp3 (mono, 32 kHz, 64 kbps, peak -2 dB).
 
-How the offsets were chosen (see docs/phases/phase-14c.md): every recording was analysed for voicing (pitch
-by autocorrelation) and loudness. Attack cries are isolated 0.25-0.4 s sung notes with a clean onset and a
-quick decay; special-attack cries are isolated 0.8-1.2 s strong high notes; the Aura song is 4 s of sustained
-voiced singing from "Vocalise" starting on a note onset. Replace an entry to swap a sample.
+The clip is 4 s of sustained voiced singing from "Vocalise" (voicing found by autocorrelation pitch tracking),
+starting on a note onset. Attack, dash and surge sounds are synthesized in src/audio, not sampled.
 """
 
 import os
@@ -17,15 +15,7 @@ import sys
 
 # (output name, source file stem, start seconds, duration seconds, fade-in, fade-out)
 SAMPLES = [
-    ("rosa_attack_1", "e4b90261-0b60-44ed-b04a-d7c36614ebd2", 15.6, 0.34, 0.005, 0.07),
-    ("rosa_attack_2", "bf93da03-e449-467b-8f2b-4dc708c7ae60", 5.34, 0.38, 0.005, 0.07),
-    ("rosa_attack_3", "till our wedding day", 13.44, 0.27, 0.005, 0.07),
-    ("rosa_attack_4", "4d5983a7-2bdf-4342-99db-e29b525b7290", 19.95, 0.41, 0.005, 0.08),
-    ("rosa_spell_1", "6efcd05e-efda-4f1a-b1c7-eba870c13957", 38.44, 0.81, 0.005, 0.15),
-    ("rosa_spell_2", "65933793-8960-4489-8903-ce334c59299d", 47.39, 1.17, 0.005, 0.2),
-    ("rosa_aura_1", "Vocalise", 22.45, 4.0, 0.03, 1.0),
-    ("rosa_aura_2", "Vocalise", 4.91, 4.0, 0.03, 1.0),
-    ("rosa_aura_3", "Vocalise", 11.31, 4.0, 0.03, 1.0),
+    ("rosa_aura", "Vocalise", 22.45, 4.0, 0.03, 1.0),
 ]
 
 PAD = 0.02

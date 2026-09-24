@@ -1,7 +1,8 @@
 import { useFrame } from '@react-three/fiber';
 import { Plane, Raycaster, Vector2, Vector3, type Camera } from 'three';
 import { createFixedStepper } from '@/game/fixed-step';
-import { playVoice, stopVoice } from '@/audio/voice';
+import { playSfx } from '@/audio/sfx';
+import { playAuraSong, stopVoice } from '@/audio/voice';
 import { combat } from '@/game/combat-sim';
 import { loot, spawnDrops } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
@@ -84,9 +85,12 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       onEnemyDefeatedForQuests(event.kind);
       spawnDrops(event.kind, { x: event.x, z: event.z });
     } else if (event.type === 'cast') {
-      if (event.ability === 'attack') playVoice('attack');
-      else if (event.ability === 'spell') playVoice('spell');
-      else if (event.ability === 'aura') playVoice('aura');
+      if (event.ability === 'attack') playSfx('swing');
+      else if (event.ability === 'dash') playSfx('bubbles');
+      else if (event.ability === 'spell') playSfx('wave');
+      else if (event.ability === 'aura') playAuraSong();
+    } else if (event.type === 'enemyHit') {
+      playSfx('hit');
     } else if (event.type === 'playerDowned') {
       stopVoice();
       useGameStore.getState().setDowned(true);
@@ -105,9 +109,12 @@ export function GameLoop() {
       return;
     }
 
+    const followingId =
+      Object.entries(useNpcStore.getState().npcs).find(([, n]) => n.following)?.[0] ?? null;
+    const spots = followingId ? SPOTS.filter((n) => n.id !== followingId) : SPOTS;
     const talkNow = consumePressed(input, 'interact');
     if (talkNow) {
-      const near = nearestTalkable(SPOTS, sim.curr.pos);
+      const near = nearestTalkable(spots, sim.curr.pos);
       if (near) {
         sim.path = [];
         sim.talkTo = null;
@@ -127,12 +134,12 @@ export function GameLoop() {
       input.click = null;
       const target = groundPoint(state.camera, click);
       const ray = raycaster.ray;
-      const bodyHit = npcUnderRay(SPOTS, {
+      const bodyHit = npcUnderRay(spots, {
         origin: { x: ray.origin.x, y: ray.origin.y, z: ray.origin.z },
         dir: { x: ray.direction.x, y: ray.direction.y, z: ray.direction.z },
       });
       if (target) {
-        const npc = bodyHit ?? npcAtPoint(SPOTS, target);
+        const npc = bodyHit ?? npcAtPoint(spots, target);
         if (npc) {
           if (Math.hypot(npc.x - sim.curr.pos.x, npc.z - sim.curr.pos.z) <= TALK_RANGE) {
             sim.path = [];
@@ -170,8 +177,6 @@ export function GameLoop() {
     }
 
     const stats = currentStats();
-    const followingId =
-      Object.entries(useNpcStore.getState().npcs).find(([, n]) => n.following)?.[0] ?? null;
     sim.alpha = stepper.advance(delta, (dt) => {
       let move = getMove(input);
       const frame = stepCombat(combat, {
@@ -185,7 +190,7 @@ export function GameLoop() {
           aura: input.pressed.aura,
           spell: input.pressed.spell,
         },
-        npcs: NPC_TARGETS,
+        npcs: followingId ? NPC_TARGETS.filter((n) => n.id !== followingId) : NPC_TARGETS,
         world: currentWorld,
         stats,
         companion: followingId ? { id: followingId } : null,
@@ -232,7 +237,7 @@ export function GameLoop() {
     const zone = zoneAt(currentMap.zones, sim.curr.pos);
     if (zone !== store.zone) store.setZone(zone);
 
-    const near = nearestTalkable(SPOTS, sim.curr.pos);
+    const near = nearestTalkable(spots, sim.curr.pos);
     const nearId = near?.id ?? null;
     if (nearId !== store.nearbyNpc) store.setNearbyNpc(nearId);
 
@@ -240,7 +245,7 @@ export function GameLoop() {
     if (nearBoard !== store.nearBoard) store.setNearBoard(nearBoard);
 
     if (sim.talkTo && sim.path.length === 0) {
-      const target = SPOTS.find((n) => n.id === sim.talkTo);
+      const target = spots.find((n) => n.id === sim.talkTo);
       const toBoard = sim.talkTo === BOARD_ID;
       sim.talkTo = null;
       if (target && nearId === target.id) useDialogueStore.getState().open(target.id);

@@ -21,6 +21,9 @@ export const COMPANION = {
   lungeSpeed: 9,
   /** Farther than this from Rosa and he simply appears beside her. */
   teleportDistance: 22,
+  /** Start walking to his spot when farther than this, stop when closer than `settleDistance`. */
+  startDistance: 0.6,
+  settleDistance: 0.15,
   swingTime: 0.3,
 } as const;
 
@@ -29,6 +32,8 @@ export type CompanionState = 'follow' | 'chase' | 'windup' | 'strike' | 'recover
 export type Companion = {
   id: string;
   pos: Vec2;
+  /** Position at the start of the last step, for smooth rendering between steps. */
+  prev: Vec2;
   facing: Vec2;
   state: CompanionState;
   timer: number;
@@ -37,6 +42,10 @@ export type Companion = {
   swing: number;
   /** Set on the step where the sword lands, so the hit is applied exactly once. */
   hitPending: boolean;
+  /** Walking to his spot beside Rosa; starts and stops at different distances so he does not stutter. */
+  repositioning: boolean;
+  /** Rosa's position on the previous step, to know how fast she is moving. */
+  lastPlayer: Vec2;
 };
 
 export type CompanionTarget = { id: string; pos: Vec2; radius: number };
@@ -61,12 +70,15 @@ export function createCompanion(id: string, player: Vec2, playerFacing: Vec2): C
   return {
     id,
     pos: spot,
+    prev: { x: spot.x, z: spot.z },
     facing: { x: playerFacing.x, z: playerFacing.z },
     state: 'follow',
     timer: 0,
     target: null,
     swing: 0,
     hitPending: false,
+    repositioning: false,
+    lastPlayer: { x: player.x, z: player.z },
   };
 }
 
@@ -108,9 +120,13 @@ export function stepCompanion(c: Companion, ctx: CompanionContext): CompanionHit
   const { dt, player, world } = ctx;
   c.swing = Math.max(0, c.swing - dt);
   c.hitPending = false;
+  c.prev = { x: c.pos.x, z: c.pos.z };
+  const wasPlayer = c.lastPlayer;
+  c.lastPlayer = { x: player.x, z: player.z };
 
   if (dist(c.pos, player) > COMPANION.teleportDistance) {
     c.pos = resolveCircle(followSpot(player, ctx.playerFacing), COMPANION.radius, world);
+    c.prev = { x: c.pos.x, z: c.pos.z };
     c.state = 'follow';
     c.target = null;
   }
@@ -126,9 +142,13 @@ export function stepCompanion(c: Companion, ctx: CompanionContext): CompanionHit
         c.target = null;
         const spot = followSpot(player, ctx.playerFacing);
         const d = dist(c.pos, spot);
-        if (d > 0.35) {
-          const dir = directionTo(c.pos, spot);
-          walk(c, dir, COMPANION.speed * Math.min(1.8, 1 + d / 6), dt, world);
+        const playerSpeed = dist(wasPlayer, player) / dt;
+        c.repositioning = c.repositioning
+          ? d >= COMPANION.settleDistance || playerSpeed > 0.5
+          : d > COMPANION.startDistance;
+        if (c.repositioning) {
+          const dir = d > 0.05 ? directionTo(c.pos, spot) : ctx.playerFacing;
+          walk(c, dir, Math.min(COMPANION.speed * 1.8, playerSpeed + d * 5), dt, world);
           c.facing = dir;
         } else {
           c.facing = { x: ctx.playerFacing.x, z: ctx.playerFacing.z };

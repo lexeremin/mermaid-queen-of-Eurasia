@@ -54,6 +54,8 @@ export type CombatEvent =
   | { type: 'playerHurt'; damage: number }
   | { type: 'playerDowned' }
   | { type: 'npcCharmed'; id: string }
+  /** A hit landed on an enemy (from Rosa or a companion). */
+  | { type: 'enemyHit' }
   /** Rosa used an ability (drives voice and sound). */
   | { type: 'cast'; ability: AbilityId };
 
@@ -192,6 +194,7 @@ function hitEnemy(
   events: CombatEvent[],
 ): void {
   const dir = directionTo(from, e.pos);
+  events.push({ type: 'enemyHit' });
   if (damageEnemy(e, damage, dir, knockback, s.time)) {
     s.kills += 1;
     events.push({ type: 'enemyDefeated', kind: e.kind, x: e.pos.x, z: e.pos.z });

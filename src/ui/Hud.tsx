@@ -4,6 +4,7 @@ import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
+import { FollowerButton } from '@/ui/FollowerButton';
 import { InventoryPanel } from '@/ui/InventoryPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
 import { MenuMermaid } from '@/ui/MenuMermaid';
@@ -66,6 +67,8 @@ export function Hud() {
       )}
 
       {touch && !paused && !inventoryOpen && !questPanel && !dialogueOpen && <TouchControls />}
+
+      <FollowerButton touch={touch} />
 
       <DialogueBox />
 

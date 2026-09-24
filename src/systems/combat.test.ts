@@ -449,3 +449,15 @@ describe('cast events and companion', () => {
     expect(s.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
   });
 });
+
+describe('hit events', () => {
+  it('reports each hit that lands, and none when the swing misses', () => {
+    const s = createCombatState([{ id: 'e', kind: 'tycoon', x: 0, z: -1.6 }]);
+    s.enemies[0]!.state = 'blinded';
+    s.enemies[0]!.blindedUntil = 99;
+    const hits = (events: { type: string }[]) => events.filter((e) => e.type === 'enemyHit').length;
+    expect(hits(step(s, { actions: { attack: true } }).events)).toBe(1);
+    const empty = createCombatState();
+    expect(hits(step(empty, { actions: { attack: true } }).events)).toBe(0);
+  });
+});
