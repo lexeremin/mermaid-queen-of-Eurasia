@@ -42,50 +42,50 @@ function run(s: CombatState, seconds: number, over: Parameters<typeof step>[1] =
   return events;
 }
 
-const wisp = (x: number, z: number) => ({ id: `w${x}_${z}`, kind: 'paperWisp' as const, x, z });
+const wisp = (x: number, z: number) => ({ id: `w${x}_${z}`, kind: 'tycoon' as const, x, z });
 
 describe('trident attack', () => {
   it('damages enemies in front, not behind, and starts the cooldown', () => {
     const s = createCombatState([wisp(0, -1.6), wisp(0, 1.6)]);
-    for (const e of s.enemies) e.state = 'lovestruck';
-    for (const e of s.enemies) e.charmedUntil = 99;
+    for (const e of s.enemies) e.state = 'blinded';
+    for (const e of s.enemies) e.blindedUntil = 99;
     step(s, { actions: { attack: true } });
-    expect(s.enemies[0]?.hp).toBe(ENEMIES.paperWisp.maxHp - TRIDENT.damage);
-    expect(s.enemies[1]?.hp).toBe(ENEMIES.paperWisp.maxHp);
+    expect(s.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp - TRIDENT.damage);
+    expect(s.enemies[1]?.hp).toBe(ENEMIES.tycoon.maxHp);
     expect(s.cooldowns.attack).toBeGreaterThan(0.4);
     step(s, { actions: { attack: true } });
-    expect(s.enemies[0]?.hp).toBe(ENEMIES.paperWisp.maxHp - TRIDENT.damage);
+    expect(s.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp - TRIDENT.damage);
   });
 
   it('aim assist turns the strike toward a nearby enemy off to the side', () => {
     const s = createCombatState([wisp(2.0, -1.0)]);
-    s.enemies[0]!.state = 'lovestruck';
-    s.enemies[0]!.charmedUntil = 99;
+    s.enemies[0]!.state = 'blinded';
+    s.enemies[0]!.blindedUntil = 99;
     const frame = step(s, { actions: { attack: true } });
-    expect(s.enemies[0]?.hp).toBeLessThan(ENEMIES.paperWisp.maxHp);
+    expect(s.enemies[0]?.hp).toBeLessThan(ENEMIES.tycoon.maxHp);
     expect(frame.faceOverride?.x).toBeGreaterThan(0.5);
     expect(frame.cancelWalk).toBe(true);
   });
 
   it('turns to hit an enemy right behind her, but not a distant one behind her', () => {
     const near = createCombatState([wisp(0, 1.8)]);
-    near.enemies[0]!.state = 'lovestruck';
-    near.enemies[0]!.charmedUntil = 99;
+    near.enemies[0]!.state = 'blinded';
+    near.enemies[0]!.blindedUntil = 99;
     const frame = step(near, { actions: { attack: true } });
-    expect(near.enemies[0]?.hp).toBeLessThan(ENEMIES.paperWisp.maxHp);
+    expect(near.enemies[0]?.hp).toBeLessThan(ENEMIES.tycoon.maxHp);
     expect(frame.faceOverride?.z).toBeGreaterThan(0.9);
     const far = createCombatState([wisp(0, 3.2)]);
-    far.enemies[0]!.state = 'lovestruck';
-    far.enemies[0]!.charmedUntil = 99;
+    far.enemies[0]!.state = 'blinded';
+    far.enemies[0]!.blindedUntil = 99;
     step(far, { actions: { attack: true } });
-    expect(far.enemies[0]?.hp).toBe(ENEMIES.paperWisp.maxHp);
+    expect(far.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
   });
 
   it('slows the player briefly and reports a kill once', () => {
     const s = createCombatState([wisp(0, -1.2)]);
     s.enemies[0]!.hp = 5;
     const frame = step(s, { actions: { attack: true } });
-    expect(frame.events).toContainEqual({ type: 'enemyDefeated', kind: 'paperWisp' });
+    expect(frame.events).toContainEqual({ type: 'enemyDefeated', kind: 'tycoon' });
     expect(frame.moveScale).toBeLessThan(1);
     expect(s.kills).toBe(1);
     expect(run(s, 1).filter((e) => e.type === 'enemyDefeated')).toHaveLength(0);
@@ -119,7 +119,7 @@ describe('dash', () => {
   });
 
   it('a dashing player is not hurt', () => {
-    const s = createCombatState([{ id: 'g', kind: 'stampGolem', x: 0, z: -1.5 }]);
+    const s = createCombatState([{ id: 'g', kind: 'speaker', x: 0, z: -1.5 }]);
     s.enemies[0]!.state = 'windup';
     s.enemies[0]!.timer = 0.01;
     s.enemies[0]!.attackDir = north;
@@ -144,7 +144,7 @@ describe('mermaid aura', () => {
     expect(events).toContainEqual({ type: 'npcCharmed', id: 'near' });
     run(s, AURA.duration, { npcs });
     expect(s.charmed.far).toBeGreaterThan(0);
-    expect(s.enemies[0]?.state).toBe('lovestruck');
+    expect(s.enemies[0]?.state).toBe('blinded');
     expect(s.aura.active).toBe(false);
   });
 
@@ -166,11 +166,25 @@ describe('mermaid aura', () => {
     expect(s.mana).toBeGreaterThanOrEqual(10);
   });
 
-  it('charmed enemies do not attack', () => {
-    const s = createCombatState([{ id: 'g', kind: 'stampGolem', x: 0, z: -1.5 }]);
-    step(s, { actions: { aura: true } });
-    run(s, 2.0);
-    expect(s.hp).toBe(MAX_HP);
+  it("blinded enemies' swings miss unless Rosa is practically touching them", () => {
+    const far = createCombatState([{ id: 'g', kind: 'speaker', x: 0, z: -1.6 }]);
+    step(far, { actions: { aura: true } });
+    run(far, 0.3);
+    expect(far.enemies[0]?.state).toBe('blinded');
+    far.enemies[0]!.wander = { x: 0, z: -1 };
+    far.enemies[0]!.wanderTimer = 99;
+    far.enemies[0]!.swingTimer = 0.01;
+    run(far, 1.0);
+    expect(far.hp).toBe(MAX_HP);
+
+    const close = createCombatState([{ id: 'g', kind: 'speaker', x: 0, z: -0.6 }]);
+    close.enemies[0]!.state = 'blinded';
+    close.enemies[0]!.blindedUntil = 99;
+    close.enemies[0]!.wander = { x: 0, z: -1 };
+    close.enemies[0]!.wanderTimer = 99;
+    close.enemies[0]!.swingTimer = 0.01;
+    run(close, 0.2);
+    expect(close.hp).toBe(MAX_HP - ENEMIES.speaker.damage);
   });
 });
 
@@ -178,15 +192,15 @@ describe('tide surge', () => {
   it('hits everything in the ring, knocks back, and costs mana', () => {
     const s = createCombatState([wisp(3, 0), wisp(-3, 1), wisp(9, 0)]);
     for (const e of s.enemies) {
-      e.state = 'lovestruck';
-      e.charmedUntil = 99;
+      e.state = 'blinded';
+      e.blindedUntil = 99;
     }
     step(s, { actions: { spell: true } });
     expect(s.enemies[0]?.hp).toBe(
-      ENEMIES.paperWisp.maxHp - SPELL.damage > 0 ? ENEMIES.paperWisp.maxHp - SPELL.damage : 0,
+      ENEMIES.tycoon.maxHp - SPELL.damage > 0 ? ENEMIES.tycoon.maxHp - SPELL.damage : 0,
     );
     expect(s.enemies[1]?.state).toBe('dead');
-    expect(s.enemies[2]?.hp).toBe(ENEMIES.paperWisp.maxHp);
+    expect(s.enemies[2]?.hp).toBe(ENEMIES.tycoon.maxHp);
     expect(s.mana).toBeCloseTo(MAX_MANA - 35, 0);
     expect(s.effects.some((e) => e.type === 'ring')).toBe(true);
   });
@@ -194,24 +208,24 @@ describe('tide surge', () => {
 
 describe('taking damage', () => {
   it('a melee hit hurts once, then grants brief invulnerability', () => {
-    const s = createCombatState([{ id: 'g', kind: 'stampGolem', x: 0, z: -1.5 }]);
+    const s = createCombatState([{ id: 'g', kind: 'speaker', x: 0, z: -1.5 }]);
     s.enemies[0]!.state = 'chase';
     const events = run(s, 1);
     expect(events.filter((e) => e.type === 'playerHurt')).toHaveLength(1);
-    expect(s.hp).toBe(MAX_HP - ENEMIES.stampGolem.damage);
+    expect(s.hp).toBe(MAX_HP - ENEMIES.speaker.damage);
     expect(HURT_INVULN).toBeGreaterThan(0);
   });
 
   it('projectiles travel, hit the player, and stop at walls', () => {
-    const s = createCombatState([{ id: 'm', kind: 'memoThrower', x: 0, z: -6.5 }]);
+    const s = createCombatState([{ id: 'm', kind: 'demagogue', x: 0, z: -6.5 }]);
     s.enemies[0]!.state = 'chase';
     run(s, 2.2);
-    expect(s.hp).toBe(MAX_HP - ENEMIES.memoThrower.damage);
+    expect(s.hp).toBe(MAX_HP - ENEMIES.demagogue.damage);
     const walled: CollisionWorld = {
       ...world,
       colliders: [{ kind: 'box', cx: 0, cz: -3.5, hx: 3, hz: 0.3 }],
     };
-    const s2 = createCombatState([{ id: 'm', kind: 'memoThrower', x: 0, z: -6.5 }]);
+    const s2 = createCombatState([{ id: 'm', kind: 'demagogue', x: 0, z: -6.5 }]);
     s2.enemies[0]!.state = 'chase';
     run(s2, 2.2, { world: walled });
     expect(s2.hp).toBe(MAX_HP);
@@ -258,6 +272,6 @@ describe('regeneration and respawn', () => {
     expect(s.enemies[0]?.state).toBe('dead');
     run(s, 41, { playerPos: { x: 90, z: 90 } });
     expect(s.enemies[0]?.state).not.toBe('dead');
-    expect(s.enemies[0]?.hp).toBe(ENEMIES.paperWisp.maxHp);
+    expect(s.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
   });
 });

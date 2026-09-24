@@ -1,10 +1,15 @@
 import type { AssetId } from '@/data/assets';
 
-export type EnemyKind = 'paperWisp' | 'stampGolem' | 'memoThrower';
+/**
+ * Original satirical politician caricatures, defined by costume and weapon.
+ * None is meant to resemble, or resembles, any real person.
+ */
+export type EnemyKind = 'tycoon' | 'speaker' | 'demagogue';
 
 export type EnemyDef = {
   kind: EnemyKind;
   name: string;
+  weapon: string;
   asset: AssetId;
   maxHp: number;
   speed: number;
@@ -17,70 +22,91 @@ export type EnemyDef = {
   recover: number;
   knockbackResist: number;
   ranged: boolean;
+  /** Lunges forward during the strike. */
+  lunge: boolean;
   /** Ranged enemies back off inside this distance and close in beyond `preferMax`. */
   preferMin: number;
   preferMax: number;
   projectileSpeed: number;
   scale: number;
+  /** Height of the head (blindfold band) and of the floating debuff icon, in metres. */
+  headHeight: number;
+  markHeight: number;
+  headRadius: number;
 };
 
 export const ENEMIES: Readonly<Record<EnemyKind, EnemyDef>> = {
-  paperWisp: {
-    kind: 'paperWisp',
-    name: 'Paper Wisp',
-    asset: 'enemyWisp',
-    maxHp: 18,
-    speed: 4.6,
-    radius: 0.4,
+  tycoon: {
+    kind: 'tycoon',
+    name: 'Golden-Pen Tycoon',
+    weapon: 'giant golden fountain pen',
+    asset: 'enemyTycoon',
+    maxHp: 24,
+    speed: 4.2,
+    radius: 0.45,
     aggroRange: 9,
-    attackRange: 1.1,
-    damage: 6,
-    windup: 0.25,
-    recover: 0.55,
-    knockbackResist: 0,
+    attackRange: 1.7,
+    damage: 8,
+    windup: 0.3,
+    recover: 0.6,
+    knockbackResist: 0.1,
     ranged: false,
+    lunge: true,
     preferMin: 0,
     preferMax: 0,
     projectileSpeed: 0,
     scale: 1,
+    headHeight: 2.08,
+    markHeight: 3.15,
+    headRadius: 0.3,
   },
-  stampGolem: {
-    kind: 'stampGolem',
-    name: 'Stamp Golem',
-    asset: 'enemyStamper',
-    maxHp: 60,
-    speed: 2.4,
+  speaker: {
+    kind: 'speaker',
+    name: 'Gavel Speaker',
+    weapon: 'enormous gavel',
+    asset: 'enemySpeaker',
+    maxHp: 70,
+    speed: 2.3,
     radius: 0.8,
     aggroRange: 8,
-    attackRange: 2.0,
-    damage: 16,
-    windup: 0.7,
-    recover: 1.0,
+    attackRange: 2.2,
+    damage: 18,
+    windup: 0.75,
+    recover: 1.1,
     knockbackResist: 0.6,
     ranged: false,
+    lunge: false,
     preferMin: 0,
     preferMax: 0,
     projectileSpeed: 0,
     scale: 1,
+    headHeight: 2.2,
+    markHeight: 3.3,
+    headRadius: 0.36,
   },
-  memoThrower: {
-    kind: 'memoThrower',
-    name: 'Memo Thrower',
-    asset: 'enemyMemo',
-    maxHp: 28,
+  demagogue: {
+    kind: 'demagogue',
+    name: 'Megaphone Demagogue',
+    weapon: 'megaphone (sound blasts)',
+    asset: 'enemyDemagogue',
+    maxHp: 32,
     speed: 3.0,
     radius: 0.5,
     aggroRange: 10,
     attackRange: 9,
-    damage: 8,
-    windup: 0.45,
+    damage: 9,
+    windup: 0.5,
     recover: 1.3,
     knockbackResist: 0.2,
     ranged: true,
+    lunge: false,
     preferMin: 5,
     preferMax: 8,
-    projectileSpeed: 9,
+    projectileSpeed: 8,
     scale: 1,
+    headHeight: 2.15,
+    markHeight: 3.0,
+    headRadius: 0.28,
   },
 };
 

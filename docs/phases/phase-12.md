@@ -1,6 +1,6 @@
 # Phase 12 — Combat core
 
-**Status:** ✅ Complete
+**Status:** ✅ Complete (enemy roster and the enemy Aura effect changed in Phase 12b: see `phase-12b.md`)
 
 ## Goal
 Real-time top-down combat on the existing engine: Rosa's trident attack, dash, the **singing Mermaid Aura**, one area spell, health and mana, and three bureaucratic monster types with AI. Boss, loot, XP and levels come later (Phases 13 and 16).

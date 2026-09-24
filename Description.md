@@ -108,10 +108,10 @@ Simple real-time top-down combat.
 
 - Rosa has a magical trident.
 - Basic attack.
-- Mermaid Aura ability: Rosa sings. Musical notes orbit her in expanding circles; every man the rings touch is mesmerized and shows a floating heart buff above his head.
+- Mermaid Aura ability: Rosa sings. Musical notes orbit her in expanding circles. Friendly men the rings touch are mesmerized and show a floating heart buff above their heads; enemies get a **blind debuff** (a crossed-out eye above the head and a blindfold): they stumble around and their attacks miss.
 - Dash.
 - One area-of-effect spell.
-- 3 enemy types.
+- 3 enemy types: original satirical politician caricatures with different weapons (gavel, golden pen, megaphone). Invented archetypes, not real people.
 - One boss.
 
 ---

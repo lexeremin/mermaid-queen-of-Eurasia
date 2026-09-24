@@ -63,7 +63,7 @@ describe('enemy placement', () => {
     const ids = RED_SQUARE.enemies.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(RED_SQUARE.enemies.map((e) => e.kind))).toEqual(
-      new Set(['paperWisp', 'stampGolem', 'memoThrower']),
+      new Set(['tycoon', 'speaker', 'demagogue']),
     );
   });
 

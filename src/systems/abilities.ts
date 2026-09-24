@@ -35,7 +35,7 @@ export const AURA = {
   rings: 3,
   ringWidth: 1.4,
   npcCharm: 12,
-  enemyCharm: 5,
+  enemyBlind: 5,
 } as const;
 export const SPELL = { radius: 4.8, damage: 28, knockback: 5, burst: 0.35 } as const;
 

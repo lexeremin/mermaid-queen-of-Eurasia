@@ -20,7 +20,7 @@ import {
 import { aimAssist, directionTo, inCircle, inCone } from '@/systems/combat-math';
 import { resolveCircle, type CollisionWorld } from '@/systems/collision';
 import {
-  charmEnemy,
+  blindEnemy,
   createEnemy,
   damageEnemy,
   defOf,
@@ -121,6 +121,8 @@ export type CombatFrame = {
 const ATTACK_LOCK = 0.18;
 const ATTACK_LOCK_SCALE = 0.4;
 const PROJECTILE_RADIUS = 0.25;
+/** A blinded enemy only connects when Rosa is practically touching it. */
+const BLIND_MELEE_REACH = 0.9;
 const PROJECTILE_LIFE = 2.2;
 
 const pushEffect = (
@@ -269,7 +271,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       if (e.state === 'dead' || s.aura.hit.has(e.id)) continue;
       if (inCircle(playerPos, e.pos, defOf(e).radius, radius)) {
         s.aura.hit.add(e.id);
-        charmEnemy(e, s.time + AURA.enemyCharm);
+        blindEnemy(e, s.time + AURA.enemyBlind);
       }
     }
     if (s.aura.t >= AURA.duration) s.aura.active = false;
@@ -280,7 +282,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     if (e.state === 'dead' && e.deadFor >= RESPAWN_SECONDS) respawnEnemy(e);
     if (!action) continue;
     if (action.kind === 'melee') {
-      const reach = action.range + PLAYER_RADIUS;
+      const reach = action.blind ? BLIND_MELEE_REACH : action.range + PLAYER_RADIUS;
       if (Math.hypot(playerPos.x - action.origin.x, playerPos.z - action.origin.z) <= reach) {
         hurtPlayer(s, action.damage, events);
       }

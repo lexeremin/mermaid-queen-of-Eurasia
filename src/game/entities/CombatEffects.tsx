@@ -66,6 +66,10 @@ export function CombatEffects() {
   const ringGeometry = useMemo(() => new RingGeometry(0.8, 1, 40).rotateX(-Math.PI / 2), []);
   const puffGeometry = useMemo(() => new SphereGeometry(1, 8, 6), []);
   const noteGeo = useMemo(() => noteGeometry(), []);
+  const waveGeometry = useMemo(
+    () => new RingGeometry(0.3, 0.42, 12, 1, -0.9, 1.8).rotateX(-Math.PI / 2),
+    [],
+  );
 
   useEffect(() => {
     const mesh = notes.current;
@@ -124,9 +128,9 @@ export function CombatEffects() {
       if (!mesh) return;
       mesh.visible = p !== undefined;
       if (p) {
-        mesh.position.set(p.pos.x, 0.9, p.pos.z);
+        mesh.position.set(p.pos.x, 1.0, p.pos.z);
         mesh.rotation.y = yawOf({ x: p.vel.x, z: p.vel.z });
-        mesh.rotation.x = Math.sin(p.age * 18) * 0.5;
+        mesh.scale.setScalar(0.9 + p.age * 1.4);
       }
     });
 
@@ -249,10 +253,10 @@ export function CombatEffects() {
           ref={(m) => {
             shots[i] = m;
           }}
+          geometry={waveGeometry}
           visible={false}
         >
-          <boxGeometry args={[0.5, 0.05, 0.3]} />
-          <meshBasicMaterial color="#ece0c0" />
+          <meshBasicMaterial color="#ffcf5a" side={DoubleSide} transparent opacity={0.9} />
         </mesh>
       ))}
       <instancedMesh

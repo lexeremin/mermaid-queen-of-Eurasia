@@ -5,15 +5,7 @@ import { PLAYER_RADIUS } from '@/systems/movement';
 import type { Vec2 } from '@/utils/vec2';
 
 export type EnemyState =
-  | 'idle'
-  | 'chase'
-  | 'windup'
-  | 'attack'
-  | 'recover'
-  | 'stunned'
-  | 'lovestruck'
-  | 'returning'
-  | 'dead';
+  'idle' | 'chase' | 'windup' | 'attack' | 'recover' | 'stunned' | 'blinded' | 'returning' | 'dead';
 
 export type Enemy = {
   id: string;
@@ -26,7 +18,12 @@ export type Enemy = {
   timer: number;
   attackDir: Vec2;
   knock: Vec2;
-  charmedUntil: number;
+  blindedUntil: number;
+  /** Direction a blinded enemy stumbles in, re-rolled every WANDER_INTERVAL. */
+  wander: Vec2;
+  wanderTimer: number;
+  swingTimer: number;
+  seed: number;
   flash: number;
   deadFor: number;
   strafe: 1 | -1;
@@ -42,14 +39,41 @@ export type EnemyContext = {
 };
 
 export type EnemyAction =
-  | { kind: 'melee'; damage: number; origin: Vec2; range: number }
-  | { kind: 'projectile'; from: Vec2; dir: Vec2; damage: number; speed: number };
+  | { kind: 'melee'; damage: number; origin: Vec2; range: number; blind: boolean }
+  | { kind: 'projectile'; from: Vec2; dir: Vec2; damage: number; speed: number; blind: boolean };
 
 const ATTACK_TIME = 0.12;
 const LUNGE_SPEED_FACTOR = 2.6;
 const KNOCK_DECAY = 9;
 const RETURN_HEAL_PER_SECOND = 0.25;
 const LOSE_INTEREST_FACTOR = 1.8;
+const WANDER_INTERVAL = 0.7;
+const BLIND_SPEED_FACTOR = 0.45;
+const BLIND_SWING_INTERVAL = 1.4;
+const BLIND_SWING_ANIMATION = 0.18;
+
+const hashId = (id: string): number => {
+  let h = 2166136261;
+  for (let i = 0; i < id.length; i++) h = Math.imul(h ^ id.charCodeAt(i), 16777619);
+  return h >>> 0 || 1;
+};
+
+/** Deterministic xorshift in [0, 1), advancing the enemy's own seed. */
+function random(enemy: Enemy): number {
+  let x = enemy.seed;
+  x ^= x << 13;
+  x >>>= 0;
+  x ^= x >>> 17;
+  x ^= x << 5;
+  x >>>= 0;
+  enemy.seed = x || 1;
+  return enemy.seed / 4294967296;
+}
+
+function randomDirection(enemy: Enemy): Vec2 {
+  const a = random(enemy) * Math.PI * 2;
+  return { x: Math.sin(a), z: Math.cos(a) };
+}
 
 export const defOf = (enemy: Pick<Enemy, 'kind'>): EnemyDef => ENEMIES[enemy.kind];
 
@@ -65,7 +89,11 @@ export function createEnemy(id: string, kind: EnemyKind, spawn: Vec2): Enemy {
     timer: 0,
     attackDir: { x: 0, z: 1 },
     knock: { x: 0, z: 0 },
-    charmedUntil: 0,
+    blindedUntil: 0,
+    wander: { x: 0, z: 1 },
+    wanderTimer: 0,
+    swingTimer: 0.6,
+    seed: hashId(id),
     flash: 0,
     deadFor: 0,
     strafe: 1,
@@ -107,17 +135,17 @@ export function damageEnemy(
   const push = knockback * (1 - def.knockbackResist);
   enemy.knock = { x: knockDir.x * push, z: knockDir.z * push };
   const armored = def.knockbackResist >= 0.5 && enemy.state === 'windup';
-  if (!armored && enemy.state !== 'lovestruck') {
+  if (!armored && enemy.state !== 'blinded') {
     enemy.state = 'stunned';
     enemy.timer = 0.3 * (1 - def.knockbackResist);
   }
   return false;
 }
 
-export function charmEnemy(enemy: Enemy, until: number): void {
+export function blindEnemy(enemy: Enemy, until: number): void {
   if (enemy.state === 'dead') return;
-  enemy.charmedUntil = until;
-  enemy.state = 'lovestruck';
+  enemy.blindedUntil = until;
+  enemy.state = 'blinded';
 }
 
 const distance = (a: Vec2, b: Vec2): number => Math.hypot(b.x - a.x, b.z - a.z);
@@ -160,9 +188,42 @@ export function stepEnemy(enemy: Enemy, ctx: EnemyContext, dt: number): EnemyAct
     enemy.knock = { x: enemy.knock.x * k, z: enemy.knock.z * k };
   }
 
-  if (enemy.state === 'lovestruck') {
-    if (ctx.time >= enemy.charmedUntil) enemy.state = 'idle';
-    return null;
+  if (enemy.state === 'blinded') {
+    if (ctx.time >= enemy.blindedUntil) {
+      enemy.state = 'idle';
+      return null;
+    }
+    enemy.wanderTimer -= dt;
+    enemy.swingTimer -= dt;
+    enemy.timer = Math.max(0, enemy.timer - dt);
+    if (enemy.wanderTimer <= 0) {
+      enemy.wanderTimer = WANDER_INTERVAL;
+      enemy.wander = randomDirection(enemy);
+    }
+    enemy.facing = enemy.wander;
+    move(enemy, enemy.wander, def.speed * BLIND_SPEED_FACTOR, dt, ctx.world);
+    if (enemy.swingTimer > 0) return null;
+    enemy.swingTimer = BLIND_SWING_INTERVAL;
+    enemy.timer = BLIND_SWING_ANIMATION;
+    const dir = randomDirection(enemy);
+    enemy.facing = dir;
+    if (def.ranged) {
+      return {
+        kind: 'projectile',
+        from: { ...enemy.pos },
+        dir,
+        damage: def.damage,
+        speed: def.projectileSpeed,
+        blind: true,
+      };
+    }
+    return {
+      kind: 'melee',
+      damage: def.damage,
+      origin: { ...enemy.pos },
+      range: def.attackRange,
+      blind: true,
+    };
   }
 
   const toPlayer = directionTo(enemy.pos, ctx.player);
@@ -242,6 +303,7 @@ export function stepEnemy(enemy: Enemy, ctx: EnemyContext, dt: number): EnemyAct
           dir,
           damage: def.damage,
           speed: def.projectileSpeed,
+          blind: false,
         };
       }
       return {
@@ -249,11 +311,12 @@ export function stepEnemy(enemy: Enemy, ctx: EnemyContext, dt: number): EnemyAct
         damage: def.damage,
         origin: { ...enemy.pos },
         range: def.attackRange,
+        blind: false,
       };
     }
     case 'attack': {
       enemy.timer -= dt;
-      if (!def.ranged && enemy.kind === 'paperWisp') {
+      if (def.lunge) {
         move(enemy, enemy.attackDir, def.speed * LUNGE_SPEED_FACTOR, dt, ctx.world);
       }
       if (enemy.timer <= 0) {

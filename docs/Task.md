@@ -91,6 +91,7 @@ Read these files before starting any work:
 | Phase 10 — NPCs + dialogue | ✅ Complete | 8 NPCs (Russian men archetypes), dialogue, tap/E interact, relationships, heart-buff visual | 10d002e. 44 assets, ~53 draw calls |
 | Phase 11 — Save + Supabase | ✅ Complete | localStorage save/load, Supabase anon auth, schema + RLS, stats sync with offline queue, opt-out | f2122cd. Live cloud verified (16/16 RLS checks, sync + restore) |
 | Phase 12 — Combat core | ✅ Complete | Trident attack, dash, singing Mermaid Aura (orbiting notes), AoE spell, damage, 3 enemy types + AI | 1845ab7. 47 assets, ~50 draw calls |
+| Phase 12b — Satirical politicians + blind debuff | ✅ Complete | Enemies replaced by three original caricatures with different weapons; the Aura blinds enemies (blindfold icon, missed attacks) | HASH12B |
 | Phase 13 — Progression + inventory | ⬜ Next | HP/mana/XP/levels, inventory + equipment UI (touch), loot | |
 | Phase 14 — Quests + kingdom | ⬜ Todo | Quest board, quest log, kingdom reputation | |
 | Phase 15 — Alexander Garden content | ⬜ Todo | Herbs, pearls, monsters, hidden shrine in the garden | |
