@@ -3,9 +3,9 @@ import {
   BufferGeometry,
   DoubleSide,
   Float32BufferAttribute,
+  LinearFilter,
   LinearMipmapLinearFilter,
   MeshLambertMaterial,
-  NearestFilter,
   RepeatWrapping,
   SRGBColorSpace,
   TextureLoader,
@@ -62,8 +62,9 @@ function RibbonMeshView({ data, color }: { data: RibbonMesh; color: string }) {
 function tiledMaterial(url: string, w: number, d: number, tileMeters: number): MeshLambertMaterial {
   const texture = new TextureLoader().load(url);
   texture.colorSpace = SRGBColorSpace;
-  // Pixel-crisp up close, mipmapped and anisotropic at a distance so the fine tiles do not shimmer.
-  texture.magFilter = NearestFilter;
+  // Trilinear and anisotropic. Nearest magnification made the grout lines swim (1 px, then 2 px thick) as the
+  // camera moved forward and back; smooth filtering keeps their thickness steady.
+  texture.magFilter = LinearFilter;
   texture.minFilter = LinearMipmapLinearFilter;
   texture.generateMipmaps = true;
   texture.anisotropy = GROUND_ANISOTROPY;

@@ -40,7 +40,7 @@ def build_resurrection_gate():
         x = sx * 3.5
         p.box((2.9, 2.9, 0.5), (x, 0, 0.25), "stone")
         p.box((2.6, 2.6, 8.0), (x, 0, 4.5), "brick_light")
-        _seams(p, (2.64, 2.64), (1.6, 2.8, 4.0, 5.2, 6.4, 7.6))
+        _seams(p, (2.64, 2.64), (1.6, 2.8, 4.0, 5.2, 6.4, 7.6), at=(x, 0))
         p.box((0.7, 0.1, 1.5), (x, -1.33, 3.6), "ink")
         p.box((0.5, 0.1, 1.0), (x, -1.33, 6.2), "candle")
         p.box((2.9, 2.9, 0.4), (x, 0, 8.7), "stone")
@@ -48,8 +48,8 @@ def build_resurrection_gate():
         p.cone(0.08, 0, 0.7, (x, 0, 13.85), "gold", segments=4)
         p.cone(0, 0.2, 0.3, (x, 0, 13.3), "ruby", segments=4)
     # Round arch under the gate block: stone trim ring, keystone and lanterns on both faces.
-    arch_opening(p, 2.2, 2.4, 4.6, -1.3, 1.3, "brick_light", "stone", -1.38, segments=12)
-    arch_opening(p, 2.2, 2.4, 4.6, -1.3, 1.3, "brick_light", "stone", 1.38, segments=12)
+    arch_opening(p, 2.2, 2.3, 4.6, -1.3, 1.3, "brick_light", "stone", -1.38, segments=12)
+    arch_opening(p, 2.2, 2.3, 4.6, -1.3, 1.3, "brick_light", "stone", 1.38, segments=12)
     for sx in (-1, 1):
         for yy in (-1.2, 1.2):
             p.box((0.16, 0.3, 0.16), (sx * 2.05, yy, 3.3), "ink")
@@ -66,7 +66,7 @@ def build_resurrection_gate():
 
 def _cathedral(p, x, y, r):
     p.box((5.0 * r, 4.4 * r, 4.4 * r), (x, y, 2.2 * r), "stone")
-    _seams(p, (5.04 * r, 4.44 * r), (1.2 * r, 2.4 * r, 3.6 * r), "wet_stone")
+    _seams(p, (5.04 * r, 4.44 * r), (1.2 * r, 2.4 * r, 3.6 * r), "wet_stone", at=(x, y))
     p.cone(1.25 * r, 1.15 * r, 1.7 * r, (x, y, 5.25 * r), "stone", segments=8)
     _onion(p, x, y, 6.1 * r, 1.05 * r, "gold", "gold")
     for dx, dy in ((-1.8, -1.5), (1.8, -1.5), (-1.8, 1.5), (1.8, 1.5)):

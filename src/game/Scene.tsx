@@ -4,6 +4,7 @@ import { CameraRig } from '@/game/CameraRig';
 import { ATMOSPHERE } from '@/game/atmosphere';
 import { CAMERA_FOV, CAMERA_OFFSET } from '@/game/camera';
 import { GameLoop } from '@/game/GameLoop';
+import { ActorRings } from '@/game/entities/ActorRings';
 import { ClickMarker } from '@/game/entities/ClickMarker';
 import { CombatEffects } from '@/game/entities/CombatEffects';
 import { CompanionActor } from '@/game/entities/CompanionActor';
@@ -48,6 +49,7 @@ export function Scene() {
         <CompanionActor />
         <ClickMarker />
         <EnemyActors />
+        <ActorRings />
         <Pickups />
         <Gatherables />
         <CombatEffects />

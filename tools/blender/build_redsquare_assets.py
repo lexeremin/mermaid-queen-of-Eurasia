@@ -14,9 +14,11 @@ def _done(name, p):
     return {"name": name, "tris": triangle_count([obj]), "path": export_glb(name + ".glb", [obj.name])}
 
 
-def _seams(p, size_xy, z_values, color="brick_dark"):
+def _seams(p, size_xy, z_values, color="brick_dark", at=(0, 0)):
+    """Thin horizontal brick-course plates around a solid centred on `at` (x, y). Pass `at` for anything that is
+    not built at the origin, or the plates end up floating in the middle of the model."""
     for z in z_values:
-        p.box((size_xy[0], size_xy[1], 0.06), (0, 0, z), color)
+        p.box((size_xy[0], size_xy[1], 0.06), (at[0], at[1], z), color)
 
 
 def _onion(p, x, y, z, r, main, band):
@@ -127,7 +129,7 @@ def build_museum():
     for sx in (-1, 1):
         x = sx * 5.9
         p.box((2.4, 2.4, 8.0), (x, 0, 4.6), "brick_light")
-        _seams(p, (2.44, 2.44), (2.0, 3.2, 4.4, 5.6, 6.8))
+        _seams(p, (2.44, 2.44), (2.0, 3.2, 4.4, 5.6, 6.8), at=(x, 0))
         p.box((0.5, 0.1, 1.0), (x, -1.23, 5.0), "ink")
         p.cone(1.9, 0.12, 4.6, (x, 0, 10.9), "dome_green", segments=8)
         p.cone(0.09, 0, 0.8, (x, 0, 13.6), "gold", segments=4)
@@ -157,7 +159,7 @@ def build_garden_gate():
     for x in (-2.1, 2.1):
         p.box((1.1, 1.1, 0.5), (x, 0, 0.25), "stone")
         p.box((0.9, 0.9, 3.6), (x, 0, 2.3), "brick_light")
-        _seams(p, (0.94, 0.94), (1.2, 2.0, 2.8, 3.6))
+        _seams(p, (0.94, 0.94), (1.2, 2.0, 2.8, 3.6), at=(x, 0))
         p.box((1.2, 1.2, 0.3), (x, 0, 4.25), "stone")
         for dx in (-0.4, 0.4):
             for dy in (-0.4, 0.4):
@@ -167,16 +169,11 @@ def build_garden_gate():
         p.cone(0.16, 0, 0.3, (x, 0, 5.95), "ruby", segments=4)
     p.box((3.4, 0.8, 0.7), (0, 0, 3.4), "brick_light")
     p.box((1.2, 0.06, 0.4), (0, -0.43, 3.4), "gold")
-    # Iron scroll arch under the lintel with a hanging lantern (the opening stays clear below head height).
-    r = 1.6
-    for face in (-0.36, 0.36):
-        for i in range(13):
-            a = math.pi * i / 12
-            p.box((0.16, 0.06, 0.16), (r * math.cos(a), face, 1.4 + r * math.sin(a)), "ink")
-    p.box((0.06, 0.06, 0.55), (0, 0, 2.78), "ink")
-    p.box((0.34, 0.34, 0.46), (0, 0, 2.4), "candle")
-    p.box((0.4, 0.4, 0.1), (0, 0, 2.68), "gold")
-    p.box((0.4, 0.4, 0.08), (0, 0, 2.14), "gold")
+    # Lanterns on the inner faces of the posts; nothing hangs in the opening.
+    for sx in (-1, 1):
+        p.box((0.16, 0.16, 0.16), (sx * 1.5, 0, 2.95), "ink")
+        p.box((0.26, 0.3, 0.46), (sx * 1.5, 0, 2.55), "candle")
+        p.box((0.32, 0.36, 0.08), (sx * 1.5, 0, 2.84), "gold")
     return _done("bld_garden_gate", p)
 
 

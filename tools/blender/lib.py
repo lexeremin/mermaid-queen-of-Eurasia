@@ -371,6 +371,7 @@ def arch_opening(part, half_width, spring_z, top_z, y0, y1, fill_color, trim_col
     tympanum spanning y0..y1, and adds a trim ring of small blocks plus a keystone on the face at `trim_y`
     (pass the y of the outer face, nudged outward). The opening is a semicircle of radius `half_width`."""
     r = half_width
+    assert spring_z + r < top_z - 0.05, "arch_opening: the arc must stay below the lintel line or the tympanum polygon degenerates"
     pts = [(-r, spring_z)]
     for i in range(1, segments):
         a = math.pi - math.pi * i / segments

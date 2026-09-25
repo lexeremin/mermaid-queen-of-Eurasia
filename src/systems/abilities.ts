@@ -17,16 +17,16 @@ export const HP_REGEN_DELAY = 8;
 export const HURT_INVULN = 0.5;
 
 export const TRIDENT = {
-  range: 2.3,
-  halfAngle: (55 * Math.PI) / 180,
+  range: 3.4,
+  halfAngle: (60 * Math.PI) / 180,
   damage: 14,
   knockback: 2.2,
 } as const;
 export const AIM_ASSIST = {
-  range: 3.6,
+  range: 4.8,
   maxAngle: (80 * Math.PI) / 180,
   /** Anything this close is targeted whatever direction Rosa faces. */
-  closeRange: 2.6,
+  closeRange: 3.6,
 } as const;
 export const DASH = { distance: 4.4, duration: 0.2, invuln: 0.28 } as const;
 export const AURA = {

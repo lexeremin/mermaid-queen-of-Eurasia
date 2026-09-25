@@ -84,11 +84,25 @@ describe('trident attack', () => {
     const frame = step(near, { actions: { attack: true } });
     expect(near.enemies[0]?.hp).toBeLessThan(ENEMIES.tycoon.maxHp);
     expect(frame.faceOverride?.z).toBeGreaterThan(0.9);
-    const far = createCombatState([wisp(0, 3.2)]);
+    const far = createCombatState([wisp(0, 4.4)]);
     far.enemies[0]!.state = 'blinded';
     far.enemies[0]!.blindedUntil = 99;
     step(far, { actions: { attack: true } });
     expect(far.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
+  });
+
+  it('reaches an enemy about three and a half metres in front, and no further', () => {
+    expect(TRIDENT.range).toBeGreaterThanOrEqual(3.3);
+    const inReach = createCombatState([wisp(0, -(TRIDENT.range - 0.3))]);
+    inReach.enemies[0]!.state = 'blinded';
+    inReach.enemies[0]!.blindedUntil = 99;
+    step(inReach, { actions: { attack: true } });
+    expect(inReach.enemies[0]?.hp).toBeLessThan(ENEMIES.tycoon.maxHp);
+    const outOfReach = createCombatState([wisp(0, -(TRIDENT.range + 1.2))]);
+    outOfReach.enemies[0]!.state = 'blinded';
+    outOfReach.enemies[0]!.blindedUntil = 99;
+    step(outOfReach, { actions: { attack: true } });
+    expect(outOfReach.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
   });
 
   it('slows the player briefly and reports a kill once', () => {
