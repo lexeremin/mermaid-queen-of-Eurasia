@@ -123,3 +123,50 @@ describe('menu popups', () => {
     expect(state().paused).toBe(false);
   });
 });
+
+describe('map overlay', () => {
+  beforeEach(() =>
+    useGameStore.setState({
+      paused: false,
+      welcomeOpen: false,
+      dialogueOpen: false,
+      downed: false,
+      inventoryOpen: false,
+      questPanel: null,
+      mapOpen: false,
+      mapBlocking: false,
+    }),
+  );
+
+  it('on desktop the world keeps running behind the map; on touch it waits', () => {
+    state().toggleMap(false);
+    expect(state().mapOpen).toBe(true);
+    expect(isSimRunning(state())).toBe(true);
+    state().toggleMap(false);
+    expect(state().mapOpen).toBe(false);
+    state().toggleMap(true);
+    expect(isSimRunning(state())).toBe(false);
+    state().toggleMap(true);
+    expect(isSimRunning(state())).toBe(true);
+  });
+
+  it('ESC closes it, and opening the bag or the quest log replaces it', () => {
+    state().toggleMap(true);
+    state().handleEscape();
+    expect(state().mapOpen).toBe(false);
+    expect(state().mapBlocking).toBe(false);
+    state().toggleMap(false);
+    state().toggleInventory();
+    expect(state().mapOpen).toBe(false);
+    expect(state().inventoryOpen).toBe(true);
+  });
+
+  it('does not open over the pause menu, the welcome screen, a dialogue or when fainted', () => {
+    for (const key of ['paused', 'welcomeOpen', 'dialogueOpen', 'downed'] as const) {
+      useGameStore.setState({ [key]: true });
+      state().toggleMap(false);
+      expect(state().mapOpen, key).toBe(false);
+      useGameStore.setState({ [key]: false });
+    }
+  });
+});

@@ -82,9 +82,6 @@ export function QuestPanel() {
         <div className="quest-scroll">
           {tab === 'quests' && (
             <>
-              {!atBoard && (
-                <p className="hint">Accept and claim quests at the notice board in the square.</p>
-              )}
               {shown.map(({ def, status }) => {
                 const progress = log.active[def.id] ?? EMPTY;
                 const states = objectiveStates(def, progress, view);
@@ -152,16 +149,10 @@ export function QuestPanel() {
                 />
                 <span>{nextRank ? `${rep} / ${nextRank.min}` : `${rep} MAX`}</span>
               </div>
-              <p className="hint">
-                {nextRank ? `Next rank: ${nextRank.name}. ` : ''}Reputation comes from finished
-                quests and every person who joins your kingdom.
-              </p>
+              {nextRank && <p className="hint">Next rank: {nextRank.name}</p>}
               <h3>
                 Subjects ({subjects.length}/{NPCS.length})
               </h3>
-              {subjects.length === 0 && (
-                <p className="hint">No one has joined yet. Sing to them.</p>
-              )}
               <ul className="subjects">
                 {subjects.map((n) => (
                   <li key={n.id}>

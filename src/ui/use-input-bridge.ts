@@ -16,6 +16,7 @@ export function useInputBridge(): void {
       },
       onInventory: toggleInventory,
       onQuests: toggleQuestLog,
+      onMap: () => useGameStore.getState().toggleMap(false),
       onQuickUse: (slot) => {
         if (canQuickUse()) quickUse(slot === 0 ? 'healingTea' : 'coldKvass');
       },

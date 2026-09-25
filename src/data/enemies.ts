@@ -160,5 +160,6 @@ export const ENEMIES: Readonly<Record<EnemyKind, EnemyDef>> = {
   },
 };
 
-export const RESPAWN_SECONDS = 40;
+/** Surface monsters return after three minutes (the underground refills only when Rosa re-enters it). */
+export const RESPAWN_SECONDS = 180;
 export const LEASH_DISTANCE = 20;

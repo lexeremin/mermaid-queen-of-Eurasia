@@ -133,7 +133,7 @@ export function InventoryPanel() {
 
         {questItems.length > 0 && (
           <div className="quest-items" aria-label="Quest items">
-            <small>QUEST ITEMS · no bag space</small>
+            <small>Quest items</small>
             {questItems.map(([id, n]) => (
               <span key={id} className="quest-item" title={ITEMS[id].description}>
                 <ItemIcon id={id} size={26} />
@@ -204,9 +204,7 @@ export function InventoryPanel() {
                 )}
               </div>
             </>
-          ) : (
-            <p className="hint">Tap an item to see what it does.</p>
-          )}
+          ) : null}
         </div>
 
         <button type="button" className="hud-btn big" onClick={close}>

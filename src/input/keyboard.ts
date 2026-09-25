@@ -32,6 +32,7 @@ export type KeyboardHandlers = {
   onEscape: () => void;
   onInventory: () => void;
   onQuests: () => void;
+  onMap: () => void;
   onQuickUse: (slot: 0 | 1) => void;
 };
 
@@ -45,6 +46,11 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
     }
     if (e.code === 'KeyI') {
       if (!e.repeat) handlers.onInventory();
+      return;
+    }
+    if (e.code === 'KeyM' || e.code === 'Tab') {
+      e.preventDefault();
+      if (!e.repeat) handlers.onMap();
       return;
     }
     if (e.code === 'KeyJ') {

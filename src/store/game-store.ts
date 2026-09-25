@@ -18,6 +18,9 @@ export type GameState = {
   /** Menu popups: settings, and the "start a new game?" confirmation. */
   settingsOpen: boolean;
   newGameOpen: boolean;
+  /** The map overlay. On touch it is a blocking screen (`mapBlocking`); on desktop the world keeps running. */
+  mapOpen: boolean;
+  mapBlocking: boolean;
   downed: boolean;
   nearbyNpc: string | null;
   /** The notice board or shrine Rosa is close enough to use, if any. */
@@ -37,6 +40,7 @@ export type GameState = {
   setControlsOpen: (open: boolean) => void;
   setSettingsOpen: (open: boolean) => void;
   setNewGameOpen: (open: boolean) => void;
+  toggleMap: (blocking: boolean) => void;
   setDowned: (downed: boolean) => void;
   setNearbyNpc: (id: string | null) => void;
   setNearPlace: (place: PlaceId | null) => void;
@@ -58,6 +62,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   controlsOpen: false,
   settingsOpen: false,
   newGameOpen: false,
+  mapOpen: false,
+  mapBlocking: false,
   downed: false,
   nearbyNpc: null,
   nearPlace: null,
@@ -71,6 +77,12 @@ export const useGameStore = create<GameState>((set, get) => ({
   setControlsOpen: (controlsOpen) => set({ controlsOpen }),
   setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
   setNewGameOpen: (newGameOpen) => set({ newGameOpen }),
+  toggleMap: (blocking) =>
+    set((s) => {
+      if (s.paused || s.welcomeOpen || s.dialogueOpen || s.downed) return s;
+      if (s.mapOpen) return { mapOpen: false, mapBlocking: false };
+      return { mapOpen: true, mapBlocking: blocking, inventoryOpen: false, questPanel: null };
+    }),
   setDowned: (downed) => set({ downed }),
   setNearbyNpc: (nearbyNpc) => set({ nearbyNpc }),
   setNearPlace: (nearPlace) => set({ nearPlace }),
@@ -80,17 +92,32 @@ export const useGameStore = create<GameState>((set, get) => ({
   toggleQuestLog: () =>
     set((s) => {
       if (s.paused || s.dialogueOpen || s.downed) return s;
-      return s.questPanel ? { questPanel: null } : { questPanel: 'log', inventoryOpen: false };
+      return s.questPanel
+        ? { questPanel: null }
+        : { questPanel: 'log', inventoryOpen: false, mapOpen: false, mapBlocking: false };
     }),
   form: 'human',
   setForm: (form) => set({ form }),
   setZone: (zone) => set({ zone }),
   setPaused: (paused) =>
-    set(paused ? { paused, inventoryOpen: false, questPanel: null } : { paused }),
-  togglePause: () => set((s) => ({ paused: !s.paused, inventoryOpen: false, questPanel: null })),
+    set(
+      paused
+        ? { paused, inventoryOpen: false, questPanel: null, mapOpen: false, mapBlocking: false }
+        : { paused },
+    ),
+  togglePause: () =>
+    set((s) => ({
+      paused: !s.paused,
+      inventoryOpen: false,
+      questPanel: null,
+      mapOpen: false,
+      mapBlocking: false,
+    })),
   toggleInventory: () =>
     set((s) =>
-      s.paused || s.dialogueOpen ? s : { inventoryOpen: !s.inventoryOpen, questPanel: null },
+      s.paused || s.dialogueOpen
+        ? s
+        : { inventoryOpen: !s.inventoryOpen, questPanel: null, mapOpen: false, mapBlocking: false },
     ),
   handleEscape: () => {
     if (get().downed) return;
@@ -98,6 +125,7 @@ export const useGameStore = create<GameState>((set, get) => ({
     else if (get().newGameOpen) set({ newGameOpen: false });
     else if (get().settingsOpen) set({ settingsOpen: false });
     else if (get().welcomeOpen) return;
+    else if (get().mapOpen) set({ mapOpen: false, mapBlocking: false });
     else if (get().questPanel) set({ questPanel: null });
     else if (get().inventoryOpen) set({ inventoryOpen: false });
     else get().togglePause();
@@ -114,6 +142,7 @@ export function isSimRunning(
     | 'downed'
     | 'transitioning'
     | 'welcomeOpen'
+    | 'mapBlocking'
   >,
 ): boolean {
   return (
@@ -123,6 +152,7 @@ export function isSimRunning(
     !state.dialogueOpen &&
     !state.downed &&
     !state.transitioning &&
-    !state.welcomeOpen
+    !state.welcomeOpen &&
+    !state.mapBlocking
   );
 }

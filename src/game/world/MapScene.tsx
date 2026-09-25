@@ -18,6 +18,7 @@ import { InstancedModel, type Transform } from '@/game/assets/InstancedModel';
 import { useGameStore } from '@/store/game-store';
 import { GroundPaving } from '@/game/world/GroundPaving';
 import { EntranceGlow } from '@/game/world/EntranceGlow';
+import { LampGlow } from '@/game/world/LampGlow';
 import { ContactShadows } from '@/game/world/ContactShadows';
 import { UG_MIN_Z } from '@/data/maps/underground';
 import { currentMap } from '@/game/world/current-map';
@@ -209,6 +210,7 @@ export function MapScene() {
       ))}
       <ContactShadows />
       <EntranceGlow />
+      <LampGlow />
       <GlassRoofs map={map} />
     </>
   );

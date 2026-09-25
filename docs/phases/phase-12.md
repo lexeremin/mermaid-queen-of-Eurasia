@@ -23,7 +23,7 @@ Real-time top-down combat on the existing engine: Rosa's trident attack, dash, t
 | **Stamp Golem** | slow heavy | 60 | 2.4 | 16 dmg slam with a 0.7 s ground telegraph |
 | **Memo Thrower** | ranged | 28 | 3.0 | throws memos (8 dmg, speed 9), keeps 5–8 m away |
 
-AI states: idle → chase (aggro 8–9 m) → windup → attack → recover, plus stunned (knockback), lovestruck, and dead (respawns after 40 s). They leash back to their spawn beyond 20 m and heal there. Enemies collide with the world and never spawn near NPCs (tested).
+AI states: idle → chase (aggro 8–9 m) → windup → attack → recover, plus stunned (knockback), lovestruck, and dead (respawns after 3 min, since phase 16f). They leash back to their spawn beyond 20 m and heal there. Enemies collide with the world and never spawn near NPCs (tested).
 
 ### Feedback
 Attack arc, dash streak, expanding tide ring, orbiting notes for the Aura, hit flash and knockback, enemy health bars when damaged, red screen edge when hurt, HP and mana bars, cooldown sweeps on the ability buttons (desktop bar and touch buttons), stat events `enemy_defeated` and `player_downed`.
@@ -59,7 +59,7 @@ Attack arc, dash streak, expanding tide ring, orbiting notes for the Aura, hit f
 ## Notes for later phases
 - Enemies drop nothing and grant no XP yet (Phase 13). The boss (Phase 16) should be immune to the Aura charm.
 - Tidal Song (mermaid form: wider rings, crossing water) is Phase 17; the Aura constants are in `abilities.ts`.
-- Enemy respawn is 40 s at the spawn point; enemies do not attack NPCs.
+- Enemy respawn was 40 s here (3 min since phase 16f) at the spawn point; enemies do not attack NPCs.
 - Headless software rendering runs 10–30 fps and slows the sim proportionally (the fixed step clamps at 5 steps per frame); timings in the runs above are wall-clock, so they look slower than a real GPU.
 
 ## Out of scope

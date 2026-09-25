@@ -8,6 +8,7 @@ import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
 import { ControlsPanel } from '@/ui/ControlsPanel';
 import { Welcome } from '@/ui/Welcome';
+import { MapOverlay, MiniMap } from '@/ui/MapViews';
 import { RecallButton } from '@/ui/RecallButton';
 import { QuickUse } from '@/ui/QuickUse';
 import { UiIcon } from '@/ui/icons';
@@ -50,9 +51,11 @@ export function Hud() {
   const openDialogue = useDialogueStore((s) => s.open);
   const togglePause = useGameStore((s) => s.togglePause);
   const toggleInventory = useGameStore((s) => s.toggleInventory);
+  const toggleMap = useGameStore((s) => s.toggleMap);
+  const mapOpen = useGameStore((s) => s.mapOpen);
 
   return (
-    <div className="hud">
+    <div className={touch ? 'hud hud-touch' : 'hud'}>
       {import.meta.env.DEV && <DebugOverlay />}
 
       <CombatHud touch={touch} />
@@ -60,6 +63,16 @@ export function Hud() {
       <div className={`fade-overlay${transitioning ? ' on' : ''}`} aria-hidden="true" />
 
       <div className="hud-top">
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={() => toggleMap(touch)}
+          aria-label="Map"
+          title="Map (M, Tab)"
+        >
+          <UiIcon id="map" />
+          {!touch && <kbd>M</kbd>}
+        </button>
         <button
           type="button"
           className="icon-btn"
@@ -113,6 +126,9 @@ export function Hud() {
       {touch && !paused && !welcomeOpen && !inventoryOpen && !questPanel && !dialogueOpen && (
         <TouchControls />
       )}
+
+      {!welcomeOpen && !paused && !mapOpen && <MiniMap touch={touch} />}
+      {mapOpen && <MapOverlay touch={touch} />}
 
       <div className={touch ? 'dock dock-touch' : 'dock'}>
         <FollowerButton />

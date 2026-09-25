@@ -114,3 +114,11 @@ Audio and music for the underground and the boss, more than one boss, Mermaid-fo
 - **Settings** popup holds Sound and Anonymous stats. **New game** opens a small confirmation popup with two equal buttons (Start new game, Cancel). `Esc` closes the newest popup first.
 - **Cooldowns:** a stronger dark sweep with a bright gold edge, the remaining whole seconds in large numerals (for skills with a cooldown of 1.5 s or more), and a flash when the skill is ready again; on the touch buttons too.
 - **Menu simplified further:** Controls is no longer in the main menu; the Settings popup holds Sound, Anonymous stats and Controls. The welcome screen keeps its own Controls button.
+
+## Follow-up (16f): map, lamp glow, quieter UI
+- **Respawn:** surface monsters return after 3 minutes (`RESPAWN_SECONDS = 180`); the underground still only refills when Rosa re-enters it.
+- **Lamp glow:** every lamppost lantern gets a warm halo (one `Points` draw call) and a soft pool of light on the ground (one instanced mesh).
+- **Prince Sasha's button** is a small 44 px portrait with no text. Explanatory hint texts were removed (bag placeholder, quest log intro, kingdom blurb, "no bag space"); the quest items strip just says "Quest items".
+- **Map** (`src/game/map/*`, `src/ui/MapViews.tsx`): the static picture of each region (surface, underground) is painted once from the map data (water, plazas, paths, trees, buildings, and the underground rooms, walls and columns), then everything live is drawn on top: Rosa as a gold arrow, people, her follower, nearby monsters, gates, the metro, the notice board and shrine, chests and the boss gate below ground. It switches to the underground by itself.
+  - **Desktop:** a minimap in the bottom-right corner (click it to open the full map); `Tab` or `M` (or the new map icon in the top row) opens a full overlay with place names over the running game; `Tab`/`M`/`Esc` close it.
+  - **Touch (the experiment):** both. A small tappable minimap sits under the top icons (hidden on landscape phones, which have no room), and the map icon in the top row opens a full-screen map with a Close button; the world waits while it is open. Recall, the boss bar, the zone banner and the toasts were moved so nothing overlaps.

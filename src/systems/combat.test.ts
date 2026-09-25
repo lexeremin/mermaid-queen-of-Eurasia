@@ -259,7 +259,7 @@ describe('regeneration and respawn', () => {
     s.enemies[0]!.hp = 1;
     step(s, { playerPos: { x: 20, z: 1.2 }, playerFacing: north, actions: { attack: true } });
     expect(s.enemies[0]?.state).toBe('dead');
-    run(s, 41, { playerPos: { x: 90, z: 90 } });
+    run(s, RESPAWN_SECONDS + 1, { playerPos: { x: 90, z: 90 } });
     expect(s.enemies[0]?.state).not.toBe('dead');
     expect(s.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
   });

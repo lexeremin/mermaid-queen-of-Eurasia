@@ -504,9 +504,30 @@ export function ItemIcon({ id, size = 36, label }: { id: ItemId; size?: number; 
 
 /* ---------- interface ---------- */
 
-export type UiIconId = 'quests' | 'bag' | 'pause' | 'recall';
+export type UiIconId = 'map' | 'quests' | 'bag' | 'pause' | 'recall';
 
 const UI_ICONS: Record<UiIconId, ReactNode> = {
+  // A folded map with a dotted route and a pin.
+  map: (
+    <>
+      <path d="M6 12 L18 8 L30 12 L42 8 V37 L30 41 L18 37 L6 41 Z" fill="#f3e2b0" {...line} />
+      <path d="M18 8 V37 M30 12 V41" stroke={INK} strokeWidth={2} />
+      <path
+        d="M10 32 Q16 24 22 28 Q28 32 32 22"
+        fill="none"
+        stroke="#9b6bd0"
+        strokeWidth={2.4}
+        strokeLinecap="round"
+        strokeDasharray="1 5"
+      />
+      <path
+        d="M35 10 Q41 10 41 16 Q41 21 35 27 Q29 21 29 16 Q29 10 35 10 Z"
+        fill="#e0574a"
+        {...line}
+      />
+      <circle cx="35" cy="16" r="2.4" fill="#fff3d0" />
+    </>
+  ),
   // A rolled scroll with writing.
   quests: (
     <>

@@ -30,7 +30,6 @@ export function FollowerButton() {
           npc.name.replace('Uncle ', '')[0]
         )}
       </span>
-      <span className="follower-label">TALK</span>
     </button>
   );
 }
