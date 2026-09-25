@@ -27,6 +27,7 @@ Feature list with phase mapping. Status lives in `docs/Task.md`.
 | Garden gameplay: herbs, pearls, monsters, hidden shrine | 15 |
 | Moscow underground: 3 rooms, enemies, loot, boss arena, boss | 16 |
 | Underground rework: Father of Corruption, gate opens when the halls are cleared, instanced monsters, rarer loot, always-on enemy health bars, slot-free quest items | 16b |
+| Vintage HUD theme, welcome screen, controls popup, Prince Sasha avatar, dock on the left | 16d |
 | Blink (Shift) replaces Dash, Recall (T) channelled return to Red Square, icon HUD buttons, dock layout without overlaps | 16c |
 | Transformations: Mermaid Queen (Tidal Song), Forest Spirit, Elvish Form, Tsarina of Eurasia | 17 |
 | Audio, VFX (mist, drizzle, particles), HUD polish, title screen, settings, occlusion fade | 18 |

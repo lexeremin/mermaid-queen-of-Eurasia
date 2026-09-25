@@ -63,3 +63,43 @@ describe('game store', () => {
     state().setDowned(false);
   });
 });
+
+describe('welcome screen and controls popup', () => {
+  beforeEach(() =>
+    useGameStore.setState({
+      paused: false,
+      inventoryOpen: false,
+      questPanel: null,
+      welcomeOpen: false,
+      controlsOpen: false,
+    }),
+  );
+
+  it('the welcome screen stops the sim until the game begins', () => {
+    state().setWelcomeOpen(true);
+    expect(isSimRunning(state())).toBe(false);
+    state().setWelcomeOpen(false);
+    expect(isSimRunning(state())).toBe(true);
+  });
+
+  it('ESC does not skip the welcome screen, but closes the controls popup on top of it', () => {
+    state().setWelcomeOpen(true);
+    state().handleEscape();
+    expect(state().welcomeOpen).toBe(true);
+    expect(state().paused).toBe(false);
+    state().setControlsOpen(true);
+    state().handleEscape();
+    expect(state().controlsOpen).toBe(false);
+    expect(state().welcomeOpen).toBe(true);
+  });
+
+  it('ESC closes the controls popup from the pause menu first, then the menu', () => {
+    state().setPaused(true);
+    state().setControlsOpen(true);
+    state().handleEscape();
+    expect(state().controlsOpen).toBe(false);
+    expect(state().paused).toBe(true);
+    state().handleEscape();
+    expect(state().paused).toBe(false);
+  });
+});

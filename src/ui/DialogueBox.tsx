@@ -1,5 +1,6 @@
 import { clearPressed, input } from '@/input/input-state';
 import { useEffect } from 'react';
+import { AVATARS } from '@/data/avatars';
 import { NPC_BY_ID } from '@/data/npcs';
 import { methodLabel } from '@/data/persuasion';
 import { treeFor, useDialogueStore } from '@/store/dialogue-store';
@@ -52,7 +53,11 @@ export function DialogueBox() {
       <div className="dialogue-card">
         <div className="dialogue-head">
           <div className="portrait" style={{ background: npc.accent }} aria-hidden>
-            {npc.name.replace('Uncle ', '')[0]}
+            {AVATARS[npc.id] ? (
+              <img src={AVATARS[npc.id]} alt="" draggable={false} />
+            ) : (
+              npc.name.replace('Uncle ', '')[0]
+            )}
           </div>
           <div className="dialogue-who">
             <strong>{npc.name}</strong>

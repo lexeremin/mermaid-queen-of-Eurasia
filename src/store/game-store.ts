@@ -11,6 +11,10 @@ export type GameState = {
   /** Quest panel: the read-only log, or the notice board where quests are accepted and claimed. */
   questPanel: QuestPanel;
   dialogueOpen: boolean;
+  /** The welcome screen of a brand new game. */
+  welcomeOpen: boolean;
+  /** The keybindings popup (opened from the menu or the welcome screen). */
+  controlsOpen: boolean;
   downed: boolean;
   nearbyNpc: string | null;
   /** The notice board or shrine Rosa is close enough to use, if any. */
@@ -26,6 +30,8 @@ export type GameState = {
   setUnderground: (underground: boolean) => void;
   setTransitioning: (transitioning: boolean) => void;
   setDialogueOpen: (open: boolean) => void;
+  setWelcomeOpen: (open: boolean) => void;
+  setControlsOpen: (open: boolean) => void;
   setDowned: (downed: boolean) => void;
   setNearbyNpc: (id: string | null) => void;
   setNearPlace: (place: PlaceId | null) => void;
@@ -43,6 +49,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   inventoryOpen: false,
   questPanel: null,
   dialogueOpen: false,
+  welcomeOpen: false,
+  controlsOpen: false,
   downed: false,
   nearbyNpc: null,
   nearPlace: null,
@@ -52,6 +60,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   setUnderground: (underground) => set({ underground }),
   setTransitioning: (transitioning) => set({ transitioning }),
   setDialogueOpen: (dialogueOpen) => set({ dialogueOpen }),
+  setWelcomeOpen: (welcomeOpen) => set({ welcomeOpen, controlsOpen: false }),
+  setControlsOpen: (controlsOpen) => set({ controlsOpen }),
   setDowned: (downed) => set({ downed }),
   setNearbyNpc: (nearbyNpc) => set({ nearbyNpc }),
   setNearPlace: (nearPlace) => set({ nearPlace }),
@@ -75,7 +85,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     ),
   handleEscape: () => {
     if (get().downed) return;
-    if (get().questPanel) set({ questPanel: null });
+    if (get().controlsOpen) set({ controlsOpen: false });
+    else if (get().welcomeOpen) return;
+    else if (get().questPanel) set({ questPanel: null });
     else if (get().inventoryOpen) set({ inventoryOpen: false });
     else get().togglePause();
   },
@@ -84,7 +96,13 @@ export const useGameStore = create<GameState>((set, get) => ({
 export function isSimRunning(
   state: Pick<
     GameState,
-    'paused' | 'inventoryOpen' | 'questPanel' | 'dialogueOpen' | 'downed' | 'transitioning'
+    | 'paused'
+    | 'inventoryOpen'
+    | 'questPanel'
+    | 'dialogueOpen'
+    | 'downed'
+    | 'transitioning'
+    | 'welcomeOpen'
   >,
 ): boolean {
   return (
@@ -93,6 +111,7 @@ export function isSimRunning(
     !state.questPanel &&
     !state.dialogueOpen &&
     !state.downed &&
-    !state.transitioning
+    !state.transitioning &&
+    !state.welcomeOpen
   );
 }

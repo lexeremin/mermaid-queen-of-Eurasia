@@ -6,6 +6,8 @@ import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
+import { ControlsPanel } from '@/ui/ControlsPanel';
+import { Welcome } from '@/ui/Welcome';
 import { RecallButton } from '@/ui/RecallButton';
 import { QuickUse } from '@/ui/QuickUse';
 import { UiIcon } from '@/ui/icons';
@@ -33,6 +35,9 @@ export function Hud() {
   const inventoryOpen = useGameStore((s) => s.inventoryOpen);
   const questPanel = useGameStore((s) => s.questPanel);
   const nearPlace = useGameStore((s) => s.nearPlace);
+  const welcomeOpen = useGameStore((s) => s.welcomeOpen);
+  const controlsOpen = useGameStore((s) => s.controlsOpen);
+  const setControlsOpen = useGameStore((s) => s.setControlsOpen);
   const transitioning = useGameStore((s) => s.transitioning);
   const toggleQuestLog = useGameStore((s) => s.toggleQuestLog);
   const zone = useGameStore((s) => s.zone);
@@ -83,7 +88,7 @@ export function Hud() {
         </button>
       </div>
 
-      {zone && !paused && !inventoryOpen && !questPanel && (
+      {zone && !paused && !welcomeOpen && !inventoryOpen && !questPanel && (
         <div key={zone.id} className="zone-hint">
           {zone.label}
         </div>
@@ -101,12 +106,14 @@ export function Hud() {
         </button>
       )}
 
-      {touch && !paused && !inventoryOpen && !questPanel && !dialogueOpen && <TouchControls />}
+      {touch && !paused && !welcomeOpen && !inventoryOpen && !questPanel && !dialogueOpen && (
+        <TouchControls />
+      )}
 
       <div className={touch ? 'dock dock-touch' : 'dock'}>
         <FollowerButton />
         <div className="dock-row">
-          <RecallButton touch={touch} />
+          {!touch && <RecallButton touch={false} />}
           <QuickUse touch={touch} />
         </div>
       </div>
@@ -116,7 +123,7 @@ export function Hud() {
       {inventoryOpen && <InventoryPanel />}
       {questPanel && <QuestPanel />}
 
-      {paused && (
+      {paused && !welcomeOpen && (
         <div className="overlay">
           <div className="panel menu">
             <MenuMermaid />
@@ -124,15 +131,11 @@ export function Hud() {
               Mermaid Queen <span>of Eurasia</span>
             </h1>
             <p className="menu-sub">Paused</p>
-            {!touch && (
-              <p className="hint">
-                WASD move · click to walk · click a person to talk · Space / right-click attack ·
-                Shift blink · Q aura · R spell · T recall · E interact · I bag · J quests · 1 / 2
-                quick use · ESC pause
-              </p>
-            )}
             <button type="button" className="hud-btn big" onClick={togglePause}>
               RESUME
+            </button>
+            <button type="button" className="hud-btn" onClick={() => setControlsOpen(true)}>
+              CONTROLS
             </button>
             <PauseSettings />
             <a
@@ -141,11 +144,14 @@ export function Hud() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              GITHUB PROJECT
+              lexeremin on Github
             </a>
           </div>
         </div>
       )}
+
+      {welcomeOpen && <Welcome />}
+      {controlsOpen && <ControlsPanel touch={touch} />}
     </div>
   );
 }

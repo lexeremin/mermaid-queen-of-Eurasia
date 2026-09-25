@@ -1,3 +1,4 @@
+import { AVATARS } from '@/data/avatars';
 import { NPC_BY_ID } from '@/data/npcs';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { useGameStore } from '@/store/game-store';
@@ -23,7 +24,11 @@ export function FollowerButton() {
       onClick={() => open(npc.id)}
     >
       <span className="follower-portrait" style={{ background: npc.accent }}>
-        {npc.name.replace('Uncle ', '')[0]}
+        {AVATARS[npc.id] ? (
+          <img src={AVATARS[npc.id]} alt="" draggable={false} />
+        ) : (
+          npc.name.replace('Uncle ', '')[0]
+        )}
       </span>
       <span className="follower-label">TALK</span>
     </button>

@@ -164,6 +164,7 @@ export function resetProgress(): void {
   rebuildGather();
   useNpcStore.getState().reset();
   useGameStore.getState().setForm('human');
+  useGameStore.getState().setWelcomeOpen(true);
   resetSim();
   resetCombat();
   syncDungeonWorld();
@@ -175,6 +176,10 @@ export function resetProgress(): void {
 export function startPersistence(): void {
   const save = loadLocalSave();
   if (save) applySave(save);
+  // A brand new game opens with the welcome screen (dev: ?welcome=0 skips it for scripted runs).
+  const skip =
+    import.meta.env.DEV && new URLSearchParams(window.location.search).get('welcome') === '0';
+  useGameStore.getState().setWelcomeOpen(!save && !skip);
 
   let timer: number | undefined;
   const scheduleSave = () => {
