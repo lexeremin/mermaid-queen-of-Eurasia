@@ -15,7 +15,7 @@ def _report(name, path, objects):
 
 def build_tree():
     clear_scene()
-    p = Part("tree_spruce")
+    p = Part("tree_spruce", more_segments=False)
     p.cone(0.2, 0.14, 0.9, (0, 0, 0.45), "wood_dark", segments=6)
     tiers = [(1.15, 1.5, 0.6), (0.9, 1.4, 1.5), (0.6, 1.3, 2.4)]
     for i, (radius, height, z0) in enumerate(tiers):

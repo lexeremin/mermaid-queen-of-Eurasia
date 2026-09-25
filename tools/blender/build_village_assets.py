@@ -47,7 +47,7 @@ def _shop(name, awning, goods):
         p.box((0.14, 2.6, 2.0), (x, 0, 1.0), "wood_light")
     p.box((3.7, 0.16, 2.6), (0, 1.35, 1.3), "wood")
     p.box((3.6, 0.9, 0.9), (0, -1.0, 0.45), "wood_light")
-    p.box((3.8, 1.1, 0.1), (0, -1.0, 0.95), "wood")
+    p.box((3.72, 1.1, 0.1), (0, -1.0, 0.95), "wood")
 
     stripes = 6
     span = 3.72 / stripes
@@ -137,7 +137,7 @@ def build_crate():
 
 def build_birch():
     clear_scene()
-    p = Part("tree_birch")
+    p = Part("tree_birch", more_segments=False)
     p.cone(0.16, 0.1, 2.6, (0, 0, 1.3), "birch", segments=5)
     for x, y, z in ((0.0, -0.1, 0.7), (-0.05, -0.08, 1.3), (0.05, -0.08, 1.9)):
         p.box((0.09, 0.05, 0.12), (x, y, z), "ink")
@@ -149,7 +149,7 @@ def build_birch():
 
 def build_linden():
     clear_scene()
-    p = Part("tree_linden")
+    p = Part("tree_linden", more_segments=False)
     p.cone(0.22, 0.14, 1.7, (0, 0, 0.85), "bark", segments=6)
     p.cone(0.9, 1.6, 1.0, (0, 0, 2.3), "leaf_dark", segments=8)
     p.cone(1.6, 1.2, 0.9, (0, 0, 3.25), "leaf", segments=8)

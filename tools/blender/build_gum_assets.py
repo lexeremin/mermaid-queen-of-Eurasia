@@ -10,7 +10,7 @@ import math
 
 def build_gum_facade():
     clear_scene()
-    p = Part("bld_gum_facade")
+    p = Part("bld_gum_facade", auto_bevel=False)  # 2 088 of 2 200 triangles already: chamfers would break the budget
     length, depth, gap = 18.0, 5.0, 4.6
     wing = (length - gap) / 2
     for sx in (-1, 1):

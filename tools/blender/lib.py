@@ -13,6 +13,7 @@ import os
 import bmesh
 import bpy
 from mathutils import Euler, Matrix, Vector
+from mathutils.bvhtree import BVHTree
 
 REPO = globals().get("REPO") or os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 SRC_DIR = os.path.join(REPO, "assets-src")
@@ -22,6 +23,30 @@ with open(os.path.join(REPO, "tools", "palette.json")) as _f:
 ATLAS = PALETTE["atlas"]
 COLORS = PALETTE["colors"]
 COLOR_NAMES = list(COLORS.keys())
+
+
+BEVEL_MIN_SIDE = 0.9  # "auto" bevel: only boxes whose thinnest side is at least this
+BEVEL_MAX = 0.07
+SMOOTH_MIN_SEGMENTS = 6
+EMBED_DETAILS = True
+DECAL_MAX_THICK = 0.16  # thin plates on a wall are sunk until they stand this proud of it
+DECAL_PROUD = 0.02
+EMBED_APPLY = True  # False: only report
+EMBED_LOG = []  # what embed_details() changed or could not fix, per finished Part; print it after a build
+
+
+def round_segments(segments, radius):
+    """Facet count for a round form: the requested count for anything small or pointed (4-5 sides: spires and
+    pyramids stay as they are), 10 from 0.4 m radius, 12 from 0.8 m."""
+    if segments < 6:
+        return segments
+    return max(segments, 12 if radius >= 0.8 else 10 if radius >= 0.4 else segments)
+
+
+def bevel_width(size):
+    """Chamfer width for a box of `size`: 0 (sharp) for anything thin, else 15% of the thinnest side up to BEVEL_MAX."""
+    thin = min(size)
+    return 0.0 if thin < BEVEL_MIN_SIDE else min(BEVEL_MAX, thin * 0.15)
 
 
 def _hex_to_rgb(value):
@@ -136,8 +161,10 @@ class Part:
     `parent` is another Part (or Empty from `empty()`); the parent must be un-rotated at rest.
     """
 
-    def __init__(self, name, pivot=(0, 0, 0), parent=None):
+    def __init__(self, name, pivot=(0, 0, 0), parent=None, auto_bevel=True, more_segments=True):
         self.name = name
+        self.more_segments = more_segments  # False for anything instanced by the hundred (trees): round_segments() adds triangles
+        self.auto_bevel = auto_bevel  # False for models at their triangle budget (a flat facade gains little from chamfers)
         self.pivot = Vector(pivot)
         self.parent = parent
         self.bm = bmesh.new()
@@ -161,14 +188,30 @@ class Part:
         )
         bmesh.ops.transform(self.bm, matrix=matrix, verts=verts)
 
-    def box(self, size, loc, color, rot=(0, 0, 0)):
+    def box(self, size, loc, color, rot=(0, 0, 0), bevel="auto"):
+        """Box centered on `loc`. `bevel` chamfers the edges: "auto" bevels only large boxes (thinnest side at least
+        BEVEL_MIN_SIDE), a number is the chamfer width in metres, 0 or None keeps sharp edges. The chamfer faces
+        get the box colour, so nothing bleeds into neighbouring palette cells."""
+        before = set(self.bm.faces)
         verts = bmesh.ops.create_cube(self.bm, size=1.0)["verts"]
-        self._place(verts, loc, rot, size)
-        self._paint(self._faces_of(verts), color)
+        width = (bevel_width(size) if self.auto_bevel else 0.0) if bevel == "auto" else (bevel or 0.0)
+        if width > 0:
+            bmesh.ops.transform(self.bm, matrix=Matrix.Diagonal((*size, 1.0)), verts=verts)
+            edges = list({e for v in verts for e in v.link_edges})
+            bmesh.ops.bevel(self.bm, geom=edges, offset=width, offset_type="OFFSET", segments=1, affect="EDGES")
+            verts = list({v for f in self.bm.faces if f not in before for v in f.verts})
+            self._place(verts, loc, rot, (1, 1, 1))
+        else:
+            self._place(verts, loc, rot, size)
+        self._paint([f for f in self.bm.faces if f not in before], color)
         return self
 
-    def cone(self, r_bottom, r_top, height, loc, color, segments=6, rot=(0, 0, 0), caps=True):
-        """Frustum centered on `loc`, axis along local Z. r_top=0 gives a cone."""
+    def cone(self, r_bottom, r_top, height, loc, color, segments=6, rot=(0, 0, 0), caps=True, smooth="auto"):
+        """Frustum centered on `loc`, axis along local Z. r_top=0 gives a cone. `smooth` shades the side faces as one
+        round surface ("auto": from 6 segments up); the caps and the rim between them stay crisp. Round forms are given
+        more segments as they get wider (see `round_segments`), so drums and domes read as round, not as prisms."""
+        if self.more_segments:
+            segments = round_segments(segments, max(r_bottom, r_top))
         verts = bmesh.ops.create_cone(
             self.bm,
             cap_ends=caps,
@@ -179,8 +222,18 @@ class Part:
             depth=height,
         )["verts"]
         self._place(verts, loc, rot, (1, 1, 1))
-        self._paint(self._faces_of(verts), color)
+        faces = self._faces_of(verts)
+        self._paint(faces, color)
+        if (segments >= SMOOTH_MIN_SEGMENTS) if smooth == "auto" else smooth:
+            self._smooth_sides([f for f in faces if len(f.verts) <= 4])  # sides are quads or apex triangles; caps are n-gons
         return self
+
+    def _smooth_sides(self, faces):
+        for f in faces:
+            f.smooth = True
+        for f in faces:
+            for e in f.edges:
+                e.smooth = all(g.smooth for g in e.link_faces)
 
     def prism_yz(self, points, x0, x1, color):
         """Extrude a polygon given as (y, z) points along X from x0 to x1."""
@@ -243,13 +296,150 @@ class Part:
             bm.verts[vi].co += offset
         return len(levels)
 
+
+    # --- plate audit -------------------------------------------------------------------------------------------
+    def _islands(self):
+        seen, islands = set(), []
+        for f0 in self.bm.faces:
+            if f0 in seen:
+                continue
+            stack, island = [f0], []
+            seen.add(f0)
+            while stack:
+                f = stack.pop()
+                island.append(f)
+                for e in f.edges:
+                    for g in e.link_faces:
+                        if g not in seen:
+                            seen.add(g)
+                            stack.append(g)
+            islands.append(island)
+        return islands
+
+    def embed_details(self, apply=True, max_gap=0.15, thin=0.2):
+        """Finds thin plates (windows, panels, trim, plaques: boxes at most `thin` metres thick and at least twice as
+        wide) and makes sure each one sits on a surface. From the plate's back face a ray goes into the rest of the
+        model: the distance to the wall is the gap. With `apply`, a plate that floats (gap up to `max_gap`) is moved
+        onto the wall, and a plate whose corners hang in the air (a flat plate on a faceted drum) gets its back face
+        stretched into the wall, so it can neither float nor leave a crack. Returns one dict per plate that needed it:
+        {name, gap, corner, fixed}. Plates with no surface behind them at all are reported as `orphan`."""
+        bm = self.bm
+        bm.verts.ensure_lookup_table()
+        islands = self._islands()
+        island_of = {}
+        for i, isl in enumerate(islands):
+            for f in isl:
+                island_of[f] = i
+        tris, tri_island = [], []
+        coords = [v.co.copy() for v in bm.verts]
+        for f in bm.faces:
+            vi = [v.index for v in f.verts]
+            for k in range(1, len(vi) - 1):
+                tris.append((vi[0], vi[k], vi[k + 1]))
+                tri_island.append(island_of[f])
+        if not tris:
+            return []
+        bvh = BVHTree.FromPolygons(coords, tris, epsilon=0.0)
+        probe = Vector((0.377, 0.517, 0.768)).normalized()
+
+        def hits(origin, direction, exclude, limit=400.0):
+            out, o = [], Vector(origin)
+            for _ in range(64):
+                loc, nrm, idx, dist = bvh.ray_cast(o, direction, limit)
+                if loc is None:
+                    break
+                if tri_island[idx] != exclude:
+                    out.append((tri_island[idx], (loc - Vector(origin)).length, nrm))
+                o = loc + direction * 1e-4
+            return out
+
+        def inside(point, exclude):
+            counts = {}
+            for isl_id, _, _ in hits(point, probe, exclude):
+                counts[isl_id] = counts.get(isl_id, 0) + 1
+            return any(n % 2 == 1 for n in counts.values())
+
+        def gap(point, direction, exclude):
+            """0 when `point` is already inside something, else the distance to the first surface facing the point."""
+            if inside(point + direction * 0.01, exclude):
+                return 0.0
+            for _, dist, nrm in sorted(hits(point, direction, exclude, max_gap * 2), key=lambda h: h[1]):
+                if nrm.dot(direction) < 0:
+                    return dist
+            return None
+
+        def surface(point, direction, exclude, limit):
+            for _, dist, nrm in sorted(hits(point, direction, exclude, limit), key=lambda h: h[1]):
+                if nrm.dot(direction) < 0:
+                    return dist
+            return None
+
+        report = []
+        for i, isl in enumerate(islands):
+            verts = list({v for f in isl for v in f.verts})
+            if len(isl) != 6 or len(verts) != 8:
+                continue
+            v0 = verts[0]
+            edges = [e.other_vert(v0).co - v0.co for e in v0.link_edges]
+            if len(edges) != 3:
+                continue
+            lengths = [e.length for e in edges]
+            k = lengths.index(min(lengths))
+            t = lengths[k]
+            wide = sorted(lengths[j] for j in range(3) if j != k)
+            if t > thin or wide[0] < 1.1 * t:
+                continue
+            n = edges[k].normalized()
+            u = edges[(k + 1) % 3].normalized()
+            w = edges[(k + 2) % 3].normalized()
+            au, aw = lengths[(k + 1) % 3], lengths[(k + 2) % 3]
+            c = sum((v.co for v in verts), Vector()) / 8
+            best = None
+            for sign in (1, -1):
+                d = n * sign
+                g = gap(c + d * (t / 2), d, i)
+                if g is not None and (best is None or g < best[1]):
+                    best = (d, g)
+            if best is None:
+                report.append({"name": self.name, "gap": None, "corner": None, "fixed": False, "orphan": True})
+                continue
+            d, g_center = best
+            back = c + d * (t / 2)
+            corner_pts = [back + u * (sx * au * 0.45) + w * (sy * aw * 0.45) for sx in (-1, 1) for sy in (-1, 1)]
+            gaps = [gap(q, d, i) for q in corner_pts]
+            worst = max([x for x in gaps if x is not None] + [0.0])
+            overhang = sum(1 for x in gaps if x is None)
+            shift = g_center
+            # A window, door or panel on a wall reads as paint, not as a slab: sink it until it stands DECAL_PROUD proud.
+            decal = t <= DECAL_MAX_THICK and not overhang and not inside(c - d * (t / 2 + 0.02), i)
+            if decal:
+                wall = surface(c - d * (t / 2 + 0.5), d, i, 1.0)
+                if wall is not None:
+                    shift = max(shift, wall - 0.5 - DECAL_PROUD)
+            if shift <= 0.004 and worst <= 0.004 and not overhang:
+                continue
+            entry = {"name": self.name, "gap": round(g_center, 3), "corner": round(worst, 3), "fixed": False, "overhang": overhang, "decal": decal, "sink": round(max(shift - g_center, 0.0), 3)}
+            if apply and shift <= max_gap + t and (worst - shift) <= max_gap:
+                for v in verts:
+                    v.co += d * shift
+                reach = max([x - shift for x in gaps if x is not None] + [0.0])
+                if reach > 0.004:
+                    for v in verts:
+                        if (v.co - (c + d * shift)).dot(d) > 0:  # the back-face verts
+                            v.co += d * (reach + 0.03)
+                entry["fixed"] = True
+            report.append(entry)
+        bm.normal_update()
+        return report
+
     def finish(self):
         self.separate_coplanar()
+        if EMBED_DETAILS:
+            EMBED_LOG.extend(self.embed_details(apply=EMBED_APPLY))
         mesh = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(mesh)
         self.bm.free()
-        for poly in mesh.polygons:
-            poly.use_smooth = False
+        # flat shading everywhere except the faces `cone()` marked smooth (already carried over by to_mesh)
         mesh.materials.append(get_material())
         obj = bpy.data.objects.new(self.name, mesh)
         bpy.context.scene.collection.objects.link(obj)

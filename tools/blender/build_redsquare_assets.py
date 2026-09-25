@@ -230,15 +230,19 @@ def build_lamppost():
 
 def build_fir_tub():
     clear_scene()
-    p = Part("prop_fir_tub")
+    p = Part("prop_fir_tub", more_segments=False)
     p.cone(0.55, 0.5, 0.6, (0, 0, 0.3), "wood", segments=8)
     for z in (0.15, 0.48):
         p.cone(0.58, 0.55, 0.07, (0, 0, z), "wood_dark", segments=8, caps=False)
     for r, h, z0 in ((0.95, 1.1, 0.6), (0.75, 1.0, 1.3), (0.5, 0.9, 1.95)):
         p.cone(r, 0, h, (0, 0, z0 + h / 2), "spruce_dark", segments=8)
         p.cone(r * 1.04, r * 0.86, h * 0.16, (0, 0, z0 + h * 0.08), "spruce", segments=8)
-    for a, r, z in ((0, 0.8, 0.9), (2.1, 0.75, 1.1), (4.2, 0.7, 1.2), (1.0, 0.55, 1.7), (3.1, 0.5, 1.8), (5.2, 0.4, 2.2)):
-        p.box((0.09, 0.09, 0.09), (r * math.cos(a) * 0.9, r * math.sin(a) * 0.9, z), "candle")
+    # Baubles sit in the surface of a tier: `frac` is how far up the tier (0 = its base), and the radius shrinks with it.
+    tiers = ((0.95, 1.1, 0.6), (0.75, 1.0, 1.3), (0.5, 0.9, 1.95))
+    for a, tier, frac in ((0, 0, 0.3), (2.1, 0, 0.55), (4.2, 1, 0.3), (1.0, 1, 0.6), (3.1, 2, 0.35), (5.2, 2, 0.6)):
+        r, h, z0 = tiers[tier]
+        radius = r * (1 - frac) * 0.93  # 0.93: flat facets of a 12-sided cone sit at about 0.97 of its radius
+        p.box((0.09, 0.09, 0.09), (radius * math.cos(a), radius * math.sin(a), z0 + h * frac), "candle", bevel=0)
     p.box((0.18, 0.18, 0.18), (0, 0, 2.9), "gold")
     return _done("prop_fir_tub", p)
 
