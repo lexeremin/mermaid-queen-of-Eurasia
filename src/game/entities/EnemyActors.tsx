@@ -21,7 +21,7 @@ import { defOf, type Enemy } from '@/systems/enemy-ai';
 import { currentMap } from '@/game/world/current-map';
 
 const FLASH = new Color('#ffffff');
-const BAR_WIDTH = 1.1;
+const BAR_WIDTH = 1.7;
 
 function EnemyActor({ index }: { index: number }) {
   const spawn = currentMap.enemies[index];
@@ -86,7 +86,7 @@ function EnemyActor({ index }: { index: number }) {
 
     if (blindfold.current) blindfold.current.visible = blind;
 
-    const showBar = !dead && combat.time < enemy.barUntil && enemy.hp < def.maxHp;
+    const showBar = !dead && !enemy.dormant;
     if (bar.current && fill.current) {
       bar.current.visible = showBar;
       if (showBar) {
@@ -121,14 +121,14 @@ function EnemyActor({ index }: { index: number }) {
           </mesh>
         </group>
       </group>
-      <group ref={bar} position={[0, def.markHeight - 0.35, 0]} visible={false}>
-        <mesh>
-          <planeGeometry args={[BAR_WIDTH + 0.08, 0.2]} />
-          <meshBasicMaterial color="#0b1220" depthTest={false} transparent opacity={0.85} />
+      <group ref={bar} position={[0, def.markHeight - 0.15, 0]} visible={false}>
+        <mesh renderOrder={20}>
+          <planeGeometry args={[BAR_WIDTH + 0.12, 0.3]} />
+          <meshBasicMaterial color="#0b1220" depthTest={false} transparent opacity={0.9} />
         </mesh>
-        <mesh ref={fill} position={[0, 0, 0.01]}>
-          <planeGeometry args={[BAR_WIDTH, 0.13]} />
-          <meshBasicMaterial color="#e3536b" depthTest={false} />
+        <mesh ref={fill} position={[0, 0, 0.01]} renderOrder={21}>
+          <planeGeometry args={[BAR_WIDTH, 0.2]} />
+          <meshBasicMaterial color="#e3536b" depthTest={false} transparent />
         </mesh>
       </group>
       <mesh ref={telegraph} rotation-x={-Math.PI / 2} position={[0, 0.06, 0]} visible={false}>

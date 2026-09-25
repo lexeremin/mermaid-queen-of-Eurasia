@@ -9,7 +9,14 @@ import {
   type Objective,
   type QuestDef,
 } from '@/data/quests';
-import { addToBag, removeFromBag, countOf, type Bag } from '@/systems/inventory';
+import {
+  addToStash,
+  countInStash,
+  removeFromStash,
+  type Bag,
+  type Keepsakes,
+  type Stash,
+} from '@/systems/inventory';
 import { MESMERIZED_AT } from '@/systems/relationship';
 
 export type QuestProgress = { counts: number[]; visited: string[] };
@@ -23,6 +30,7 @@ export type QuestLog = {
 export type WorldView = {
   level: number;
   bag: Bag;
+  keepsakes: Keepsakes;
   joinedCount: number;
   relationship: (npc: string) => number;
   /** Which dungeon milestones have been reached. */
@@ -102,7 +110,7 @@ export function objectiveState(
       break;
     case 'collect':
       need = objective.count;
-      have = countOf(view.bag, objective.item);
+      have = countInStash(view, objective.item);
       text = `Bring ${ITEMS[objective.item].name}`;
       break;
     case 'level':
@@ -181,30 +189,28 @@ export function recordVisit(log: QuestLog, zoneId: string): QuestLog {
 }
 
 export type ClaimResult =
-  { ok: true; log: QuestLog; bag: Bag } | { ok: false; reason: 'not-ready' | 'bag-full' };
+  | { ok: true; log: QuestLog; bag: Bag; keepsakes: Keepsakes }
+  | { ok: false; reason: 'not-ready' | 'bag-full' };
 
 /** Completes a ready quest: consumes collected items, then adds rewards. Refuses if the bag cannot hold them. */
 export function claimQuest(log: QuestLog, id: string, view: WorldView): ClaimResult {
   const def = QUEST_BY_ID.get(id);
   const progress = log.active[id];
   if (!def || !progress || !isReady(def, progress, view)) return { ok: false, reason: 'not-ready' };
-  let bag = view.bag;
+  let stash: Stash = { bag: view.bag, keepsakes: view.keepsakes };
   for (const o of def.objectives) {
-    if (o.kind !== 'collect') continue;
-    let left = o.count;
-    while (left > 0) {
-      const index = bag.findIndex((s) => s?.id === o.item);
-      if (index < 0) break;
-      const qty = Math.min(left, bag[index]?.qty ?? 0);
-      bag = removeFromBag(bag, index, qty).bag;
-      left -= qty;
-    }
+    if (o.kind === 'collect') stash = removeFromStash(stash, o.item, o.count);
   }
   for (const item of def.reward.items ?? []) {
-    const added = addToBag(bag, item.id, item.qty);
+    const added = addToStash(stash, item.id, item.qty);
     if (added.leftover > 0) return { ok: false, reason: 'bag-full' };
-    bag = added.bag;
+    stash = { bag: added.bag, keepsakes: added.keepsakes };
   }
   const rest = Object.fromEntries(Object.entries(log.active).filter(([key]) => key !== id));
-  return { ok: true, log: { active: rest, completed: [...log.completed, id] }, bag };
+  return {
+    ok: true,
+    log: { active: rest, completed: [...log.completed, id] },
+    bag: stash.bag,
+    keepsakes: stash.keepsakes,
+  };
 }

@@ -1,6 +1,6 @@
 import { isZero, type Vec2 } from '@/utils/vec2';
 
-export const ACTIONS = ['attack', 'dash', 'aura', 'spell', 'interact'] as const;
+export const ACTIONS = ['attack', 'dash', 'aura', 'spell', 'teleport', 'interact'] as const;
 export type Action = (typeof ACTIONS)[number];
 
 export type InputState = {
@@ -8,12 +8,21 @@ export type InputState = {
   stickMove: Vec2;
   /** Left-click on the canvas in normalized device coordinates, consumed by the game loop. */
   click: { x: number; y: number; touch: boolean } | null;
+  /** Where the mouse is over the canvas (normalized device coordinates), or null (touch, or off the canvas). */
+  pointer: { x: number; y: number } | null;
   held: Record<Action, boolean>;
   pressed: Record<Action, boolean>;
 };
 
 function flags(): Record<Action, boolean> {
-  return { attack: false, dash: false, aura: false, spell: false, interact: false };
+  return {
+    attack: false,
+    dash: false,
+    aura: false,
+    spell: false,
+    teleport: false,
+    interact: false,
+  };
 }
 
 export function createInputState(): InputState {
@@ -21,6 +30,7 @@ export function createInputState(): InputState {
     keyMove: { x: 0, z: 0 },
     stickMove: { x: 0, z: 0 },
     click: null,
+    pointer: null,
     held: flags(),
     pressed: flags(),
   };
@@ -45,6 +55,7 @@ export function resetInput(input: InputState): void {
   input.keyMove = { x: 0, z: 0 };
   input.stickMove = { x: 0, z: 0 };
   input.click = null;
+  input.pointer = null;
   input.held = flags();
   input.pressed = flags();
 }

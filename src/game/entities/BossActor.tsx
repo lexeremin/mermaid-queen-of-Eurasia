@@ -33,7 +33,7 @@ function armAngle(kind: string, t: number): number {
   return 0;
 }
 
-/** Lord Bumazhnik: the same walk-in-place model, with the stamp arm raised and slammed to match his moves. */
+/** Father of Corruption: the same walk-in-place model, with the stamp arm raised and slammed to match his moves. */
 export function BossActor({ index }: { index: number }) {
   const root = useRef<Group>(null);
   const yaw = useRef<Group>(null);

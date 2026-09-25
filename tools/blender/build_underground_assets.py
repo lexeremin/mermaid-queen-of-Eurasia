@@ -1,4 +1,4 @@
-"""Moscow underground (Phase 16): metro pavilion, stairs, dark-brick wall kit, column, boss gate, chandelier, paper stack, boss.
+"""Moscow underground (Phase 16): metro pavilion, stairs, dark-brick wall kit, column, boss gate, paper stack, boss.
 
 Exec after lib.py and build_redsquare_assets.py in the same namespace (uses _done, _seams).
     ns["build_all_underground"]()
@@ -93,22 +93,6 @@ def build_ug_gate():
     return _done("bld_ug_gate", p)
 
 
-def build_chandelier():
-    """A hanging chandelier: chain, gold ring, candles. Hangs from 4.6 m down to 2.9 m."""
-    clear_scene()
-    p = Part("prop_chandelier")
-    p.box((0.06, 0.06, 1.7), (0, 0, 3.75), "ink")
-    p.cone(0.5, 0.15, 0.4, (0, 0, 3.0), "gold", segments=8)
-    for k in range(6):
-        a = k * math.pi / 3
-        x, y = 1.0 * math.cos(a), 1.0 * math.sin(a)
-        p.box((0.9, 0.09, 0.09), (0.5 * math.cos(a), 0.5 * math.sin(a), 3.0), "gold", rot=(0, 0, a))
-        p.box((0.16, 0.16, 0.1), (x, y, 2.95), "gold")
-        p.box((0.12, 0.12, 0.42), (x, y, 3.2), "candle")
-    p.box((0.4, 0.4, 0.4), (0, 0, 2.75), "amber", rot=(0.6, 0.6, 0))
-    return _done("prop_chandelier", p)
-
-
 def build_paper_stack():
     clear_scene()
     p = Part("prop_paper_stack")
@@ -169,7 +153,7 @@ def build_metro_entrance():
 
 
 def build_boss_registrar():
-    """Lord Bumazhnik, the Great Registrar (Phase 16): a golem of ledgers in a pinstripe waistcoat, monocle, crown of
+    """Father of Corruption (Phase 16): a golem of ledgers in a pinstripe waistcoat, monocle, crown of
     stamps and a giant rubber stamp for a fist. Rigid parts: torso, head, arm_stamp (procedural slam), arm_quill."""
     clear_scene()
     root = Empty("boss_registrar")
@@ -256,6 +240,6 @@ def build_boss_registrar():
 def build_all_underground():
     fns = [
         build_ug_wall, build_ug_wall_b, build_ug_wall_c, build_ug_wall_short, build_ug_column, build_ug_gate,
-        build_chandelier, build_paper_stack, build_ug_stairs, build_metro_entrance,
+        build_paper_stack, build_ug_stairs, build_metro_entrance,
     ]
     return [fn() for fn in fns] + [build_boss_registrar()]

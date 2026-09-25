@@ -45,7 +45,8 @@ const toastFail = (reason: string) =>
 
 export function InventoryPanel() {
   const close = useGameStore((s) => s.toggleInventory);
-  const { level, xp, bag, equipment } = useProgressStore();
+  const { level, xp, bag, equipment, keepsakes } = useProgressStore();
+  const questItems = (Object.entries(keepsakes) as [ItemId, number][]).filter(([, n]) => n > 0);
   const equip = useProgressStore((s) => s.equip);
   const unequip = useProgressStore((s) => s.unequip);
   const [sel, setSel] = useState<Selection>(null);
@@ -129,6 +130,18 @@ export function InventoryPanel() {
             );
           })}
         </div>
+
+        {questItems.length > 0 && (
+          <div className="quest-items" aria-label="Quest items">
+            <small>QUEST ITEMS · no bag space</small>
+            {questItems.map(([id, n]) => (
+              <span key={id} className="quest-item" title={ITEMS[id].description}>
+                <ItemIcon id={id} size={26} />
+                <b>{ITEMS[id].name}</b> x{n}
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="detail">
           {def ? (

@@ -13,6 +13,8 @@ export type NavGrid = {
   prewarm: () => Promise<void>;
   /** Forgets the cache (a gate opened or closed, so walkability changed). */
   reset: () => void;
+  /** Whether two points lie in the same walkable region (a walk from one to the other exists). */
+  sameRegion: (a: Vec2, b: Vec2) => boolean;
 };
 
 const UNKNOWN = 0;
@@ -29,6 +31,60 @@ export function createNavGrid(world: CollisionWorld, radius: number, cell = 0.5)
   const isFreePoint = (x: number, z: number): boolean => {
     const p = resolveCircle({ x, z }, radius, world);
     return Math.abs(p.x - x) < 1e-6 && Math.abs(p.z - z) < 1e-6;
+  };
+
+  // Connected walkable regions, labelled lazily by a flood fill and dropped whenever the cache is reset.
+  let labels: Int32Array | null = null;
+  const computeLabels = (): Int32Array => {
+    const out = new Int32Array(cols * rows);
+    let next = 0;
+    const stack: number[] = [];
+    for (let start = 0; start < out.length; start++) {
+      if (out[start] !== 0) continue;
+      const si = start % cols;
+      const sj = Math.floor(start / cols);
+      if (!isFreeCell(si, sj)) continue;
+      next += 1;
+      out[start] = next;
+      stack.push(start);
+      while (stack.length > 0) {
+        const k = stack.pop() as number;
+        const i = k % cols;
+        const j = Math.floor(k / cols);
+        for (const [di, dj] of [
+          [1, 0],
+          [-1, 0],
+          [0, 1],
+          [0, -1],
+        ] as const) {
+          const ni = i + di;
+          const nj = j + dj;
+          if (ni < 0 || nj < 0 || ni >= cols || nj >= rows) continue;
+          const nk = nj * cols + ni;
+          if (out[nk] !== 0 || !isFreeCell(ni, nj)) continue;
+          out[nk] = next;
+          stack.push(nk);
+        }
+      }
+    }
+    return out;
+  };
+  const regionAt = (x: number, z: number): number => {
+    labels ??= computeLabels();
+    const ci = Math.round((x - minX) / cell);
+    const cj = Math.round((z - minZ) / cell);
+    for (let r = 0; r <= 2; r++) {
+      for (let dj = -r; dj <= r; dj++) {
+        for (let di = -r; di <= r; di++) {
+          const i = ci + di;
+          const j = cj + dj;
+          if (i < 0 || j < 0 || i >= cols || j >= rows) continue;
+          const label = labels[j * cols + i] ?? 0;
+          if (label !== 0) return label;
+        }
+      }
+    }
+    return 0;
   };
 
   const isFreeCell = (i: number, j: number): boolean => {
@@ -50,7 +106,14 @@ export function createNavGrid(world: CollisionWorld, radius: number, cell = 0.5)
     isFreePoint,
     toCell: (x, z) => [Math.round((x - minX) / cell), Math.round((z - minZ) / cell)],
     cellCenter: (i, j) => ({ x: minX + i * cell, z: minZ + j * cell }),
-    reset: () => state.fill(UNKNOWN),
+    reset: () => {
+      state.fill(UNKNOWN);
+      labels = null;
+    },
+    sameRegion: (a, b) => {
+      const ra = regionAt(a.x, a.z);
+      return ra !== 0 && ra === regionAt(b.x, b.z);
+    },
     async prewarm() {
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) isFreeCell(i, j);

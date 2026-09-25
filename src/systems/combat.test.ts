@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ENEMIES } from '@/data/enemies';
+import { ENEMIES, RESPAWN_SECONDS } from '@/data/enemies';
 import {
   AURA,
   DASH,
@@ -10,6 +10,7 @@ import {
   SWING_TIME,
   TRIDENT,
 } from '@/systems/abilities';
+import { ABILITIES } from '@/systems/abilities';
 import { BASE_STATS } from '@/systems/progression';
 import type { CollisionWorld } from '@/systems/collision';
 import {
@@ -577,5 +578,78 @@ describe('the boss fight', () => {
     });
     expect(b.blindedUntil - s.time).toBeLessThanOrEqual(AURA.enemyBlind * 0.25 + 0.01);
     expect(b.blindedUntil).toBeGreaterThan(0);
+  });
+});
+
+describe('teleport', () => {
+  const dest = { x: 8, z: 0 };
+  const blink = (s: CombatState, resolveTeleport: CombatParams['resolveTeleport'] = () => dest) =>
+    step(s, { actions: { teleport: true }, resolveTeleport });
+
+  it('blinks to the destination, costs mana, starts the cooldown and grants a moment of safety', () => {
+    const s = createCombatState();
+    const frame = blink(s);
+    expect(frame.teleportTo).toEqual(dest);
+    expect(frame.events).toContainEqual({ type: 'cast', ability: 'teleport' });
+    expect(s.mana).toBe(MAX_MANA - ABILITIES.teleport.mana);
+    expect(s.cooldowns.teleport).toBeGreaterThan(0);
+    expect(s.invuln).toBeGreaterThan(0);
+    expect(s.blink).toBeGreaterThan(0);
+    expect(s.effects.filter((e) => e.type === 'bubbles')).toHaveLength(2);
+  });
+
+  it('is on cooldown afterwards, and needs the mana', () => {
+    const s = createCombatState();
+    blink(s);
+    expect(blink(s).teleportTo).toBeNull();
+    const poor = createCombatState();
+    poor.mana = 5;
+    expect(blink(poor).teleportTo).toBeNull();
+  });
+
+  it('is not cast (and costs nothing) when there is nowhere to land', () => {
+    const s = createCombatState();
+    const frame = blink(s, () => null);
+    expect(frame.teleportTo).toBeNull();
+    expect(s.mana).toBe(MAX_MANA);
+    expect(s.cooldowns.teleport).toBe(0);
+  });
+
+  it('cannot be cast while downed', () => {
+    const s = createCombatState();
+    s.downed = true;
+    expect(blink(s).teleportTo).toBeNull();
+  });
+
+  it('dodges a boss hazard that lands while the invulnerability lasts', () => {
+    const s = createCombatState();
+    s.hazards.push({
+      id: 1,
+      shape: { kind: 'circle', x: 0, z: 0, r: 3 },
+      delay: 0.2,
+      age: 0,
+      damage: 40,
+      hit: false,
+    });
+    blink(s);
+    // She has moved away in the game loop, but even standing still the blink's safety window covers the hit.
+    const events = run(s, 0.3);
+    expect(events.some((e) => e.type === 'playerHurt')).toBe(false);
+  });
+});
+
+describe('respawning', () => {
+  it('surface monsters come back after a while; instanced ones never on their own', () => {
+    const s = createCombatState([
+      { id: 'a', kind: 'tycoon', x: 20, z: 20 },
+      { id: 'b', kind: 'tycoon', x: -20, z: 20, instanced: true },
+    ]);
+    for (const e of s.enemies) {
+      e.hp = 0;
+      e.state = 'dead';
+    }
+    run(s, RESPAWN_SECONDS + 5);
+    expect(s.enemies[0]!.state).not.toBe('dead');
+    expect(s.enemies[1]!.state).toBe('dead');
   });
 });

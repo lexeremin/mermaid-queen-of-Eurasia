@@ -8,10 +8,10 @@ export type Objective =
   | { kind: 'recruit'; count: number }
   | { kind: 'collect'; item: ItemId; count: number }
   | { kind: 'level'; level: number }
-  /** A dungeon milestone (see the dungeon store): the stamp was found, the gate opened, the boss beaten. */
+  /** A dungeon milestone (see the dungeon store): the halls cleared, the boss beaten. */
   | { kind: 'flag'; flag: DungeonFlag; label: string };
 
-export type DungeonFlag = 'stampFound' | 'gateOpen' | 'bossDefeated';
+export type DungeonFlag = 'hallsCleared' | 'bossDefeated';
 
 export type QuestReward = {
   xp: number;
@@ -172,17 +172,13 @@ export const QUESTS: readonly QuestDef[] = [
     },
   },
   {
-    id: 'the-registrars-stamp',
-    title: "The Registrar's Stamp",
+    id: 'clear-the-halls',
+    title: 'Silence the Halls',
     blurb:
-      'The Registry Vault is sealed, and the only key is a rubber stamp in the pocket of the Chief Registrar, deep in the Records Cellar.',
+      'The Records Cellar and its halls are crawling with gloomy clerks. Defeat every monster of the three halls and the way to the Vault opens by itself.',
     minRank: 2,
     objectives: [
-      {
-        kind: 'flag',
-        flag: 'stampFound',
-        label: "Take the Registrar's Stamp from the Chief Registrar",
-      },
+      { kind: 'flag', flag: 'hallsCleared', label: 'Defeat every monster in the three halls' },
     ],
     reward: {
       xp: 120,
@@ -194,12 +190,12 @@ export const QUESTS: readonly QuestDef[] = [
     },
   },
   {
-    id: 'tear-up-the-paperwork',
-    title: 'Tear Up the Paperwork',
+    id: 'end-the-corruption',
+    title: 'End the Corruption',
     blurb:
-      'Lord Bumazhnik has filed the whole square under "denied". Open the Registry Vault and file him under "defeated".',
+      'Behind the Vault gate waits the Father of Corruption, who has filed the whole square under "denied". Put an end to him.',
     minRank: 3,
-    objectives: [{ kind: 'flag', flag: 'bossDefeated', label: 'Defeat Lord Bumazhnik' }],
+    objectives: [{ kind: 'flag', flag: 'bossDefeated', label: 'Defeat the Father of Corruption' }],
     reward: {
       xp: 300,
       rep: 30,

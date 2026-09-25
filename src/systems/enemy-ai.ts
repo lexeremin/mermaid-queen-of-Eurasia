@@ -31,6 +31,8 @@ export type Enemy = {
   barUntil: number;
   /** Waits out of the fight (invisible, untargetable) until the boss wakes it. */
   dormant: boolean;
+  /** Belongs to an instance: does not respawn by timer (see `resetInstance`). */
+  instanced: boolean;
   /** One of the boss's four helpers (they collapse when the boss falls). */
   helper: boolean;
   /** The boss's state machine; null for everyone else. */
@@ -118,7 +120,7 @@ export function createEnemy(
   id: string,
   kind: EnemyKind,
   spawn: Vec2,
-  options: { dormant?: boolean } = {},
+  options: { dormant?: boolean; instanced?: boolean } = {},
 ): Enemy {
   return {
     id,
@@ -141,6 +143,7 @@ export function createEnemy(
     strafe: 1,
     barUntil: 0,
     dormant: options.dormant ?? false,
+    instanced: options.instanced ?? false,
     helper: options.dormant ?? false,
     brain: kind === 'boss' ? createBrain() : null,
   };
@@ -148,7 +151,10 @@ export function createEnemy(
 
 /** Back to full health at the spawn point (respawn). */
 export function respawnEnemy(enemy: Enemy): void {
-  Object.assign(enemy, createEnemy(enemy.id, enemy.kind, enemy.spawn), { helper: enemy.helper });
+  Object.assign(enemy, createEnemy(enemy.id, enemy.kind, enemy.spawn), {
+    helper: enemy.helper,
+    instanced: enemy.instanced,
+  });
 }
 
 /** Wakes a dormant helper where it stands, ready to fight. */

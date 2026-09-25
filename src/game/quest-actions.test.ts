@@ -59,6 +59,6 @@ describe('quest actions', () => {
     useProgressStore.getState().addItem('pearl', 4);
     acceptQuestAction('pearls-for-the-board');
     expect(claimQuestAction('pearls-for-the-board')).toBe(true);
-    expect(countOf(useProgressStore.getState().bag, 'pearl')).toBe(1);
+    expect(useProgressStore.getState().keepsakes.pearl).toBe(1);
   });
 });

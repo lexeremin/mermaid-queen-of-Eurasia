@@ -4,6 +4,7 @@ import { currentWorld } from '@/game/world/current-map';
 import { nav } from '@/game/world/nav';
 import { useDungeonStore } from '@/store/dungeon-store';
 import type { Collider } from '@/systems/collision';
+import { createEnemy } from '@/systems/enemy-ai';
 
 const GATE_COLLIDER: Collider = UNDERGROUND.gate.box;
 
@@ -35,6 +36,33 @@ export function syncDungeonWorld(): void {
       e.deadFor = 999;
     }
   }
+}
+
+/** Every monster of the three halls (not the boss or his helpers). */
+export const hallMonsters = () =>
+  combat.enemies.filter((e) => e.instanced && e.kind !== 'boss' && !e.helper);
+
+export const hallsAreClear = (): boolean => hallMonsters().every((e) => e.state === 'dead');
+
+/**
+ * Rosa leaves and re-enters the underground: everything refills and the gate shuts again. (A beaten boss stays
+ * beaten and his gate stays open.)
+ */
+export function resetInstance(): void {
+  const { bossDefeated } = useDungeonStore.getState();
+  for (const e of combat.enemies) {
+    if (!e.instanced) continue;
+    if (e.kind === 'boss' || e.helper) {
+      if (bossDefeated) continue;
+      Object.assign(e, createEnemy(e.id, e.kind, e.spawn, { dormant: e.helper, instanced: true }));
+    } else {
+      Object.assign(e, createEnemy(e.id, e.kind, e.spawn, { instanced: true }));
+    }
+  }
+  combat.hazards = [];
+  combat.projectiles = [];
+  useDungeonStore.getState().closeGate();
+  syncDungeonWorld();
 }
 
 // A fresh game starts with the gate shut.

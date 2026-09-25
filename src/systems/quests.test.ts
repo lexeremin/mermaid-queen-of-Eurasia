@@ -20,9 +20,10 @@ import {
 const view = (over: Partial<WorldView> = {}): WorldView => ({
   level: 1,
   bag: emptyBag(),
+  keepsakes: {},
   joinedCount: 0,
   relationship: () => 0,
-  dungeon: { stampFound: false, gateOpen: false, bossDefeated: false },
+  dungeon: { hallsCleared: false, bossDefeated: false },
   ...over,
 });
 
@@ -211,27 +212,23 @@ describe('claiming', () => {
 
 describe('dungeon flag objectives', () => {
   it('are done only once the milestone is reached', () => {
-    const def = quest('the-registrars-stamp');
+    const def = quest('clear-the-halls');
     const progress = { counts: [0], visited: [] };
     expect(isReady(def, progress, view())).toBe(false);
     expect(
-      isReady(
-        def,
-        progress,
-        view({ dungeon: { stampFound: true, gateOpen: false, bossDefeated: false } }),
-      ),
+      isReady(def, progress, view({ dungeon: { hallsCleared: true, bossDefeated: false } })),
     ).toBe(true);
   });
 
   it('reads as a plain sentence in the tracker, not a count', () => {
-    const def = quest('tear-up-the-paperwork');
+    const def = quest('end-the-corruption');
     expect(trackerLine(def, { counts: [0], visited: [] }, view())).toContain(
-      'Defeat Lord Bumazhnik',
+      'Defeat the Father of Corruption',
     );
   });
 
   it('puts the underground quests at ranks the earlier quests can reach', () => {
     expect(quest('into-the-depths').minRank).toBeLessThanOrEqual(2);
-    expect(quest('tear-up-the-paperwork').minRank).toBeLessThanOrEqual(3);
+    expect(quest('end-the-corruption').minRank).toBeLessThanOrEqual(3);
   });
 });

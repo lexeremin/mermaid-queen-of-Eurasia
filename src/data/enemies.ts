@@ -133,10 +133,10 @@ export const ENEMIES: Readonly<Record<EnemyKind, EnemyDef>> = {
     markHeight: 4.6,
     headRadius: 0.36,
   },
-  // Lord Bumazhnik, the Great Registrar. His moves live in systems/boss.ts; these are the shared numbers.
+  // The Father of Corruption. His moves live in systems/boss.ts; these are the shared numbers.
   boss: {
     kind: 'boss',
-    name: 'Lord Bumazhnik',
+    name: 'Father of Corruption',
     weapon: 'colossal rubber stamp',
     asset: 'bossRegistrar',
     maxHp: 900,

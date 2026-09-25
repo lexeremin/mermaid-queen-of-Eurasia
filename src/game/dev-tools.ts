@@ -4,7 +4,7 @@ import { grantXp } from '@/game/progress-actions';
 import { gather } from '@/game/gather-sim';
 import { useGardenStore } from '@/store/garden-store';
 import { useDungeonStore } from '@/store/dungeon-store';
-import { goDown, goUp, openBossDoor } from '@/game/dungeon-actions';
+import { goDown, goUp } from '@/game/dungeon-actions';
 import { syncDungeonWorld } from '@/game/dungeon-sim';
 import { renderStats } from '@/game/render-stats';
 import { audioLog } from '@/audio/engine';
@@ -46,7 +46,6 @@ declare global {
       dungeon: typeof useDungeonStore;
       goDown: typeof goDown;
       goUp: typeof goUp;
-      openBossDoor: typeof openBossDoor;
       syncDungeonWorld: typeof syncDungeonWorld;
     };
   }
@@ -70,7 +69,6 @@ export function installDevTools(): void {
     dungeon: useDungeonStore,
     goDown,
     goUp,
-    openBossDoor,
     syncDungeonWorld,
     project(x, y, z) {
       const camera = (window as { __mqCamera?: Camera }).__mqCamera;

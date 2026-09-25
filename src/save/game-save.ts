@@ -55,8 +55,7 @@ export function collectSave(): SaveData {
       shrineGift: useGardenStore.getState().shrineGift,
     },
     dungeon: {
-      stampFound: useDungeonStore.getState().stampFound,
-      gateOpen: useDungeonStore.getState().gateOpen,
+      hallsCleared: useDungeonStore.getState().hallsCleared,
       bossDefeated: useDungeonStore.getState().bossDefeated,
       cachesTaken: [...useDungeonStore.getState().cachesTaken],
     },
@@ -83,6 +82,7 @@ function collectProgress(): SaveData['progress'] {
     xp: p.xp,
     awarded: [...p.awarded],
     bag: p.bag.map((s) => (s ? { ...s } : null)),
+    keepsakes: Object.fromEntries(Object.entries(p.keepsakes).map(([id, n]) => [id, n ?? 0])),
     equipment: { ...p.equipment },
   };
 }
@@ -103,6 +103,7 @@ export function applySave(save: SaveData): void {
     xp: save.progress.xp,
     awarded: [...save.progress.awarded],
     bag: save.progress.bag.map((s) => (s ? { ...s } : null)),
+    keepsakes: { ...save.progress.keepsakes },
     equipment: { ...save.progress.equipment },
   });
   useQuestStore

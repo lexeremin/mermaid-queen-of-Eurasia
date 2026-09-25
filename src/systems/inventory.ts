@@ -85,3 +85,81 @@ export function unequipToBag(bag: Bag, equipment: Equipment, slot: EquipSlot): E
   if (added.leftover > 0) return { ok: false, reason: 'bag-full' };
   return { ok: true, bag: added.bag, equipment: { ...equipment, [slot]: null } };
 }
+
+/** Quest items (keepsakes such as pearls) live outside the bag: they take no slot. */
+export type Keepsakes = Partial<Record<ItemId, number>>;
+export const MAX_KEEPSAKES = 999;
+
+export const isKeepsake = (id: ItemId): boolean => ITEMS[id].kind === 'keepsake';
+
+/** Everything Rosa carries: bag slots for ordinary items, a slot-free tally for quest items. */
+export type Stash = { bag: Bag; keepsakes: Keepsakes };
+
+export const emptyKeepsakes = (): Keepsakes => ({});
+
+export function addToStash(
+  stash: Stash,
+  id: ItemId,
+  qty = 1,
+): Stash & { added: number; leftover: number } {
+  if (!isKeepsake(id)) {
+    const result = addToBag(stash.bag, id, qty);
+    return {
+      bag: result.bag,
+      keepsakes: stash.keepsakes,
+      added: result.added,
+      leftover: result.leftover,
+    };
+  }
+  const have = stash.keepsakes[id] ?? 0;
+  const added = Math.max(0, Math.min(qty, MAX_KEEPSAKES - have));
+  return {
+    bag: stash.bag,
+    keepsakes: added > 0 ? { ...stash.keepsakes, [id]: have + added } : stash.keepsakes,
+    added,
+    leftover: qty - added,
+  };
+}
+
+/** Adds every item, or returns null (and changes nothing) if the bag cannot hold the ordinary ones. */
+export function addAllToStash(
+  stash: Stash,
+  items: readonly { id: ItemId; qty: number }[],
+): Stash | null {
+  let next = stash;
+  for (const item of items) {
+    const result = addToStash(next, item.id, item.qty);
+    if (result.leftover > 0) return null;
+    next = { bag: result.bag, keepsakes: result.keepsakes };
+  }
+  return next;
+}
+
+export const countInStash = (stash: Stash, id: ItemId): number =>
+  countOf(stash.bag, id) + (stash.keepsakes[id] ?? 0);
+
+/** Whether one more of this item can be picked up (quest items always can). */
+export const canTake = (stash: Stash, id: ItemId): boolean =>
+  isKeepsake(id) || hasSpaceFor(stash.bag, id);
+
+/** Removes `qty` of an item, quest tally first, then bag stacks. */
+export function removeFromStash(stash: Stash, id: ItemId, qty: number): Stash {
+  let left = qty;
+  let keepsakes = stash.keepsakes;
+  const tally = keepsakes[id] ?? 0;
+  if (tally > 0) {
+    const take = Math.min(tally, left);
+    keepsakes = { ...keepsakes, [id]: tally - take };
+    if (keepsakes[id] === 0) delete keepsakes[id];
+    left -= take;
+  }
+  let bag = stash.bag;
+  while (left > 0) {
+    const index = bag.findIndex((s) => s?.id === id);
+    if (index < 0) break;
+    const take = Math.min(left, bag[index]?.qty ?? 0);
+    bag = removeFromBag(bag, index, take).bag;
+    left -= take;
+  }
+  return { bag, keepsakes };
+}

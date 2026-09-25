@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Zone } from '@/systems/zones';
 
 export type HeroForm = 'human' | 'mermaid';
-export type PlaceId = 'board' | 'shrine' | 'metro-down' | 'metro-up' | 'boss-door';
+export type PlaceId = 'board' | 'shrine' | 'metro-down' | 'metro-up';
 export type QuestPanel = 'log' | 'board' | null;
 
 export type GameState = {

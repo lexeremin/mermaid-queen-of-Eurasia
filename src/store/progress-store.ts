@@ -1,14 +1,16 @@
 import { create } from 'zustand';
 import { STARTER_EQUIPMENT, type EquipSlot, type ItemId } from '@/data/items';
 import {
-  addToBag,
+  addToStash,
   emptyBag,
+  emptyKeepsakes,
   equipFromBag,
   removeFromBag,
   unequipToBag,
   type AddResult,
   type Bag,
   type EquipResult,
+  type Keepsakes,
 } from '@/systems/inventory';
 import { addXp, computeStats, type Equipment, type PlayerStats } from '@/systems/progression';
 
@@ -17,6 +19,8 @@ export type ProgressSnapshot = {
   xp: number;
   awarded: string[];
   bag: Bag;
+  /** Quest items (pearls...): counted, but they take no bag slot. */
+  keepsakes: Keepsakes;
   equipment: Equipment;
 };
 
@@ -27,6 +31,7 @@ export const defaultProgress = (): ProgressSnapshot => ({
   xp: 0,
   awarded: [],
   bag: emptyBag(),
+  keepsakes: emptyKeepsakes(),
   equipment: starterEquipment(),
 });
 
@@ -36,6 +41,7 @@ type ProgressState = ProgressSnapshot & {
   /** Awards `amount` XP once per `key`, ever. Returns false if already awarded. */
   award: (key: string, amount: number) => { awarded: boolean; levelsGained: number };
   setBag: (bag: Bag) => void;
+  setStash: (bag: Bag, keepsakes: Keepsakes) => void;
   addItem: (id: ItemId, qty?: number) => AddResult;
   removeAt: (index: number, qty?: number) => void;
   equip: (index: number) => EquipResult;
@@ -61,11 +67,13 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   },
 
   setBag: (bag) => set({ bag }),
+  setStash: (bag, keepsakes) => set({ bag, keepsakes }),
 
   addItem: (id, qty = 1) => {
-    const result = addToBag(get().bag, id, qty);
-    if (result.added > 0) set({ bag: result.bag });
-    return result;
+    const { bag, keepsakes } = get();
+    const result = addToStash({ bag, keepsakes }, id, qty);
+    if (result.added > 0) set({ bag: result.bag, keepsakes: result.keepsakes });
+    return { bag: result.bag, added: result.added, leftover: result.leftover };
   },
 
   removeAt: (index, qty = 1) => set({ bag: removeFromBag(get().bag, index, qty).bag }),

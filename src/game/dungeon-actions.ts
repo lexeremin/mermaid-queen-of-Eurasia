@@ -4,7 +4,7 @@ import { METRO } from '@/data/maps/red-square';
 import { UNDERGROUND, isUnderground } from '@/data/maps/underground';
 import { playSfx } from '@/audio/sfx';
 import { combat } from '@/game/combat-sim';
-import { gateIsShut, syncDungeonWorld } from '@/game/dungeon-sim';
+import { hallsAreClear, resetInstance, syncDungeonWorld } from '@/game/dungeon-sim';
 import { spawnPickup } from '@/game/loot-sim';
 import { awardOnce } from '@/game/progress-actions';
 import { sim } from '@/game/sim';
@@ -15,7 +15,7 @@ import { useGameStore } from '@/store/game-store';
 import { useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { resolveCircle } from '@/systems/collision';
-import { addToBag, countOf, firstIndexOf } from '@/systems/inventory';
+import { addAllToStash } from '@/systems/inventory';
 import { PLAYER_RADIUS } from '@/systems/movement';
 import { scatter } from '@/systems/pickups';
 import type { Vec2 } from '@/utils/vec2';
@@ -47,33 +47,14 @@ export function travelTo(dest: Vec2, arrivalToast?: string): void {
 }
 
 export function goDown(): void {
+  if (useGameStore.getState().transitioning) return;
+  resetInstance();
   track('underground_entered');
   travelTo(UNDERGROUND.arrival);
 }
 
 export function goUp(): void {
   travelTo(METRO.door);
-}
-
-/** The boss door: opens for good with the Registrar's Stamp, otherwise explains what is missing. */
-export function openBossDoor(): void {
-  const dungeon = useDungeonStore.getState();
-  if (dungeon.gateOpen || !gateIsShut()) {
-    toast('The gate stands open', 'info');
-    return;
-  }
-  const progress = useProgressStore.getState();
-  const index = firstIndexOf(progress.bag, 'registrarStamp');
-  if (index < 0) {
-    toast("The ruby seal wants the Registrar's Stamp. The Chief Registrar keeps it.", 'warn');
-    return;
-  }
-  progress.removeAt(index);
-  dungeon.openGate();
-  syncDungeonWorld();
-  playSfx('wave');
-  toast('The stamp turns in the lock. The gate opens for good.', 'info');
-  track('gate_opened');
 }
 
 /** Chests open when Rosa walks up to them (once ever). If the bag cannot hold the loot they stay closed. */
@@ -86,18 +67,13 @@ export function stepChests(pos: Vec2): void {
     if (Math.hypot(chest.x - pos.x, chest.z - pos.z) > CHEST_REACH) continue;
     const loot = CHEST_LOOT[chest.id];
     if (!loot) continue;
-    let bag = useProgressStore.getState().bag;
-    let fits = true;
-    for (const item of loot.items) {
-      const added = addToBag(bag, item.id, item.qty);
-      if (added.leftover > 0) fits = false;
-      bag = added.bag;
-    }
-    if (!fits) {
+    const { bag, keepsakes } = useProgressStore.getState();
+    const next = addAllToStash({ bag, keepsakes }, loot.items);
+    if (!next) {
       warnFull();
       continue;
     }
-    useProgressStore.getState().setBag(bag);
+    useProgressStore.getState().setStash(next.bag, next.keepsakes);
     useDungeonStore.getState().takeCache(chest.id);
     playSfx('gather');
     toast(`Opened the ${loot.label}`, 'info');
@@ -115,18 +91,16 @@ function warnFull(): void {
   toast('Make room in your bag for the chest', 'warn');
 }
 
-/** The Chief Registrar always carries the stamp (until Rosa has it). */
-export function onRegistrarDefeated(at: Vec2): void {
+/** Once every monster of the halls is down, the boss gate opens by itself (until Rosa re-enters). */
+export function stepGate(pos: Vec2): void {
   const dungeon = useDungeonStore.getState();
-  if (dungeon.stampFound || dungeon.gateOpen) return;
-  if (countOf(useProgressStore.getState().bag, 'registrarStamp') > 0) return;
-  spawnPickup('registrarStamp', { x: at.x, z: at.z + 0.6 });
-  toast("The Chief Registrar drops the Registrar's Stamp", 'item');
-}
-
-/** Called when an item enters the bag: the stamp is a milestone for the quests. */
-export function onItemCollected(item: string): void {
-  if (item === 'registrarStamp') useDungeonStore.getState().findStamp();
+  if (dungeon.gateOpen || !isUnderground(pos) || !hallsAreClear()) return;
+  dungeon.clearHalls();
+  dungeon.openGate();
+  syncDungeonWorld();
+  playSfx('wave');
+  toast('The halls are silent. The gate to the Vault opens.', 'info');
+  track('gate_opened');
 }
 
 export const BOSS_REWARD = { pearls: 5, charm: 'registrarSeal' } as const;
@@ -136,7 +110,7 @@ export function onBossDefeated(at: Vec2): void {
   const dungeon = useDungeonStore.getState();
   if (dungeon.bossDefeated) return;
   dungeon.defeatBoss();
-  useToastStore.getState().announce('LORD BUMAZHNIK IS FILED UNDER "DEFEATED"');
+  useToastStore.getState().announce('THE FATHER OF CORRUPTION IS NO MORE');
   const spots = scatter(at, BOSS_REWARD.pearls + 1, Math.random);
   for (let i = 0; i < BOSS_REWARD.pearls; i++) {
     const spot = spots[i];

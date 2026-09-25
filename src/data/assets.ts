@@ -90,7 +90,6 @@ export const ASSETS = {
   ugColumn: { url: '/assets/prop/prop_ug_column.glb', clips: [], footprint: [circle(0.75)] },
   ugGate: { url: '/assets/bld/bld_ug_gate.glb', clips: [] },
   ugStairs: { url: '/assets/bld/bld_ug_stairs.glb', clips: [] },
-  chandelier: { url: '/assets/prop/prop_chandelier.glb', clips: [] },
   paperStack: { url: '/assets/prop/prop_paper_stack.glb', clips: [], footprint: [circle(0.6)] },
   metroEntrance: {
     url: '/assets/bld/bld_metro_entrance.glb',

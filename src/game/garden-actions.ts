@@ -9,7 +9,7 @@ import { useGardenStore } from '@/store/garden-store';
 import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { stepGathering, type GatherNode } from '@/systems/gathering';
-import { addToBag } from '@/systems/inventory';
+import { addAllToStash } from '@/systems/inventory';
 
 const toast = (text: string, kind: 'xp' | 'item' | 'warn' | 'info' = 'info') =>
   useToastStore.getState().push(text, kind);
@@ -56,16 +56,13 @@ export function stepGather(dt: number, playerPos: { x: number; z: number }): voi
 export function prayAtShrine(): void {
   const garden = useGardenStore.getState();
   if (!garden.shrineGift) {
-    let bag = useProgressStore.getState().bag;
-    for (const gift of SHRINE_GIFT) {
-      const added = addToBag(bag, gift.id, gift.qty);
-      if (added.leftover > 0) {
-        toast('Make room in your bag for the shrine’s gift', 'warn');
-        return;
-      }
-      bag = added.bag;
+    const { bag, keepsakes } = useProgressStore.getState();
+    const next = addAllToStash({ bag, keepsakes }, SHRINE_GIFT);
+    if (!next) {
+      toast('Make room in your bag for the shrine’s gift', 'warn');
+      return;
     }
-    useProgressStore.getState().setBag(bag);
+    useProgressStore.getState().setStash(next.bag, next.keepsakes);
     garden.giveShrineGift();
     toast('The shrine gives you the Pearl Trident', 'item');
     playSfx('wave');

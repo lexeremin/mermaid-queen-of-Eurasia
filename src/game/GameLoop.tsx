@@ -7,29 +7,22 @@ import { combat } from '@/game/combat-sim';
 import { loot, spawnDrops } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
 import { prayAtShrine, stepGather } from '@/game/garden-actions';
-import {
-  goDown,
-  goUp,
-  onBossDefeated,
-  onItemCollected,
-  onRegistrarDefeated,
-  openBossDoor,
-  stepChests,
-} from '@/game/dungeon-actions';
-import { gateIsShut } from '@/game/dungeon-sim';
+import { goDown, goUp, onBossDefeated, stepChests, stepGate } from '@/game/dungeon-actions';
 import { METRO } from '@/data/maps/red-square';
 import { onEnemyDefeatedForQuests } from '@/game/quest-actions';
 import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { ITEMS } from '@/data/items';
 import { XP_REWARDS } from '@/systems/progression';
-import { hasSpaceFor } from '@/systems/inventory';
+import { canTake } from '@/systems/inventory';
 import { stepPickups } from '@/systems/pickups';
 import { MAX_STEPS_PER_FRAME, SIM_STEP, sim } from '@/game/sim';
 import { track } from '@/net/stats';
 import { useCombatStore } from '@/store/combat-store';
 import { ENEMIES } from '@/data/enemies';
 import { stepCombat, type CombatEvent } from '@/systems/combat';
+import { TELEPORT } from '@/systems/abilities';
+import { pickTeleportDestination } from '@/systems/teleport';
 import { nav } from '@/game/world/nav';
 import { clearPressed, consumePressed, getMove, input } from '@/input/input-state';
 import { useDialogueStore } from '@/store/dialogue-store';
@@ -67,21 +60,18 @@ const PLACES: { id: PlaceId; x: number; z: number }[] = [
     const id = PLACE_OF_ASSET.get(p.asset);
     return id ? [{ id, x: p.x, z: p.z }] : [];
   }),
-  // The metro pavilion on Manezhnaya Square, the stairs up in the Ticket Hall and the boss gate.
+  // The metro pavilion on Manezhnaya Square and the stairs up in the Ticket Hall.
   { id: 'metro-down', x: METRO.door.x, z: METRO.door.z },
   { id: 'metro-up', x: UNDERGROUND.stairs.x, z: UNDERGROUND.stairs.z - 2.4 },
-  { id: 'boss-door', x: UNDERGROUND.gate.x, z: UNDERGROUND.gate.z + 2.4 },
 ];
 
-/** The places that can be used right now (the boss door only while the gate is shut). */
-const activePlaces = () => (gateIsShut() ? PLACES : PLACES.filter((p) => p.id !== 'boss-door'));
+const activePlaces = () => PLACES;
 
 export function visitPlace(id: string): void {
   if (id === 'board') useGameStore.getState().openQuestPanel('board');
   else if (id === 'shrine') prayAtShrine();
   else if (id === 'metro-down') goDown();
   else if (id === 'metro-up') goUp();
-  else if (id === 'boss-door') openBossDoor();
 }
 const NPC_TARGETS = currentMap.npcs.map((n) => ({ id: n.id, pos: { x: n.x, z: n.z } }));
 const STUCK_SPEED_FRACTION = 0.25;
@@ -90,6 +80,25 @@ function groundPoint(camera: Camera, click: { x: number; y: number }): Vec2 | nu
   ndc.set(click.x, click.y);
   raycaster.setFromCamera(ndc, camera);
   return raycaster.ray.intersectPlane(GROUND, hit) ? { x: hit.x, z: hit.z } : null;
+}
+
+/** Where the blink is aimed: the mouse cursor on the ground, else the way Rosa is moving or facing. */
+let aimPoint: Vec2 | null = null;
+
+function resolveBlink(from: Vec2, move: Vec2): Vec2 | null {
+  const aim =
+    aimPoint ??
+    (() => {
+      const dir = isZero(move) ? sim.curr.facing : move;
+      const len = Math.hypot(dir.x, dir.z) || 1;
+      return {
+        x: from.x + (dir.x / len) * TELEPORT.range,
+        z: from.z + (dir.z / len) * TELEPORT.range,
+      };
+    })();
+  return pickTeleportDestination(from, aim, TELEPORT.range, currentWorld, (to) =>
+    nav.sameRegion(from, to),
+  );
 }
 
 export function walkTo(target: Vec2): boolean {
@@ -103,7 +112,6 @@ function tryCollect(item: (typeof ITEMS)[keyof typeof ITEMS]['id']): boolean {
   const result = useProgressStore.getState().addItem(item);
   if (result.added === 0) return false;
   useToastStore.getState().push(`Picked up ${ITEMS[item].name}`, 'item');
-  onItemCollected(item);
   return true;
 }
 
@@ -122,13 +130,14 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       grantXp(XP_REWARDS.enemy[event.kind], ENEMIES[event.kind].name);
       onEnemyDefeatedForQuests(event.kind);
       spawnDrops(event.kind, { x: event.x, z: event.z });
-      if (event.kind === 'registrar') onRegistrarDefeated({ x: event.x, z: event.z });
       if (event.kind === 'boss') onBossDefeated({ x: event.x, z: event.z });
     } else if (event.type === 'bossPhase') {
       useToastStore
         .getState()
         .push(
-          event.phase === 2 ? 'Bumazhnik calls for backup!' : 'Form 27-B: he is furious!',
+          event.phase === 2
+            ? 'The Father of Corruption calls for backup!'
+            : 'Form 27-B: he is furious!',
           'warn',
         );
     } else if (event.type === 'bossSummon') {
@@ -138,6 +147,7 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       else if (event.ability === 'dash') playSfx('bubbles');
       else if (event.ability === 'spell') playSfx('wave');
       else if (event.ability === 'aura') playAuraSong();
+      else if (event.ability === 'teleport') playSfx('bubbles');
     } else if (event.type === 'enemyHit') {
       playSfx('hit');
     } else if (event.type === 'playerDowned') {
@@ -226,6 +236,7 @@ export function GameLoop() {
       sim.talkTo = null;
     }
 
+    aimPoint = input.pointer ? groundPoint(state.camera, input.pointer) : null;
     const stats = currentStats();
     sim.alpha = stepper.advance(delta, (dt) => {
       let move = getMove(input);
@@ -239,13 +250,22 @@ export function GameLoop() {
           dash: input.pressed.dash,
           aura: input.pressed.aura,
           spell: input.pressed.spell,
+          teleport: input.pressed.teleport,
         },
+        resolveTeleport: (from) => resolveBlink(from, move),
         npcs: followingId ? NPC_TARGETS.filter((n) => n.id !== followingId) : NPC_TARGETS,
         world: currentWorld,
         arena: ARENA,
         stats,
         companion: followingId ? { id: followingId } : null,
       });
+      if (frame.teleportTo) {
+        const pos = frame.teleportTo;
+        sim.prev = { ...sim.curr, pos };
+        sim.curr = { ...sim.curr, pos };
+        sim.path = [];
+        sim.talkTo = null;
+      }
       if (frame.cancelWalk) {
         sim.path = [];
         sim.talkTo = null;
@@ -278,8 +298,9 @@ export function GameLoop() {
       }
       stepGather(dt, sim.curr.pos);
       stepChests(sim.curr.pos);
+      stepGate(sim.curr.pos);
       const picked = stepPickups(loot.pickups, sim.curr.pos, dt, tryCollect, (item) =>
-        hasSpaceFor(useProgressStore.getState().bag, item),
+        canTake(useProgressStore.getState(), item),
       );
       loot.pickups = picked.pickups;
       if (picked.blocked.length > 0) warnBagFull();

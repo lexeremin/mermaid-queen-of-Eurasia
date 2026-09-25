@@ -4,7 +4,7 @@ import { resolveCircle, type CollisionWorld } from '@/systems/collision';
 import type { HazardSpec } from '@/systems/hazards';
 import type { Vec2 } from '@/utils/vec2';
 
-/** Lord Bumazhnik's moves (numbers from docs/phases/phase-16.md). */
+/** Father of Corruption's moves (numbers from docs/phases/phase-16.md). */
 export const BOSS = {
   phase2At: 0.6,
   phase3At: 0.3,

@@ -6,7 +6,7 @@ import { RosaModel } from '@/game/entities/RosaModel';
 import { combat } from '@/game/combat-sim';
 import { getRenderPosition, sim } from '@/game/sim';
 import { useGameStore } from '@/store/game-store';
-import { DASH } from '@/systems/abilities';
+import { DASH, TELEPORT } from '@/systems/abilities';
 
 const position = { x: 0, z: 0 };
 
@@ -15,6 +15,11 @@ export function dashScale(t: number): number {
   if (t < 0.3) return Math.max(0.001, 1 - t / 0.3);
   if (t <= 0.7) return 0.001;
   return Math.min(1.12, ((t - 0.7) / 0.3) * 1.12 + 0.001);
+}
+
+/** Body scale after a blink: she pops back in a little oversize and settles. */
+export function blinkScale(t: number): number {
+  return Math.min(1.15, 0.05 + t * 1.3 + Math.sin(Math.min(1, t) * Math.PI) * 0.1);
 }
 
 export function Player() {
@@ -32,7 +37,11 @@ export function Player() {
     const mermaidNow = combat.mermaid > 0;
     if (mermaidNow !== singing) setSinging(mermaidNow);
     if (body.current) {
-      const s = combat.dash.active ? dashScale(combat.dash.t / DASH.duration) : 1;
+      const s = combat.dash.active
+        ? dashScale(combat.dash.t / DASH.duration)
+        : combat.blink > 0
+          ? blinkScale(1 - combat.blink / TELEPORT.pop)
+          : 1;
       body.current.scale.setScalar(s);
     }
   });

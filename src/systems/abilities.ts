@@ -1,4 +1,4 @@
-export type AbilityId = 'attack' | 'dash' | 'aura' | 'spell';
+export type AbilityId = 'attack' | 'dash' | 'aura' | 'spell' | 'teleport';
 
 export type AbilityDef = { cooldown: number; mana: number };
 
@@ -7,6 +7,7 @@ export const ABILITIES: Readonly<Record<AbilityId, AbilityDef>> = {
   dash: { cooldown: 1.4, mana: 0 },
   aura: { cooldown: 8, mana: 30 },
   spell: { cooldown: 7, mana: 35 },
+  teleport: { cooldown: 6, mana: 20 },
 };
 
 export const MAX_HP = 100;
@@ -29,6 +30,8 @@ export const AIM_ASSIST = {
   closeRange: 3.6,
 } as const;
 export const DASH = { distance: 4.4, duration: 0.2, invuln: 0.28 } as const;
+/** Instant blink to the cursor (or straight ahead), like the Wizard's Teleport: over walls, never into another region. */
+export const TELEPORT = { range: 14, invuln: 0.35, pop: 0.3 } as const;
 export const AURA = {
   duration: 2.4,
   maxRadius: 8,
@@ -52,7 +55,13 @@ export const SWING_TIME = 0.34;
 
 export type Cooldowns = Record<AbilityId, number>;
 
-export const createCooldowns = (): Cooldowns => ({ attack: 0, dash: 0, aura: 0, spell: 0 });
+export const createCooldowns = (): Cooldowns => ({
+  attack: 0,
+  dash: 0,
+  aura: 0,
+  spell: 0,
+  teleport: 0,
+});
 
 export const tickCooldowns = (cooldowns: Cooldowns, dt: number): void => {
   for (const id of Object.keys(cooldowns) as AbilityId[])

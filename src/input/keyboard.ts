@@ -16,6 +16,7 @@ const ACTION_CODES: Readonly<Record<string, Action>> = {
   ShiftRight: 'dash',
   KeyQ: 'aura',
   KeyR: 'spell',
+  KeyT: 'teleport',
   KeyE: 'interact',
 };
 
@@ -90,6 +91,17 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
       touch,
     };
   };
+  const onPointerMove = (e: PointerEvent) => {
+    if (e.pointerType !== 'mouse' || !(e.target instanceof HTMLCanvasElement)) {
+      if (e.pointerType !== 'mouse') input.pointer = null;
+      return;
+    }
+    const rect = e.target.getBoundingClientRect();
+    input.pointer = {
+      x: ((e.clientX - rect.left) / rect.width) * 2 - 1,
+      y: -((e.clientY - rect.top) / rect.height) * 2 + 1,
+    };
+  };
   const onPointerUp = (e: PointerEvent) => {
     if (e.pointerType === 'mouse' && e.button === 2) setHeld(input, 'attack', false);
   };
@@ -104,6 +116,7 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('keyup', onKeyUp);
   window.addEventListener('pointerdown', onPointerDown);
+  window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('contextmenu', onContextMenu);
   window.addEventListener('blur', onBlur);
@@ -112,6 +125,7 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
     window.removeEventListener('keydown', onKeyDown);
     window.removeEventListener('keyup', onKeyUp);
     window.removeEventListener('pointerdown', onPointerDown);
+    window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
     window.removeEventListener('contextmenu', onContextMenu);
     window.removeEventListener('blur', onBlur);

@@ -44,8 +44,11 @@ describe('consumables', () => {
 
   it('does not consume equipment or keepsakes', () => {
     useProgressStore.getState().addItem('pearl');
+    expect(useProgressStore.getState().bag.every((s) => s === null || s.id !== 'pearl')).toBe(true);
+    expect(useProgressStore.getState().keepsakes.pearl).toBe(1);
+    // Equipment in the bag is not consumed either.
+    useProgressStore.getState().addItem('silverTrident');
     expect(consumeAt(0)).toBe('blocked');
-    expect(countOf(useProgressStore.getState().bag, 'pearl')).toBe(1);
   });
 });
 

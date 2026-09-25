@@ -282,17 +282,8 @@ export function buildUnderground(): UndergroundLevel {
   ];
   for (const s of columnSpots) placements.push({ asset: 'ugColumn', x: s.x, z: s.z });
 
-  // Chandeliers hang over the rooms (each also carries a warm light) and stacks of forms clutter the edges.
+  // Warm light pools over the rooms (no fixtures: nothing hangs from the ceiling) and stacks of forms clutter the edges.
   const c = centers;
-  const chandeliers: Vec2[] = [
-    c[HALL.id]!,
-    c[CELLAR.id]!,
-    c[ARENA.id]!,
-    { x: mid - 9, z: c[PLATFORM.id]!.z },
-    { x: mid + 9, z: c[PLATFORM.id]!.z },
-  ];
-  for (const s of chandeliers)
-    placements.push({ asset: 'chandelier', x: s.x, z: s.z, collide: false });
   const lights: UndergroundLevel['lights'] = [
     { x: c[HALL.id]!.x, y: 3.4, z: c[HALL.id]!.z, color: '#ffc98a', intensity: 90, distance: 26 },
     { x: mid, y: 3.4, z: c[PLATFORM.id]!.z, color: '#ffb877', intensity: 110, distance: 30 },
@@ -390,7 +381,7 @@ export function buildUnderground(): UndergroundLevel {
     placements,
     colliders,
     floors,
-    enemies,
+    enemies: enemies.map((e) => ({ ...e, instanced: true })),
     chests,
     lights,
     zones,

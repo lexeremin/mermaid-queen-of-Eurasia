@@ -3,11 +3,11 @@ import { NPCS } from '@/data/npcs';
 import { QUEST_BY_ID } from '@/data/quests';
 import { RED_SQUARE } from '@/data/maps/red-square';
 import { ITEMS, STARTER_EQUIPMENT, isItemId, type EquipSlot, type ItemId } from '@/data/items';
-import { BAG_SIZE } from '@/systems/inventory';
+import { BAG_SIZE, MAX_KEEPSAKES, isKeepsake } from '@/systems/inventory';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 export type SavedNpc = {
   relationship: number;
@@ -21,6 +21,8 @@ export type SavedProgress = {
   xp: number;
   awarded: string[];
   bag: ({ id: ItemId; qty: number } | null)[];
+  /** Quest items, which take no bag slot. */
+  keepsakes: Record<string, number>;
   equipment: Record<EquipSlot, ItemId | null>;
 };
 
@@ -32,8 +34,7 @@ export type SavedQuests = {
 export type SavedGarden = { pearlsTaken: string[]; shrineGift: boolean };
 
 export type SavedDungeon = {
-  stampFound: boolean;
-  gateOpen: boolean;
+  hallsCleared: boolean;
   bossDefeated: boolean;
   cachesTaken: string[];
 };
@@ -59,13 +60,39 @@ export const MIGRATIONS: Migrations = {
   2: (data) => ({ ...data, quests: defaultSavedQuests() }),
   3: (data) => ({ ...data, garden: defaultSavedGarden() }),
   4: (data) => ({ ...data, dungeon: defaultSavedDungeon() }),
+  // v6: the boss gate opens when the halls are cleared (no stamp), and two quests were renamed.
+  5: (data) => {
+    const d = isRecord(data.dungeon) ? data.dungeon : {};
+    const renamed: Record<string, string> = {
+      'the-registrars-stamp': 'clear-the-halls',
+      'tear-up-the-paperwork': 'end-the-corruption',
+    };
+    const rename = (id: string) => renamed[id] ?? id;
+    const q = isRecord(data.quests) ? data.quests : {};
+    const quests = {
+      completed: Array.isArray(q.completed)
+        ? q.completed.map((id) => (typeof id === 'string' ? rename(id) : id))
+        : [],
+      active: isRecord(q.active)
+        ? Object.fromEntries(Object.entries(q.active).map(([id, v]) => [rename(id), v]))
+        : {},
+    };
+    return {
+      ...data,
+      quests,
+      dungeon: {
+        hallsCleared: d.stampFound === true || d.gateOpen === true || d.bossDefeated === true,
+        bossDefeated: d.bossDefeated === true,
+        cachesTaken: d.cachesTaken,
+      },
+    };
+  },
 };
 
 export const defaultSavedGarden = (): SavedGarden => ({ pearlsTaken: [], shrineGift: false });
 
 export const defaultSavedDungeon = (): SavedDungeon => ({
-  stampFound: false,
-  gateOpen: false,
+  hallsCleared: false,
   bossDefeated: false,
   cachesTaken: [],
 });
@@ -77,6 +104,7 @@ export const defaultSavedProgress = (): SavedProgress => ({
   xp: 0,
   awarded: [],
   bag: Array.from({ length: BAG_SIZE }, () => null),
+  keepsakes: {},
   equipment: { ...STARTER_EQUIPMENT },
 });
 
@@ -127,13 +155,25 @@ function parseProgress(raw: unknown): SavedProgress {
     : [];
 
   const bag = fallback.bag;
+  const keepsakes: Record<string, number> = {};
+  const addKeepsake = (id: ItemId, qty: number) => {
+    keepsakes[id] = Math.min(MAX_KEEPSAKES, (keepsakes[id] ?? 0) + qty);
+  };
+  if (isRecord(raw.keepsakes)) {
+    for (const [id, qty] of Object.entries(raw.keepsakes)) {
+      if (isItemId(id) && isKeepsake(id)) addKeepsake(id, Math.max(0, Math.floor(finite(qty, 0))));
+    }
+  }
   if (Array.isArray(raw.bag)) {
     raw.bag.slice(0, BAG_SIZE).forEach((entry, i) => {
       if (!isRecord(entry) || !isItemId(entry.id)) return;
       const qty = Math.min(ITEMS[entry.id].stack, Math.max(1, Math.floor(finite(entry.qty, 1))));
-      bag[i] = { id: entry.id, qty };
+      // Older saves kept quest items in the bag: move them to the slot-free tally.
+      if (isKeepsake(entry.id)) addKeepsake(entry.id, qty);
+      else bag[i] = { id: entry.id, qty };
     });
   }
+  for (const id of Object.keys(keepsakes)) if (!keepsakes[id]) delete keepsakes[id];
 
   const equipment = { ...fallback.equipment };
   if (isRecord(raw.equipment)) {
@@ -146,7 +186,7 @@ function parseProgress(raw: unknown): SavedProgress {
       }
     }
   }
-  return { level, xp, awarded, bag, equipment };
+  return { level, xp, awarded, bag, keepsakes, equipment };
 }
 
 const PEARL_IDS: ReadonlySet<string> = new Set(
@@ -173,9 +213,8 @@ function parseDungeon(raw: unknown): SavedDungeon {
   const result = defaultSavedDungeon();
   if (!isRecord(raw)) return result;
   result.bossDefeated = raw.bossDefeated === true;
-  // Beating the boss implies the gate was opened and the stamp was found.
-  result.gateOpen = raw.gateOpen === true || result.bossDefeated;
-  result.stampFound = raw.stampFound === true || result.gateOpen;
+  // Beating the boss implies the halls were cleared.
+  result.hallsCleared = raw.hallsCleared === true || result.bossDefeated;
   if (Array.isArray(raw.cachesTaken)) {
     result.cachesTaken = [
       ...new Set(

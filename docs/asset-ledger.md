@@ -68,10 +68,9 @@ Columns: file, source, licence, commercial use OK, notes.
 | `prop_ug_column.glb` | Procedural, `tools/blender/build_underground_assets.py` (`build_ug_column`), 2026-09-25 | Original work, project licence | yes | Palace-hall column with gold rings. |
 | `bld_ug_gate.glb` | Procedural, `tools/blender/build_underground_assets.py` (`build_ug_gate`), 2026-09-25 | Original work, project licence | yes | Boss gate for a 4 m corridor: heavy doors with a ruby seal. |
 | `bld_ug_stairs.glb` | Procedural, `tools/blender/build_underground_assets.py` (`build_ug_stairs`), 2026-09-25 | Original work, project licence | yes | The way up, in the first underground hall. |
-| `prop_chandelier.glb` | Procedural, `tools/blender/build_underground_assets.py` (`build_chandelier`), 2026-09-25 | Original work, project licence | yes | Hanging chandelier (flat candle colours, no real light). |
 | `prop_paper_stack.glb` | Procedural, `tools/blender/build_underground_assets.py` (`build_paper_stack`), 2026-09-25 | Original work, project licence | yes | Leaning stack of forms and ledgers. |
 | `bld_metro_entrance.glb` | Procedural, `tools/blender/build_underground_assets.py` (`build_metro_entrance`), 2026-09-25 | Original work, project licence | yes | Surface pavilion over the stairs down: teal roof, dark arch, lanterns. |
-| `boss_registrar.glb` | Procedural, `tools/blender/build_underground_assets.py` (`build_boss_registrar`), 2026-09-25 | Original work, project licence | yes | Lord Bumazhnik, the Great Registrar: original satirical golem of ledgers with a monocle, a crown of rubber stamps and a giant stamp for a fist; deliberately resembles no real person. Rigid-part rig, clip `idle`. |
+| `boss_registrar.glb` | Procedural, `tools/blender/build_underground_assets.py` (`build_boss_registrar`), 2026-09-25 | Original work, project licence | yes | Father of Corruption: original satirical golem of ledgers with a monocle, a crown of rubber stamps and a giant stamp for a fist; deliberately resembles no real person. Rigid-part rig, clip `idle`. |
 
 
 ## Third-party / generated sources

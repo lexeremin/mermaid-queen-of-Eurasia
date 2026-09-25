@@ -16,6 +16,7 @@ const SLOTS: { id: AbilityId; key: string; label: string }[] = [
   { id: 'dash', key: 'Shift', label: 'Dash' },
   { id: 'aura', key: 'Q', label: 'Aura' },
   { id: 'spell', key: 'R', label: 'Surge' },
+  { id: 'teleport', key: 'T', label: 'Blink' },
 ];
 
 /** Vertical sweep that shrinks as the cooldown ends. Updated every frame without re-rendering. */
@@ -69,7 +70,7 @@ function BossBar() {
         if (show && fill.current && name.current) {
           fill.current.style.width = `${Math.max(0, (boss.hp / ENEMIES.boss.maxHp) * 100)}%`;
           const phase = boss.brain?.phase ?? 1;
-          name.current.textContent = `${ENEMIES.boss.name}, the Great Registrar${phase > 1 ? ' · ' + (phase === 3 ? 'FURIOUS' : 'ANGRY') : ''}`;
+          name.current.textContent = `${ENEMIES.boss.name}${phase > 1 ? ' · ' + (phase === 3 ? 'FURIOUS' : 'ANGRY') : ''}`;
         }
       }
       raf = requestAnimationFrame(tick);

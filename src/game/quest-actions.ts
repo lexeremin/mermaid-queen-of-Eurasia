@@ -25,17 +25,17 @@ const toast = (text: string, kind: 'xp' | 'item' | 'warn' | 'info' = 'info') =>
   useToastStore.getState().push(text, kind);
 
 export function worldView(): WorldView {
-  const { level, bag } = useProgressStore.getState();
+  const { level, bag, keepsakes } = useProgressStore.getState();
   const npcs = useNpcStore.getState().npcs;
   const dungeon = useDungeonStore.getState();
   return {
     level,
     bag,
+    keepsakes,
     joinedCount: Object.values(npcs).filter((n) => n.joined).length,
     relationship: (id) => npcs[id]?.relationship ?? 0,
     dungeon: {
-      stampFound: dungeon.stampFound,
-      gateOpen: dungeon.gateOpen,
+      hallsCleared: dungeon.hallsCleared,
       bossDefeated: dungeon.bossDefeated,
     },
   };
@@ -65,7 +65,7 @@ export function claimQuestAction(id: string): boolean {
       toast('Bag too full for the reward', 'warn');
     return false;
   }
-  useProgressStore.getState().setBag(result.bag);
+  useProgressStore.getState().setStash(result.bag, result.keepsakes);
   setLog(result.log);
   toast(`Quest complete: ${def.title}`, 'info');
   for (const item of def.reward.items ?? []) toast(`Received ${ITEMS[item.id].name}`, 'item');

@@ -31,7 +31,7 @@ export function CameraRig() {
     lookAtTarget.set(player.x, 0, player.z);
 
     // A teleport (metro, stairs) snaps the camera instead of gliding across the map.
-    if (Math.hypot(player.x - lastPlayer.current.x, player.z - lastPlayer.current.z) > 12) {
+    if (Math.hypot(player.x - lastPlayer.current.x, player.z - lastPlayer.current.z) > 20) {
       initialized.current = false;
     }
     lastPlayer.current.x = player.x;

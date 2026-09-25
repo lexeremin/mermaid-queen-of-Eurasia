@@ -10,6 +10,7 @@ import {
   MAX_MANA,
   SPELL,
   SWING_TIME,
+  TELEPORT,
   TRIDENT,
   canUse,
   createCooldowns,
@@ -87,6 +88,8 @@ export type CombatState = {
   companion: Companion | null;
   /** Seconds left of the trident swing animation. */
   swing: number;
+  /** Seconds left of the pop-in after a teleport (0 when not blinking). */
+  blink: number;
   /** Seconds left of the temporary mermaid look (Aura song, Tide Surge). */
   mermaid: number;
   /** NPC id -> time (sim seconds) until which the NPC is charmed by the Aura. */
@@ -95,7 +98,14 @@ export type CombatState = {
   nextId: number;
 };
 
-export type SpawnPoint = { id: string; kind: EnemyKind; x: number; z: number; dormant?: boolean };
+export type SpawnPoint = {
+  id: string;
+  kind: EnemyKind;
+  x: number;
+  z: number;
+  dormant?: boolean;
+  instanced?: boolean;
+};
 
 export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatState {
   return {
@@ -111,13 +121,14 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     dash: { active: false, t: 0, dir: { x: 0, z: 1 } },
     aura: { active: false, t: 0, hit: new Set() },
     enemies: spawns.map((s) =>
-      createEnemy(s.id, s.kind, { x: s.x, z: s.z }, { dormant: s.dormant }),
+      createEnemy(s.id, s.kind, { x: s.x, z: s.z }, { dormant: s.dormant, instanced: s.instanced }),
     ),
     projectiles: [],
     hazards: [],
     effects: [],
     companion: null,
     swing: 0,
+    blink: 0,
     mermaid: 0,
     charmed: {},
     kills: 0,
@@ -125,7 +136,13 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
   };
 }
 
-export type CombatActions = { attack: boolean; dash: boolean; aura: boolean; spell: boolean };
+export type CombatActions = {
+  attack: boolean;
+  dash: boolean;
+  aura: boolean;
+  spell: boolean;
+  teleport?: boolean;
+};
 
 export type CombatParams = {
   dt: number;
@@ -141,6 +158,8 @@ export type CombatParams = {
   companion?: { id: string } | null;
   /** The boss arena; the boss only fights while Rosa is inside. */
   arena?: Box | null;
+  /** Where a blink from here would land (null: nowhere, so it is not cast). Supplied by the game loop. */
+  resolveTeleport?: (from: Vec2) => Vec2 | null;
 };
 
 export type CombatFrame = {
@@ -149,6 +168,8 @@ export type CombatFrame = {
   moveScale: number;
   faceOverride: Vec2 | null;
   cancelWalk: boolean;
+  /** Rosa blinks here this step. */
+  teleportTo: Vec2 | null;
   events: CombatEvent[];
 };
 
@@ -245,6 +266,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     moveScale: 1,
     faceOverride: null,
     cancelWalk: false,
+    teleportTo: null,
     events,
   };
 
@@ -253,6 +275,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   s.hurtFlash = Math.max(0, s.hurtFlash - dt * 2.5);
   s.attackLock = Math.max(0, s.attackLock - dt);
   s.swing = Math.max(0, s.swing - dt);
+  s.blink = Math.max(0, s.blink - dt);
   s.mermaid = Math.max(0, s.mermaid - dt);
   s.sinceHurt += dt;
   tickCooldowns(s.cooldowns, dt);
@@ -278,6 +301,24 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       s.invuln = Math.max(s.invuln, DASH.invuln);
       pushEffect(s, 'bubbles', playerPos.x, playerPos.z, dir, 0.8, 1);
       frame.cancelWalk = true;
+    }
+
+    if (p.actions.teleport && canUse(s.cooldowns, s.mana, 'teleport')) {
+      const dest = p.resolveTeleport?.(playerPos) ?? null;
+      if (dest) {
+        s.mana = spendAbility(s.cooldowns, s.mana, 'teleport') ?? s.mana;
+        events.push({ type: 'cast', ability: 'teleport' });
+        const dir = directionTo(playerPos, dest);
+        pushEffect(s, 'bubbles', playerPos.x, playerPos.z, dir, 0.8, 1);
+        pushEffect(s, 'bubbles', dest.x, dest.z, dir, 0.8, 1);
+        s.dash.active = false;
+        s.invuln = Math.max(s.invuln, TELEPORT.invuln);
+        s.blink = TELEPORT.pop;
+        frame.teleportTo = dest;
+        frame.cancelWalk = true;
+        frame.faceOverride = dir;
+        facing = dir;
+      }
     }
 
     if (p.actions.attack && !s.dash.active && canUse(s.cooldowns, s.mana, 'attack')) {
@@ -446,8 +487,9 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       continue;
     }
     const action = stepEnemy(e, { player: playerPos, playerAlive: alive, time: s.time, world }, dt);
-    // The boss and his helpers stay down once beaten.
-    if (e.state === 'dead' && e.deadFor >= RESPAWN_SECONDS && !e.helper) respawnEnemy(e);
+    // Instanced monsters (the underground) stay down until Rosa leaves and re-enters.
+    if (e.state === 'dead' && e.deadFor >= RESPAWN_SECONDS && !e.helper && !e.instanced)
+      respawnEnemy(e);
     if (!action) continue;
     if (action.kind === 'melee') {
       const reach = action.blind ? BLIND_MELEE_REACH : action.range + PLAYER_RADIUS;

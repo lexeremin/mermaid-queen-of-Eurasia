@@ -329,7 +329,7 @@ describe('save v4: garden', () => {
   });
 });
 
-describe('save v5: the underground', () => {
+describe('save v5 and v6: the underground', () => {
   const v4 = () => ({
     version: 4,
     savedAt: '2026-09-25T12:00:00.000Z',
@@ -343,37 +343,81 @@ describe('save v5: the underground', () => {
     const save = parseSave(v4())!;
     expect(save.version).toBe(SAVE_VERSION);
     expect(save.garden.shrineGift).toBe(true);
+    expect(save.dungeon).toEqual({ hallsCleared: false, bossDefeated: false, cachesTaken: [] });
+  });
+
+  it('migrates a v5 save: the stamp era becomes cleared halls, quests are renamed', () => {
+    const save = parseSave({
+      ...v4(),
+      version: 5,
+      dungeon: {
+        stampFound: true,
+        gateOpen: false,
+        bossDefeated: false,
+        cachesTaken: ['chest-hall'],
+      },
+      quests: {
+        active: { 'tear-up-the-paperwork': { counts: [0], visited: [] } },
+        completed: ['the-registrars-stamp'],
+      },
+    })!;
     expect(save.dungeon).toEqual({
-      stampFound: false,
-      gateOpen: false,
+      hallsCleared: true,
       bossDefeated: false,
-      cachesTaken: [],
+      cachesTaken: ['chest-hall'],
     });
+    expect(save.quests.completed).toEqual(['clear-the-halls']);
+    expect(Object.keys(save.quests.active)).toEqual(['end-the-corruption']);
   });
 
   it('keeps a saved dungeon and drops unknown chests', () => {
     const save = parseSave(
       good({
         dungeon: {
-          stampFound: true,
-          gateOpen: true,
+          hallsCleared: true,
           bossDefeated: false,
           cachesTaken: ['chest-hall', 'chest-hall', 'chest-nowhere', 7],
         },
       }),
     )!;
-    expect(save.dungeon.gateOpen).toBe(true);
+    expect(save.dungeon.hallsCleared).toBe(true);
     expect(save.dungeon.cachesTaken).toEqual(['chest-hall']);
   });
 
-  it('never contradicts itself: a beaten boss means an open gate and a found stamp', () => {
+  it('never contradicts itself: a beaten boss means cleared halls', () => {
     const save = parseSave(good({ dungeon: { bossDefeated: true } }))!;
-    expect(save.dungeon).toMatchObject({ bossDefeated: true, gateOpen: true, stampFound: true });
-    expect(parseSave(good({ dungeon: { gateOpen: true } }))!.dungeon.stampFound).toBe(true);
+    expect(save.dungeon).toMatchObject({ bossDefeated: true, hallsCleared: true });
   });
 
   it('survives a garbage dungeon section', () => {
     expect(parseSave(good({ dungeon: 'nope' }))!.dungeon.bossDefeated).toBe(false);
     expect(parseSave(good({ dungeon: { cachesTaken: 'all' } }))!.dungeon.cachesTaken).toEqual([]);
+  });
+});
+
+describe('save v6: quest items take no bag slot', () => {
+  it('moves pearls out of the bag of an older save into the tally', () => {
+    const save = parseSave(
+      good({
+        progress: {
+          level: 1,
+          xp: 0,
+          bag: [
+            { id: 'pearl', qty: 3 },
+            { id: 'healingTea', qty: 2 },
+            { id: 'pearl', qty: 4 },
+          ],
+        },
+      }),
+    )!;
+    expect(save.progress.keepsakes).toEqual({ pearl: 7 });
+    expect(save.progress.bag.filter(Boolean)).toEqual([{ id: 'healingTea', qty: 2 }]);
+  });
+
+  it('keeps and sanitizes a saved tally', () => {
+    const save = parseSave(
+      good({ progress: { keepsakes: { pearl: 12, healingTea: 5, nothing: 3, roseHip: -2 } } }),
+    )!;
+    expect(save.progress.keepsakes).toEqual({ pearl: 12 });
   });
 });

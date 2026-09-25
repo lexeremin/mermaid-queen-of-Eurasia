@@ -133,6 +133,33 @@ const ABILITY_ICONS: Record<AbilityId, ReactNode> = {
       <Sparkle x={7} y={16} s={1.8} />
     </>
   ),
+  teleport: (
+    <>
+      <ellipse cx="14" cy="36" rx="9" ry="4.5" fill="#bfe9ff" {...line} />
+      <ellipse cx="14" cy="36" rx="4.5" ry="2" fill="#7fc8f5" />
+      <ellipse cx="35" cy="14" rx="9" ry="4.5" fill="#ffd0e4" {...line} />
+      <ellipse cx="35" cy="14" rx="4.5" ry="2" fill="#ff9fc4" />
+      <path
+        d="M17 31 Q21 20 30 18"
+        fill="none"
+        stroke={INK}
+        strokeWidth={5.4}
+        strokeLinecap="round"
+        strokeDasharray="1 6.5"
+      />
+      <path
+        d="M17 31 Q21 20 30 18"
+        fill="none"
+        stroke="#fff5a8"
+        strokeWidth={2.6}
+        strokeLinecap="round"
+        strokeDasharray="1 6.5"
+      />
+      <Sparkle x={24} y={26} s={2.6} />
+      <Sparkle x={41} y={30} s={1.8} />
+      <circle cx="7" cy="19" r="2" fill="#e4fbff" {...line} strokeWidth={1.4} />
+    </>
+  ),
   spell: (
     <>
       <path
@@ -439,15 +466,6 @@ const ITEM_ICONS: Record<ItemId, ReactNode> = {
       <circle cx="26" cy="38" r="1.5" fill="#c46e12" />
       <circle cx="24" cy="24" r="2.6" fill="#ffd36e" {...line} strokeWidth={1.6} />
       <Sparkle x={39} y={36} s={2.2} />
-    </>
-  ),
-  registrarStamp: (
-    <>
-      <rect x="14" y="36" width="20" height="7" rx="2" fill="#d94a5c" {...line} />
-      <rect x="21" y="18" width="6" height="19" rx="2" fill="#9a6b3f" {...line} />
-      <ellipse cx="24" cy="15" rx="9" ry="7" fill="#c98a4b" {...line} />
-      <circle cx="24" cy="39.5" r="2" fill="#fff5fa" />
-      <Sparkle x={38} y={10} s={2.2} />
     </>
   ),
   registrarSeal: (

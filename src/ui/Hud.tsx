@@ -20,7 +20,6 @@ const PLACE_LABEL: Record<PlaceId, { touch: string; key: string }> = {
   shrine: { touch: 'PEARL SHRINE', key: 'Pearl Shrine' },
   'metro-down': { touch: 'GO DOWN', key: 'Descend to the metro' },
   'metro-up': { touch: 'GO UP', key: 'Climb the stairs' },
-  'boss-door': { touch: 'SEALED GATE', key: 'Sealed gate' },
 };
 
 const GITHUB_URL = 'https://github.com/lexeremin/mermaid-queen-of-Eurasia';

@@ -55,6 +55,8 @@ export type EnemySpawn = {
   z: number;
   /** Waits out of the fight until something (the boss) wakes it. */
   dormant?: boolean;
+  /** Part of an instance (the underground): never refills on its own, only when Rosa leaves and re-enters. */
+  instanced?: boolean;
 };
 
 /** A treasure chest that is opened by walking up to it, once ever. */

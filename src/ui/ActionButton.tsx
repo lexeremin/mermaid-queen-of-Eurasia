@@ -9,6 +9,7 @@ const ABILITY_OF: Record<Action, AbilityId | undefined> = {
   dash: 'dash',
   aura: 'aura',
   spell: 'spell',
+  teleport: 'teleport',
   interact: undefined,
 };
 

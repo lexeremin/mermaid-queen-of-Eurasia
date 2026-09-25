@@ -98,3 +98,26 @@ describe('steerAlongPath', () => {
     expect(done.move).toEqual({ x: 0, z: 0 });
   });
 });
+
+describe('walkable regions', () => {
+  const wall: CollisionWorld = {
+    bounds: { minX: 0, maxX: 20, minZ: 0, maxZ: 20 },
+    colliders: [{ kind: 'box', cx: 10, cz: 10, hx: 0.5, hz: 20 }],
+  };
+
+  it('tells whether two points can be walked between', () => {
+    const grid = createNavGrid(wall, 0.4, 0.5);
+    expect(grid.sameRegion({ x: 2, z: 5 }, { x: 4, z: 15 })).toBe(true);
+    expect(grid.sameRegion({ x: 2, z: 5 }, { x: 18, z: 5 })).toBe(false);
+  });
+
+  it('notices when a wall goes away after a reset', () => {
+    const colliders = [...wall.colliders];
+    const world: CollisionWorld = { bounds: wall.bounds, colliders };
+    const grid = createNavGrid(world, 0.4, 0.5);
+    expect(grid.sameRegion({ x: 2, z: 5 }, { x: 18, z: 5 })).toBe(false);
+    colliders.length = 0;
+    grid.reset();
+    expect(grid.sameRegion({ x: 2, z: 5 }, { x: 18, z: 5 })).toBe(true);
+  });
+});

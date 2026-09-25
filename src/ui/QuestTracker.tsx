@@ -9,6 +9,7 @@ import { trackerLine } from '@/systems/quests';
 export function QuestTracker() {
   const log = useQuestStore((s) => s.log);
   useProgressStore((s) => s.bag);
+  useProgressStore((s) => s.keepsakes);
   useProgressStore((s) => s.level);
   useNpcStore((s) => s.npcs);
   const first = Object.entries(log.active)[0];

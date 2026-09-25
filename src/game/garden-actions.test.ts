@@ -4,9 +4,10 @@ import { gather, rebuildGather } from '@/game/gather-sim';
 import { SHRINE_GIFT, prayAtShrine, stepGather } from '@/game/garden-actions';
 import { useGardenStore } from '@/store/garden-store';
 import { useProgressStore } from '@/store/progress-store';
-import { countOf, emptyBag, addToBag } from '@/systems/inventory';
+import { countInStash, countOf, emptyBag, addToBag } from '@/systems/inventory';
 
 const bag = () => useProgressStore.getState().bag;
+const pearls = () => useProgressStore.getState().keepsakes.pearl ?? 0;
 const node = (id: string) => gather.nodes.find((n) => n.id === id)!;
 
 beforeEach(() => {
@@ -31,11 +32,11 @@ describe('gathering in the game', () => {
   it('records a hidden pearl as taken, once ever', () => {
     const pearl = node('pearl-1');
     stepGather(0.02, pearl.pos);
-    expect(countOf(bag(), 'pearl')).toBe(1);
+    expect(pearls()).toBe(1);
     expect(useGardenStore.getState().pearlsTaken).toEqual(['pearl-1']);
     stepGather(500, { x: 0, z: 0 });
     stepGather(0.02, pearl.pos);
-    expect(countOf(bag(), 'pearl')).toBe(1);
+    expect(pearls()).toBe(1);
   });
 
   it('does not lose a plant when the bag is full', () => {
@@ -69,11 +70,12 @@ describe('the shrine', () => {
     useProgressStore.getState().setBag(emptyBag());
     prayAtShrine();
     expect(useGardenStore.getState().shrineGift).toBe(true);
-    for (const gift of SHRINE_GIFT) expect(countOf(bag(), gift.id)).toBe(gift.qty);
+    for (const gift of SHRINE_GIFT)
+      expect(countInStash(useProgressStore.getState(), gift.id)).toBe(gift.qty);
 
     prayAtShrine();
     expect(countOf(bag(), 'pearlTrident')).toBe(1);
-    expect(countOf(bag(), 'pearl')).toBe(2);
+    expect(pearls()).toBe(2);
   });
 
   it('restores health and mana after the gift, and refuses when already rested', () => {
@@ -83,8 +85,8 @@ describe('the shrine', () => {
     prayAtShrine();
     expect(combat.hp).toBe(100);
     expect(combat.mana).toBe(100);
-    const before = countOf(bag(), 'pearl');
+    const before = pearls();
     prayAtShrine();
-    expect(countOf(bag(), 'pearl')).toBe(before);
+    expect(pearls()).toBe(before);
   });
 });

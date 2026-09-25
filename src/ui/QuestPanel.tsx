@@ -34,6 +34,7 @@ export function QuestPanel() {
   const close = useGameStore((s) => s.closeQuestPanel);
   const log = useQuestStore((s) => s.log);
   useProgressStore((s) => s.bag);
+  useProgressStore((s) => s.keepsakes);
   useProgressStore((s) => s.level);
   const npcs = useNpcStore((s) => s.npcs);
   const [tab, setTab] = useState<Tab>('quests');

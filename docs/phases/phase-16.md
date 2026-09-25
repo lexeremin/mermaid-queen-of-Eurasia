@@ -31,7 +31,7 @@ The level is described as a small spec of rooms, corridors and features on a 2 m
 - The **Chief Registrar** always drops the **Registrar's Stamp** (key item). With it in the bag, `E` at the gate opens it for good (saved); without it the gate says what is missing.
 
 ### The boss: the Great Registrar
-An original satirical caricature (no real person): a towering golem of ledgers in a pinstripe waistcoat, a monocle, a crown of rubber stamps and an enormous stamp for a fist. Name in game: **Lord Bumazhnik**.
+An original satirical caricature (no real person): a towering golem of ledgers in a pinstripe waistcoat, a monocle, a crown of rubber stamps and an enormous stamp for a fist. Name in game: **Father of Corruption**.
 - **Stats:** 900 HP, radius 1.6 m, slow (1.6 m/s), Aura blinds him for only a quarter of the usual time. A large health bar with his name appears at the top of the screen while he is engaged.
 - **Phase 1 (above 60%):** *Stomp*: a red circle grows around him for 1.0 s, then hits for 32 within 5.5 m. *Stamp slam*: a circle marks where Rosa stands, lands 1.1 s later for 38. *Paper darts*: a fan of five darts (12 damage each).
 - **Phase 2 (60% to 30%):** adds a *Summon* (wakes up to 2 of the 4 dormant helpers) and a *Paper storm* (two rings of 12 darts flying outward, 10 damage each).
@@ -81,3 +81,15 @@ Audio and music for the underground and the boss, more than one boss, Mermaid-fo
 ## Verification
 - Headless Chromium (desktop and 375 x 812 touch): metro prompt and fade, arrival, all three chests, the Chief Registrar killed with real attacks and the stamp collected, the gate refusing and then opening, walking through with `W`, the boss waking, phases, the victory banner and rewards, reload keeping everything (boss down, gate open, position underground), fainting underground and getting up at the stairs. No console errors.
 - Draw calls: 61 on the surface at spawn, 41 to 47 at the metro and the arrival hall, 52 in the boss arena (limit 70).
+
+## Follow-up (16b): changes requested after the first version
+- **No ceiling fixtures:** the chandeliers are gone (asset removed); the warm light pools stay so the halls are still readable.
+- **The boss is the Father of Corruption** (name, health bar, banner, quests, docs).
+- **Loot is much rarer** (roughly a third of the old chances; gear a few percent; the Chief Registrar still drops well). Chests and the boss reward are unchanged.
+- **Enemy health bars are always visible** (larger, drawn on top) for every awake monster, not only after a hit.
+- **No stamp, no seal:** the Registrar's Stamp and its quest are removed. The boss gate opens by itself as soon as every monster of the three halls (11 monsters and the Chief Registrar) is defeated, with a toast.
+- **Instanced monsters:** underground monsters never respawn on a timer. When Rosa leaves by the stairs and goes down again, all of them refill, the helpers go back to sleep and the gate shuts (a beaten boss stays beaten and his gate stays open). The gate state is not saved; `hallsCleared` and `bossDefeated` are (milestones for quests).
+- **Quests:** *Silence the Halls* (flag `hallsCleared`) and *End the Corruption* (flag `bossDefeated`); old ids migrate.
+- **Quest items take no bag space:** items of kind `keepsake` (pearls) live in a counted tally next to the bag, are always picked up, are shown in a "Quest items" strip in the bag, and count for `collect` objectives. Older saves move pearls out of the bag on load.
+- **Save v6:** `progress.keepsakes`, `dungeon { hallsCleared, bossDefeated, cachesTaken }`, migration 5 to 6 (the stamp era counts as cleared halls, renamed quests).
+- **Blink (T, "BLINK" on touch):** a new ability like the Wizard's Teleport in Diablo 3: instantly moves Rosa toward the mouse cursor (or the way she moves or faces on touch), up to 14 m, over walls and props, 20 mana, 6 s cooldown, a moment of invulnerability, bubbles at both ends. It only lands where she could walk to (`NavGrid.sameRegion`), so it cannot skip the shut boss gate or enter the underground from the surface; if the aim is blocked it lands on the nearest free spot toward her.

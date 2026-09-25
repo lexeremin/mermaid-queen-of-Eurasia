@@ -4,40 +4,41 @@ import type { ItemId } from '@/data/items';
 type Roll = { id: ItemId; chance: number };
 type LootTable = { rolls: readonly Roll[]; gear: { chance: number; pool: readonly ItemId[] } };
 
+/** Drops are rare on purpose: most kills give nothing, and gear is a real event. */
 export const LOOT_TABLES: Readonly<Record<EnemyKind, LootTable>> = {
   tycoon: {
     rolls: [
-      { id: 'healingTea', chance: 0.3 },
-      { id: 'coldKvass', chance: 0.2 },
-      { id: 'pearl', chance: 0.25 },
+      { id: 'healingTea', chance: 0.1 },
+      { id: 'coldKvass', chance: 0.07 },
+      { id: 'pearl', chance: 0.08 },
     ],
-    gear: { chance: 0.06, pool: ['silverTrident', 'roseBrooch', 'rainCloak'] },
+    gear: { chance: 0.015, pool: ['silverTrident', 'roseBrooch', 'rainCloak'] },
   },
   speaker: {
     rolls: [
-      { id: 'healingTea', chance: 0.55 },
-      { id: 'coldKvass', chance: 0.35 },
-      { id: 'pearl', chance: 0.4 },
+      { id: 'healingTea', chance: 0.2 },
+      { id: 'coldKvass', chance: 0.12 },
+      { id: 'pearl', chance: 0.15 },
     ],
-    gear: { chance: 0.3, pool: ['rainCloak', 'silverTrident', 'amberPendant', 'pearlTrident'] },
+    gear: { chance: 0.08, pool: ['rainCloak', 'silverTrident', 'amberPendant', 'pearlTrident'] },
   },
   demagogue: {
     rolls: [
-      { id: 'healingTea', chance: 0.25 },
-      { id: 'coldKvass', chance: 0.45 },
-      { id: 'pearl', chance: 0.25 },
+      { id: 'healingTea', chance: 0.08 },
+      { id: 'coldKvass', chance: 0.14 },
+      { id: 'pearl', chance: 0.08 },
     ],
-    gear: { chance: 0.15, pool: ['roseBrooch', 'songbirdWhistle', 'velvetGown'] },
+    gear: { chance: 0.04, pool: ['roseBrooch', 'songbirdWhistle', 'velvetGown'] },
   },
   registrar: {
     rolls: [
-      { id: 'healingTea', chance: 0.9 },
-      { id: 'coldKvass', chance: 0.6 },
-      { id: 'pearl', chance: 0.8 },
+      { id: 'healingTea', chance: 0.5 },
+      { id: 'coldKvass', chance: 0.3 },
+      { id: 'pearl', chance: 0.4 },
     ],
-    gear: { chance: 0.6, pool: ['pearlTrident', 'velvetGown', 'songbirdWhistle'] },
+    gear: { chance: 0.3, pool: ['pearlTrident', 'velvetGown', 'songbirdWhistle'] },
   },
-  // The boss's rewards are handed out by the boss fight itself (see progress-actions).
+  // The boss's rewards are handed out by the boss fight itself (see dungeon-actions).
   boss: { rolls: [], gear: { chance: 0, pool: [] } },
 };
 
