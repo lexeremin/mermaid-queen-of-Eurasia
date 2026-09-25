@@ -8,15 +8,13 @@ import { xpToNext, MAX_LEVEL } from '@/systems/progression';
 import { ABILITIES, cooldownFraction, type AbilityId } from '@/systems/abilities';
 import { AbilityIcon } from '@/ui/icons';
 import { QuestTracker } from '@/ui/QuestTracker';
-import { QuickUse } from '@/ui/QuickUse';
 import { Toasts } from '@/ui/Toasts';
 
 const SLOTS: { id: AbilityId; key: string; label: string }[] = [
   { id: 'attack', key: 'Space', label: 'Trident' },
-  { id: 'dash', key: 'Shift', label: 'Dash' },
+  { id: 'blink', key: 'Shift', label: 'Blink' },
   { id: 'aura', key: 'Q', label: 'Aura' },
   { id: 'spell', key: 'R', label: 'Surge' },
-  { id: 'teleport', key: 'T', label: 'Blink' },
 ];
 
 /** Vertical sweep that shrinks as the cooldown ends. Updated every frame without re-rendering. */
@@ -124,7 +122,6 @@ export function CombatHud({ touch }: { touch: boolean }) {
         <QuestTracker />
       </div>
 
-      <QuickUse touch={touch} />
       <Toasts />
 
       {!touch && (

@@ -85,29 +85,6 @@ const ABILITY_ICONS: Record<AbilityId, ReactNode> = {
       <Heart x={24} y={36} s={0.9} />
     </>
   ),
-  dash: (
-    <>
-      <circle cx="17" cy="30" r="10" fill="#bff3ff" {...line} />
-      <path
-        d="M11.5 27 Q13 22.5 18 22"
-        fill="none"
-        stroke="#fff"
-        strokeWidth={2.6}
-        strokeLinecap="round"
-      />
-      <circle cx="34" cy="17" r="7" fill="#d6f8ff" {...line} />
-      <path
-        d="M30.5 15 Q31.5 12 35 12"
-        fill="none"
-        stroke="#fff"
-        strokeWidth={2.2}
-        strokeLinecap="round"
-      />
-      <circle cx="35" cy="36" r="4.5" fill="#c4f1ff" {...line} />
-      <circle cx="9" cy="11" r="3" fill="#e4fbff" {...line} />
-      <Sparkle x={41} y={27} s={2} />
-    </>
-  ),
   aura: (
     <>
       <path
@@ -133,7 +110,7 @@ const ABILITY_ICONS: Record<AbilityId, ReactNode> = {
       <Sparkle x={7} y={16} s={1.8} />
     </>
   ),
-  teleport: (
+  blink: (
     <>
       <ellipse cx="14" cy="36" rx="9" ry="4.5" fill="#bfe9ff" {...line} />
       <ellipse cx="14" cy="36" rx="4.5" ry="2" fill="#7fc8f5" />
@@ -523,4 +500,107 @@ export function ItemIcon({ id, size = 36, label }: { id: ItemId; size?: number; 
       {ITEM_ICONS[id]}
     </Icon>
   );
+}
+
+/* ---------- interface ---------- */
+
+export type UiIconId = 'quests' | 'bag' | 'pause' | 'recall';
+
+const UI_ICONS: Record<UiIconId, ReactNode> = {
+  // A rolled scroll with writing.
+  quests: (
+    <>
+      <path
+        d="M12 8 H36 Q40 8 40 12 V36 Q40 40 36 40 H14 Q10 40 10 36 V12"
+        fill="#fff1c9"
+        {...line}
+      />
+      <path d="M12 8 Q6 8 6 13 Q6 18 12 18 H16 V8 Z" fill="#f3d58a" {...line} />
+      <path
+        d="M16 18 V36 Q16 40 12 40"
+        fill="none"
+        stroke={INK}
+        strokeWidth={2.2}
+        strokeLinecap="round"
+      />
+      <path
+        d="M22 16 H34 M22 22 H34 M22 28 H30"
+        stroke="#9b6bd0"
+        strokeWidth={2.6}
+        strokeLinecap="round"
+      />
+      <Sparkle x={38} y={10} s={2} />
+    </>
+  ),
+  // A satchel with a strap and a buckle.
+  bag: (
+    <>
+      <path
+        d="M17 15 Q17 6 24 6 Q31 6 31 15"
+        fill="none"
+        stroke={INK}
+        strokeWidth={3.4}
+        strokeLinecap="round"
+      />
+      <path
+        d="M9 18 Q9 14 14 14 H34 Q39 14 39 18 L41 38 Q41 43 36 43 H12 Q7 43 7 38 Z"
+        fill="#e0a06a"
+        {...line}
+      />
+      <path
+        d="M8.5 24 Q24 31 39.5 24"
+        fill="none"
+        stroke={INK}
+        strokeWidth={2.2}
+        strokeLinecap="round"
+      />
+      <rect x="20" y="24" width="8" height="9" rx="2" fill="#ffd36e" {...line} strokeWidth={2} />
+      <circle cx="24" cy="28.5" r="1.4" fill={INK} />
+    </>
+  ),
+  // The game menu: a round badge with two bars.
+  pause: (
+    <>
+      <circle cx="24" cy="24" r="18" fill="#bfe9ff" {...line} />
+      <rect
+        x="15.5"
+        y="14.5"
+        width="6.5"
+        height="19"
+        rx="2.4"
+        fill="#fff"
+        {...line}
+        strokeWidth={2.2}
+      />
+      <rect
+        x="26"
+        y="14.5"
+        width="6.5"
+        height="19"
+        rx="2.4"
+        fill="#fff"
+        {...line}
+        strokeWidth={2.2}
+      />
+    </>
+  ),
+  // A swirling portal.
+  recall: (
+    <>
+      <circle cx="24" cy="24" r="18" fill="#7fb8f0" {...line} />
+      <path
+        d="M24 9 Q39 12 38 26 Q36 38 24 38 Q13 37 13 27 Q14 18 24 17 Q31 17 31 24 Q30 30 24 30 Q20 29 21 25"
+        fill="none"
+        stroke="#fff"
+        strokeWidth={3.2}
+        strokeLinecap="round"
+      />
+      <Sparkle x={38} y={9} s={2.2} />
+      <circle cx="10" cy="38" r="1.8" fill="#e4fbff" />
+    </>
+  ),
+};
+
+export function UiIcon({ id, size = 30 }: { id: UiIconId; size?: number }) {
+  return <Icon size={size}>{UI_ICONS[id]}</Icon>;
 }

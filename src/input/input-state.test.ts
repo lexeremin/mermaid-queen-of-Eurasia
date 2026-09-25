@@ -23,10 +23,10 @@ describe('input state', () => {
 
   it('clearPressed drops one-shot flags but keeps held', () => {
     const input = createInputState();
-    setHeld(input, 'dash', true);
+    setHeld(input, 'blink', true);
     clearPressed(input);
-    expect(input.pressed.dash).toBe(false);
-    expect(input.held.dash).toBe(true);
+    expect(input.pressed.blink).toBe(false);
+    expect(input.held.blink).toBe(true);
   });
 
   it('prefers the joystick over the keyboard when the stick is active', () => {

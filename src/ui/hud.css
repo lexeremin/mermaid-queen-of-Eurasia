@@ -12,7 +12,7 @@
   top: calc(var(--safe-top) + 12px);
   right: calc(var(--safe-right) + 12px);
   display: flex;
-  gap: 12px;
+  gap: 8px;
   pointer-events: auto;
 }
 
@@ -75,7 +75,7 @@
   right: calc(var(--safe-right) + 16px);
   bottom: calc(var(--safe-bottom) + 20px);
   width: 240px;
-  height: 290px;
+  height: 240px;
   pointer-events: none;
 }
 
@@ -618,18 +618,12 @@
 }
 
 .quick-use {
-  position: absolute;
-  right: calc(var(--safe-right) + 12px);
-  bottom: calc(var(--safe-bottom) + 16px);
   display: flex;
   gap: 8px;
   pointer-events: auto;
 }
 
 .quick-use-touch {
-  right: auto;
-  left: calc(var(--safe-left) + 12px);
-  bottom: calc(var(--safe-bottom) + 200px);
   flex-direction: column;
 }
 
@@ -1033,9 +1027,6 @@
 
 /* ---- follower talk button ---- */
 .follower-btn {
-  position: absolute;
-  right: calc(var(--safe-right) + 12px);
-  bottom: calc(var(--safe-bottom) + 84px);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1070,12 +1061,6 @@
   color: #10131c;
   font-size: 18px;
   font-weight: 700;
-}
-
-.follower-btn-touch {
-  right: auto;
-  left: calc(var(--safe-left) + 12px);
-  bottom: calc(var(--safe-bottom) + 336px);
 }
 
 .fade-overlay {
@@ -1183,4 +1168,208 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+/* Bottom corner dock: whoever follows Rosa, the Recall icon and the potions stack here, so they never overlap. */
+.dock {
+  position: absolute;
+  right: calc(var(--safe-right) + 12px);
+  bottom: calc(var(--safe-bottom) + 16px);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.dock-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.dock-touch {
+  right: auto;
+  left: calc(var(--safe-left) + 12px);
+  bottom: calc(var(--safe-bottom) + 190px);
+  align-items: flex-start;
+}
+
+.dock-touch .dock-row {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dock .follower-btn,
+.dock .recall-btn,
+.dock .quick-btn {
+  pointer-events: auto;
+}
+
+.icon-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 0;
+  border: 2px solid #c9a35a;
+  border-radius: 10px;
+  background: linear-gradient(#1b2438, #0b1220);
+  box-shadow:
+    inset 0 0 0 2px rgba(11, 18, 32, 0.9),
+    0 2px 6px rgba(0, 0, 0, 0.5);
+  color: inherit;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.icon-btn:hover {
+  border-color: #ffe08a;
+}
+
+.icon-btn:active {
+  background: #2f5a54;
+}
+
+.icon-btn kbd,
+.recall-btn kbd {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font:
+    700 10px/1 ui-monospace,
+    monospace;
+  color: #ffe9b0;
+  text-shadow: 0 1px 2px #000;
+}
+
+.recall-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid #7fb8f0;
+  border-radius: 50%;
+  background: rgba(11, 18, 32, 0.85);
+  color: inherit;
+  touch-action: manipulation;
+  cursor: pointer;
+}
+
+.recall-btn:disabled {
+  opacity: 0.45;
+}
+
+.recall-btn[data-casting='1'] {
+  border-color: #e4fbff;
+  box-shadow: 0 0 10px #7fb8f0;
+}
+
+.recall-ring {
+  position: absolute;
+  inset: -2px;
+  width: calc(100% + 4px);
+  height: calc(100% + 4px);
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.recall-ring circle {
+  fill: none;
+  stroke-width: 3;
+}
+
+.recall-ring-back {
+  stroke: transparent;
+}
+
+.recall-ring-fill {
+  stroke: #ffe9b0;
+  stroke-linecap: round;
+}
+
+@media (max-width: 380px) {
+  .icon-btn {
+    width: 44px;
+    height: 44px;
+  }
+
+  .hud-top {
+    gap: 6px;
+  }
+}
+
+/* Narrow phones: a smaller stick and a scaled-down button cluster keep them from touching. */
+@media (max-width: 420px) {
+  .joystick {
+    left: calc(var(--safe-left) + 12px);
+    bottom: calc(var(--safe-bottom) + 24px);
+    width: 120px;
+    height: 120px;
+  }
+
+  .action-cluster {
+    right: calc(var(--safe-right) + 8px);
+    bottom: calc(var(--safe-bottom) + 12px);
+    transform: scale(0.8);
+    transform-origin: bottom right;
+  }
+
+  .dock-touch {
+    bottom: calc(var(--safe-bottom) + 156px);
+  }
+
+  .zone-hint {
+    z-index: 2;
+  }
+}
+
+@media (max-width: 340px) {
+  .joystick {
+    width: 100px;
+    height: 100px;
+  }
+
+  .action-cluster {
+    transform: scale(0.68);
+  }
+
+  .dock-touch {
+    bottom: calc(var(--safe-bottom) + 136px);
+  }
+}
+
+/* Landscape phones: the dock lies along the bottom next to the stick, the prompt sits low. */
+@media (max-height: 500px) {
+  .dock-touch {
+    bottom: calc(var(--safe-bottom) + 16px);
+    left: calc(var(--safe-left) + 196px);
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  .dock-touch .dock-row {
+    flex-direction: row;
+    align-items: flex-end;
+  }
+
+  .talk-prompt {
+    bottom: calc(var(--safe-bottom) + 100px);
+  }
+
+  .quick-use-touch {
+    flex-direction: row;
+  }
+
+  .toasts {
+    max-width: 200px;
+  }
+
+  .boss-bar {
+    top: calc(var(--safe-top) + 12px);
+    width: min(560px, calc(100vw - 460px));
+  }
 }

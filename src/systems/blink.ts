@@ -19,7 +19,7 @@ const STEP = 0.5;
  * somewhere she could not walk to (`sameRegion` rejects other regions, like the far side of a shut gate).
  * Returns null when there is nowhere better than where she already is.
  */
-export function pickTeleportDestination(
+export function pickBlinkDestination(
   from: Vec2,
   aim: Vec2,
   range: number,

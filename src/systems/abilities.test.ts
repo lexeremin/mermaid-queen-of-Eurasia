@@ -36,9 +36,9 @@ describe('abilities', () => {
 
   it('reports the remaining fraction for the HUD', () => {
     const cd = createCooldowns();
-    spendAbility(cd, 100, 'dash');
-    expect(cooldownFraction(cd, 'dash')).toBe(1);
-    tickCooldowns(cd, ABILITIES.dash.cooldown / 2);
-    expect(cooldownFraction(cd, 'dash')).toBeCloseTo(0.5);
+    spendAbility(cd, 100, 'blink');
+    expect(cooldownFraction(cd, 'blink')).toBe(1);
+    tickCooldowns(cd, ABILITIES.blink.cooldown / 2);
+    expect(cooldownFraction(cd, 'blink')).toBeCloseTo(0.5);
   });
 });

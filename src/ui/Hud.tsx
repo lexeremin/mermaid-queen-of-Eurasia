@@ -6,6 +6,9 @@ import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
+import { RecallButton } from '@/ui/RecallButton';
+import { QuickUse } from '@/ui/QuickUse';
+import { UiIcon } from '@/ui/icons';
 import { FollowerButton } from '@/ui/FollowerButton';
 import { InventoryPanel } from '@/ui/InventoryPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
@@ -48,14 +51,35 @@ export function Hud() {
       <div className={`fade-overlay${transitioning ? ' on' : ''}`} aria-hidden="true" />
 
       <div className="hud-top">
-        <button type="button" className="hud-btn" onClick={toggleQuestLog} aria-label="Quests">
-          {touch ? 'LOG' : 'QUESTS'}
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={toggleQuestLog}
+          aria-label="Quests"
+          title="Quests (J)"
+        >
+          <UiIcon id="quests" />
+          {!touch && <kbd>J</kbd>}
         </button>
-        <button type="button" className="hud-btn" onClick={toggleInventory} aria-label="Inventory">
-          BAG
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={toggleInventory}
+          aria-label="Inventory"
+          title="Bag (I)"
+        >
+          <UiIcon id="bag" />
+          {!touch && <kbd>I</kbd>}
         </button>
-        <button type="button" className="hud-btn" onClick={togglePause} aria-label="Pause">
-          PAUSE
+        <button
+          type="button"
+          className="icon-btn"
+          onClick={togglePause}
+          aria-label="Pause"
+          title="Menu (Esc)"
+        >
+          <UiIcon id="pause" />
+          {!touch && <kbd>Esc</kbd>}
         </button>
       </div>
 
@@ -79,7 +103,13 @@ export function Hud() {
 
       {touch && !paused && !inventoryOpen && !questPanel && !dialogueOpen && <TouchControls />}
 
-      <FollowerButton touch={touch} />
+      <div className={touch ? 'dock dock-touch' : 'dock'}>
+        <FollowerButton />
+        <div className="dock-row">
+          <RecallButton touch={touch} />
+          <QuickUse touch={touch} />
+        </div>
+      </div>
 
       <DialogueBox />
 
@@ -97,8 +127,8 @@ export function Hud() {
             {!touch && (
               <p className="hint">
                 WASD move · click to walk · click a person to talk · Space / right-click attack ·
-                Shift dash · Q aura · R spell · E interact · I bag · J quests · 1 / 2 quick use ·
-                ESC pause
+                Shift blink · Q aura · R spell · T recall · E interact · I bag · J quests · 1 / 2
+                quick use · ESC pause
               </p>
             )}
             <button type="button" className="hud-btn big" onClick={togglePause}>

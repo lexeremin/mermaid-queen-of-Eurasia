@@ -4,6 +4,8 @@ import { createFixedStepper } from '@/game/fixed-step';
 import { playSfx } from '@/audio/sfx';
 import { playAuraSong, stopVoice } from '@/audio/voice';
 import { combat } from '@/game/combat-sim';
+import { recall, stepRecallChannel, toggleRecall } from '@/game/recall-sim';
+import { cancelRecall } from '@/systems/recall';
 import { loot, spawnDrops } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
 import { prayAtShrine, stepGather } from '@/game/garden-actions';
@@ -21,8 +23,8 @@ import { track } from '@/net/stats';
 import { useCombatStore } from '@/store/combat-store';
 import { ENEMIES } from '@/data/enemies';
 import { stepCombat, type CombatEvent } from '@/systems/combat';
-import { TELEPORT } from '@/systems/abilities';
-import { pickTeleportDestination } from '@/systems/teleport';
+import { BLINK } from '@/systems/abilities';
+import { pickBlinkDestination } from '@/systems/blink';
 import { nav } from '@/game/world/nav';
 import { clearPressed, consumePressed, getMove, input } from '@/input/input-state';
 import { useDialogueStore } from '@/store/dialogue-store';
@@ -68,6 +70,7 @@ const PLACES: { id: PlaceId; x: number; z: number }[] = [
 const activePlaces = () => PLACES;
 
 export function visitPlace(id: string): void {
+  cancelRecall(recall);
   if (id === 'board') useGameStore.getState().openQuestPanel('board');
   else if (id === 'shrine') prayAtShrine();
   else if (id === 'metro-down') goDown();
@@ -92,11 +95,11 @@ function resolveBlink(from: Vec2, move: Vec2): Vec2 | null {
       const dir = isZero(move) ? sim.curr.facing : move;
       const len = Math.hypot(dir.x, dir.z) || 1;
       return {
-        x: from.x + (dir.x / len) * TELEPORT.range,
-        z: from.z + (dir.z / len) * TELEPORT.range,
+        x: from.x + (dir.x / len) * BLINK.range,
+        z: from.z + (dir.z / len) * BLINK.range,
       };
     })();
-  return pickTeleportDestination(from, aim, TELEPORT.range, currentWorld, (to) =>
+  return pickBlinkDestination(from, aim, BLINK.range, currentWorld, (to) =>
     nav.sameRegion(from, to),
   );
 }
@@ -144,10 +147,9 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       playSfx('hit');
     } else if (event.type === 'cast') {
       if (event.ability === 'attack') playSfx('swing');
-      else if (event.ability === 'dash') playSfx('bubbles');
       else if (event.ability === 'spell') playSfx('wave');
       else if (event.ability === 'aura') playAuraSong();
-      else if (event.ability === 'teleport') playSfx('bubbles');
+      else if (event.ability === 'blink') playSfx('bubbles');
     } else if (event.type === 'enemyHit') {
       playSfx('hit');
     } else if (event.type === 'playerDowned') {
@@ -187,6 +189,14 @@ export function GameLoop() {
         visitPlace(place.id);
         return;
       }
+    }
+
+    if (consumePressed(input, 'recall')) {
+      if (!recall.active) {
+        sim.path = [];
+        sim.talkTo = null;
+      }
+      toggleRecall(!combat.downed);
     }
 
     if (input.click) {
@@ -247,20 +257,19 @@ export function GameLoop() {
         move,
         actions: {
           attack: input.held.attack || input.pressed.attack,
-          dash: input.pressed.dash,
           aura: input.pressed.aura,
           spell: input.pressed.spell,
-          teleport: input.pressed.teleport,
+          blink: input.pressed.blink,
         },
-        resolveTeleport: (from) => resolveBlink(from, move),
+        resolveBlink: (from) => resolveBlink(from, move),
         npcs: followingId ? NPC_TARGETS.filter((n) => n.id !== followingId) : NPC_TARGETS,
         world: currentWorld,
         arena: ARENA,
         stats,
         companion: followingId ? { id: followingId } : null,
       });
-      if (frame.teleportTo) {
-        const pos = frame.teleportTo;
+      if (frame.blinkTo) {
+        const pos = frame.blinkTo;
         sim.prev = { ...sim.curr, pos };
         sim.curr = { ...sim.curr, pos };
         sim.path = [];
@@ -271,15 +280,25 @@ export function GameLoop() {
         sim.talkTo = null;
       }
       handleCombatEvents(frame.events);
+      stepRecallChannel(dt, {
+        moving: !isZero(move) || sim.path.length > 0,
+        acting:
+          input.held.attack ||
+          input.pressed.blink ||
+          input.pressed.aura ||
+          input.pressed.spell ||
+          frame.blinkTo !== null,
+        hurt: frame.events.some((e) => e.type === 'playerHurt'),
+        downed: combat.downed,
+      });
 
-      const walking = isZero(move) && sim.path.length > 0 && !frame.moveOverride;
+      const walking = isZero(move) && sim.path.length > 0;
       if (walking) {
         const step = steerAlongPath(sim.curr.pos, sim.path);
         sim.path = step.path;
         move = step.move;
       }
-      if (frame.moveOverride) move = frame.moveOverride;
-      else if (frame.moveScale !== 1)
+      if (frame.moveScale !== 1)
         move = { x: move.x * frame.moveScale, z: move.z * frame.moveScale };
 
       sim.prev = sim.curr;

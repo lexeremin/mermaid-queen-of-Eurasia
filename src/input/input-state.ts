@@ -1,6 +1,6 @@
 import { isZero, type Vec2 } from '@/utils/vec2';
 
-export const ACTIONS = ['attack', 'dash', 'aura', 'spell', 'teleport', 'interact'] as const;
+export const ACTIONS = ['attack', 'blink', 'aura', 'spell', 'recall', 'interact'] as const;
 export type Action = (typeof ACTIONS)[number];
 
 export type InputState = {
@@ -17,10 +17,10 @@ export type InputState = {
 function flags(): Record<Action, boolean> {
   return {
     attack: false,
-    dash: false,
+    blink: false,
     aura: false,
     spell: false,
-    teleport: false,
+    recall: false,
     interact: false,
   };
 }

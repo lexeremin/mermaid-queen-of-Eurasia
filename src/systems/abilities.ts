@@ -1,13 +1,12 @@
-export type AbilityId = 'attack' | 'dash' | 'aura' | 'spell' | 'teleport';
+export type AbilityId = 'attack' | 'blink' | 'aura' | 'spell';
 
 export type AbilityDef = { cooldown: number; mana: number };
 
 export const ABILITIES: Readonly<Record<AbilityId, AbilityDef>> = {
   attack: { cooldown: 0.45, mana: 0 },
-  dash: { cooldown: 1.4, mana: 0 },
+  blink: { cooldown: 4, mana: 15 },
   aura: { cooldown: 8, mana: 30 },
   spell: { cooldown: 7, mana: 35 },
-  teleport: { cooldown: 6, mana: 20 },
 };
 
 export const MAX_HP = 100;
@@ -29,9 +28,8 @@ export const AIM_ASSIST = {
   /** Anything this close is targeted whatever direction Rosa faces. */
   closeRange: 3.6,
 } as const;
-export const DASH = { distance: 4.4, duration: 0.2, invuln: 0.28 } as const;
 /** Instant blink to the cursor (or straight ahead), like the Wizard's Teleport: over walls, never into another region. */
-export const TELEPORT = { range: 14, invuln: 0.35, pop: 0.3 } as const;
+export const BLINK = { range: 14, invuln: 0.35, pop: 0.3 } as const;
 export const AURA = {
   duration: 2.4,
   maxRadius: 8,
@@ -57,10 +55,9 @@ export type Cooldowns = Record<AbilityId, number>;
 
 export const createCooldowns = (): Cooldowns => ({
   attack: 0,
-  dash: 0,
   aura: 0,
   spell: 0,
-  teleport: 0,
+  blink: 0,
 });
 
 export const tickCooldowns = (cooldowns: Cooldowns, dt: number): void => {

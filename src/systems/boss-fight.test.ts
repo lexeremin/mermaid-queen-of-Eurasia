@@ -5,7 +5,7 @@ import { canUse } from '@/systems/abilities';
 import { directionTo } from '@/systems/combat-math';
 import { createCombatState, stepCombat, type CombatState } from '@/systems/combat';
 import { computeStats } from '@/systems/progression';
-import { overlapsHazard } from '@/systems/hazards';
+import { overlapsHazard, type Hazard } from '@/systems/hazards';
 import { PLAYER_RADIUS, stepPlayer, type PlayerState } from '@/systems/movement';
 import { STARTER_EQUIPMENT } from '@/data/items';
 import type { CollisionWorld } from '@/systems/collision';
@@ -24,8 +24,26 @@ const world: CollisionWorld = {
   ],
 };
 
+/** The nearest spot outside a marked hazard, straight out from its middle (or across its narrow side). */
+function escapePoint(from: Vec2, danger: Hazard | undefined): Vec2 | null {
+  if (!danger) return null;
+  const shape = danger.shape;
+  if (shape.kind === 'circle') {
+    const dir = directionTo({ x: shape.x, z: shape.z }, from);
+    const d = shape.r + PLAYER_RADIUS + 1;
+    return { x: shape.x + dir.x * d, z: shape.z + dir.z * d };
+  }
+  const nx = -Math.sin(shape.rot);
+  const nz = Math.cos(shape.rot);
+  const side = (from.x - shape.x) * nx + (from.z - shape.z) * nz >= 0 ? 1 : -1;
+  const d = shape.hz + PLAYER_RADIUS + 1;
+  const across = (from.x - shape.x) * nx + (from.z - shape.z) * nz;
+  const push = d - Math.abs(across);
+  return { x: from.x + nx * side * push, z: from.z + nz * side * push };
+}
+
 /**
- * A simple, honest bot: it walks up to the boss and stabs, and it steps out of any marked hazard (dashing when the
+ * A simple, honest bot: it walks up to the boss and stabs, and it steps out of any marked hazard (blinking out when the
  * marker is about to land). It does not dodge darts on purpose and never drinks a potion.
  */
 function fight(
@@ -57,7 +75,7 @@ function fight(
         const side = (player.pos.x - s2.x) * nx + (player.pos.z - s2.z) * nz >= 0 ? 1 : -1;
         move = { x: nx * side, z: nz * side };
       }
-      dash = danger.delay - danger.age < 0.3 && canUse(s.cooldowns, s.mana, 'dash');
+      dash = danger.delay - danger.age < 0.3 && canUse(s.cooldowns, s.mana, 'blink');
     } else {
       const toBoss = directionTo(player.pos, boss.pos);
       const d = Math.hypot(boss.pos.x - player.pos.x, boss.pos.z - player.pos.z);
@@ -71,7 +89,7 @@ function fight(
       move,
       actions: {
         attack: !danger && d < 5,
-        dash,
+        blink: dash,
         aura: false,
         spell: !danger && d < 4.2 && canUse(s.cooldowns, s.mana, 'spell'),
       },
@@ -79,9 +97,11 @@ function fight(
       world,
       arena,
       stats,
+      // Blink away from the marked spot (straight out of the hazard).
+      resolveBlink: (from) => escapePoint(from, danger),
     });
-    const step = frame.moveOverride ?? move;
-    player = stepPlayer(player, { move: step }, DT, world);
+    player = stepPlayer(player, { move }, DT, world);
+    if (frame.blinkTo) player = { ...player, pos: frame.blinkTo };
     if (frame.faceOverride) player = { ...player, facing: frame.faceOverride };
     if (boss.state === 'dead') return { won: true, hp: s.hp, time, state: s };
     if (s.downed) return { won: false, hp: 0, time, state: s };

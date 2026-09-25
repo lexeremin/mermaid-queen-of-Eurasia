@@ -4,7 +4,7 @@ import { useGameStore } from '@/store/game-store';
 import { useNpcStore } from '@/store/npc-store';
 
 /** Shown only while someone follows Rosa; opens his dialogue menu wherever he is. */
-export function FollowerButton({ touch }: { touch: boolean }) {
+export function FollowerButton() {
   const followingId = useNpcStore(
     (s) => Object.entries(s.npcs).find(([, n]) => n.following)?.[0] ?? null,
   );
@@ -18,7 +18,7 @@ export function FollowerButton({ touch }: { touch: boolean }) {
   return (
     <button
       type="button"
-      className={touch ? 'follower-btn follower-btn-touch' : 'follower-btn'}
+      className="follower-btn"
       aria-label={`Talk to ${npc.name}`}
       onClick={() => open(npc.id)}
     >

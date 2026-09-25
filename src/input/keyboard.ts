@@ -12,11 +12,11 @@ const ALL_MOVE_CODES: ReadonlySet<string> = new Set(Object.values(MOVE_CODES).fl
 
 const ACTION_CODES: Readonly<Record<string, Action>> = {
   Space: 'attack',
-  ShiftLeft: 'dash',
-  ShiftRight: 'dash',
+  ShiftLeft: 'blink',
+  ShiftRight: 'blink',
   KeyQ: 'aura',
   KeyR: 'spell',
-  KeyT: 'teleport',
+  KeyT: 'recall',
   KeyE: 'interact',
 };
 

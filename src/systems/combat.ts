@@ -2,7 +2,6 @@ import { RESPAWN_SECONDS, type EnemyKind } from '@/data/enemies';
 import {
   AIM_ASSIST,
   AURA,
-  DASH,
   HP_REGEN,
   HP_REGEN_DELAY,
   HURT_INVULN,
@@ -10,7 +9,7 @@ import {
   MAX_MANA,
   SPELL,
   SWING_TIME,
-  TELEPORT,
+  BLINK,
   TRIDENT,
   canUse,
   createCooldowns,
@@ -35,9 +34,9 @@ import {
 } from '@/systems/enemy-ai';
 import { BOSS, stepBoss, type Box } from '@/systems/boss';
 import { overlapsHazard, stepHazards, type Hazard } from '@/systems/hazards';
-import { PLAYER_RADIUS, PLAYER_SPEED } from '@/systems/movement';
+import { PLAYER_RADIUS } from '@/systems/movement';
 import { BASE_STATS, type PlayerStats } from '@/systems/progression';
-import { isZero, normalize, type Vec2 } from '@/utils/vec2';
+import type { Vec2 } from '@/utils/vec2';
 
 export type Projectile = { id: number; pos: Vec2; vel: Vec2; damage: number; age: number };
 
@@ -77,7 +76,6 @@ export type CombatState = {
   hurtFlash: number;
   downed: boolean;
   attackLock: number;
-  dash: { active: boolean; t: number; dir: Vec2 };
   aura: { active: boolean; t: number; hit: Set<string> };
   enemies: Enemy[];
   projectiles: Projectile[];
@@ -88,7 +86,7 @@ export type CombatState = {
   companion: Companion | null;
   /** Seconds left of the trident swing animation. */
   swing: number;
-  /** Seconds left of the pop-in after a teleport (0 when not blinking). */
+  /** Seconds left of the pop-in after a blink (0 when not blinking). */
   blink: number;
   /** Seconds left of the temporary mermaid look (Aura song, Tide Surge). */
   mermaid: number;
@@ -118,7 +116,6 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     hurtFlash: 0,
     downed: false,
     attackLock: 0,
-    dash: { active: false, t: 0, dir: { x: 0, z: 1 } },
     aura: { active: false, t: 0, hit: new Set() },
     enemies: spawns.map((s) =>
       createEnemy(s.id, s.kind, { x: s.x, z: s.z }, { dormant: s.dormant, instanced: s.instanced }),
@@ -138,10 +135,9 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
 
 export type CombatActions = {
   attack: boolean;
-  dash: boolean;
   aura: boolean;
   spell: boolean;
-  teleport?: boolean;
+  blink: boolean;
 };
 
 export type CombatParams = {
@@ -159,17 +155,15 @@ export type CombatParams = {
   /** The boss arena; the boss only fights while Rosa is inside. */
   arena?: Box | null;
   /** Where a blink from here would land (null: nowhere, so it is not cast). Supplied by the game loop. */
-  resolveTeleport?: (from: Vec2) => Vec2 | null;
+  resolveBlink?: (from: Vec2) => Vec2 | null;
 };
 
 export type CombatFrame = {
-  /** Replaces the movement vector (dash), or null. */
-  moveOverride: Vec2 | null;
   moveScale: number;
   faceOverride: Vec2 | null;
   cancelWalk: boolean;
   /** Rosa blinks here this step. */
-  teleportTo: Vec2 | null;
+  blinkTo: Vec2 | null;
   events: CombatEvent[];
 };
 
@@ -214,7 +208,6 @@ function hurtPlayer(
     s.aura.active = false;
     s.swing = 0;
     s.mermaid = 0;
-    s.dash.active = false;
     s.hazards = [];
     events.push({ type: 'playerDowned' });
     for (const e of s.enemies) standDown(e);
@@ -262,11 +255,10 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   const stats = p.stats ?? BASE_STATS;
   const events: CombatEvent[] = [];
   const frame: CombatFrame = {
-    moveOverride: null,
     moveScale: 1,
     faceOverride: null,
     cancelWalk: false,
-    teleportTo: null,
+    blinkTo: null,
     events,
   };
 
@@ -293,35 +285,24 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   let facing = p.playerFacing;
 
   if (alive) {
-    if (p.actions.dash && !s.dash.active && canUse(s.cooldowns, s.mana, 'dash')) {
-      spendAbility(s.cooldowns, s.mana, 'dash');
-      events.push({ type: 'cast', ability: 'dash' });
-      const dir = isZero(p.move) ? facing : normalize(p.move);
-      s.dash = { active: true, t: 0, dir };
-      s.invuln = Math.max(s.invuln, DASH.invuln);
-      pushEffect(s, 'bubbles', playerPos.x, playerPos.z, dir, 0.8, 1);
-      frame.cancelWalk = true;
-    }
-
-    if (p.actions.teleport && canUse(s.cooldowns, s.mana, 'teleport')) {
-      const dest = p.resolveTeleport?.(playerPos) ?? null;
+    if (p.actions.blink && canUse(s.cooldowns, s.mana, 'blink')) {
+      const dest = p.resolveBlink?.(playerPos) ?? null;
       if (dest) {
-        s.mana = spendAbility(s.cooldowns, s.mana, 'teleport') ?? s.mana;
-        events.push({ type: 'cast', ability: 'teleport' });
+        s.mana = spendAbility(s.cooldowns, s.mana, 'blink') ?? s.mana;
+        events.push({ type: 'cast', ability: 'blink' });
         const dir = directionTo(playerPos, dest);
         pushEffect(s, 'bubbles', playerPos.x, playerPos.z, dir, 0.8, 1);
         pushEffect(s, 'bubbles', dest.x, dest.z, dir, 0.8, 1);
-        s.dash.active = false;
-        s.invuln = Math.max(s.invuln, TELEPORT.invuln);
-        s.blink = TELEPORT.pop;
-        frame.teleportTo = dest;
+        s.invuln = Math.max(s.invuln, BLINK.invuln);
+        s.blink = BLINK.pop;
+        frame.blinkTo = dest;
         frame.cancelWalk = true;
         frame.faceOverride = dir;
         facing = dir;
       }
     }
 
-    if (p.actions.attack && !s.dash.active && canUse(s.cooldowns, s.mana, 'attack')) {
+    if (p.actions.attack && canUse(s.cooldowns, s.mana, 'attack')) {
       const targets = s.enemies
         .filter((e) => e.state !== 'dead' && !e.dormant)
         .map((e) => ({ id: e.id, pos: e.pos, radius: defOf(e).radius }));
@@ -382,15 +363,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     }
   }
 
-  if (s.dash.active) {
-    s.dash.t += dt;
-    const speedFactor = DASH.distance / DASH.duration / PLAYER_SPEED;
-    frame.moveOverride = { x: s.dash.dir.x * speedFactor, z: s.dash.dir.z * speedFactor };
-    if (s.dash.t >= DASH.duration) {
-      s.dash.active = false;
-      pushEffect(s, 'bubbles', playerPos.x, playerPos.z, s.dash.dir, 0.8, 1);
-    }
-  } else if (s.attackLock > 0) {
+  if (s.attackLock > 0) {
     frame.moveScale = ATTACK_LOCK_SCALE;
   }
 
@@ -550,7 +523,6 @@ export function revive(s: CombatState, stats: PlayerStats = BASE_STATS): void {
   s.projectiles = [];
   s.hazards = [];
   s.aura.active = false;
-  s.dash.active = false;
   s.swing = 0;
   s.mermaid = 0;
   for (const e of s.enemies) standDown(e);

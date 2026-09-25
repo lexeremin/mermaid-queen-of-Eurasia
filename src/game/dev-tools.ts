@@ -4,6 +4,7 @@ import { grantXp } from '@/game/progress-actions';
 import { gather } from '@/game/gather-sim';
 import { useGardenStore } from '@/store/garden-store';
 import { useDungeonStore } from '@/store/dungeon-store';
+import { recall } from '@/game/recall-sim';
 import { goDown, goUp } from '@/game/dungeon-actions';
 import { syncDungeonWorld } from '@/game/dungeon-sim';
 import { renderStats } from '@/game/render-stats';
@@ -44,6 +45,7 @@ declare global {
       spawnPickup: typeof spawnPickup;
       grantXp: typeof grantXp;
       dungeon: typeof useDungeonStore;
+      recall: typeof recall;
       goDown: typeof goDown;
       goUp: typeof goUp;
       syncDungeonWorld: typeof syncDungeonWorld;
@@ -67,6 +69,7 @@ export function installDevTools(): void {
     spawnPickup,
     grantXp,
     dungeon: useDungeonStore,
+    recall,
     goDown,
     goUp,
     syncDungeonWorld,

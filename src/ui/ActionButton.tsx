@@ -6,10 +6,10 @@ import { AbilityIcon } from '@/ui/icons';
 
 const ABILITY_OF: Record<Action, AbilityId | undefined> = {
   attack: 'attack',
-  dash: 'dash',
+  blink: 'blink',
   aura: 'aura',
   spell: 'spell',
-  teleport: 'teleport',
+  recall: undefined,
   interact: undefined,
 };
 

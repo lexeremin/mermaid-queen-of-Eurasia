@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { ENEMIES, RESPAWN_SECONDS } from '@/data/enemies';
 import {
   AURA,
-  DASH,
   HURT_INVULN,
   MAX_HP,
   MAX_MANA,
@@ -27,7 +26,7 @@ const world: CollisionWorld = {
   bounds: { minX: -100, maxX: 100, minZ: -100, maxZ: 100 },
   colliders: [],
 };
-const NONE: CombatActions = { attack: false, dash: false, aura: false, spell: false };
+const NONE: CombatActions = { attack: false, blink: false, aura: false, spell: false };
 const north = { x: 0, z: -1 };
 
 function step(
@@ -116,43 +115,6 @@ describe('trident attack', () => {
     expect(frame.moveScale).toBeLessThan(1);
     expect(s.kills).toBe(1);
     expect(run(s, 1).filter((e) => e.type === 'enemyDefeated')).toHaveLength(0);
-  });
-});
-
-describe('dash', () => {
-  it('moves along the input direction at dash speed for its duration and grants invulnerability', () => {
-    const s = createCombatState();
-    const frame = step(s, { move: { x: 1, z: 0 }, actions: { dash: true } });
-    expect(frame.moveOverride?.x).toBeGreaterThan(1);
-    expect(s.invuln).toBeGreaterThanOrEqual(DASH.invuln - 0.05);
-    let travelled = frame.moveOverride!.x;
-    for (let t = DT; t < DASH.duration + DT; t += DT) {
-      const f = step(s, { move: { x: 1, z: 0 } });
-      if (f.moveOverride) travelled += f.moveOverride.x;
-    }
-    const metres = (travelled * 5) / 60;
-    expect(metres).toBeGreaterThan(DASH.distance * 0.85);
-    expect(metres).toBeLessThan(DASH.distance * 1.2);
-    expect(s.dash.active).toBe(false);
-  });
-
-  it('dashes along the facing when standing still and respects its cooldown', () => {
-    const s = createCombatState();
-    const frame = step(s, { actions: { dash: true } });
-    expect(frame.moveOverride?.z).toBeLessThan(0);
-    run(s, 0.3);
-    step(s, { actions: { dash: true } });
-    expect(s.dash.active).toBe(false);
-  });
-
-  it('a dashing player is not hurt', () => {
-    const s = createCombatState([{ id: 'g', kind: 'speaker', x: 0, z: -1.5 }]);
-    s.enemies[0]!.state = 'windup';
-    s.enemies[0]!.timer = 0.01;
-    s.enemies[0]!.attackDir = north;
-    step(s, { actions: { dash: true } });
-    run(s, 0.1);
-    expect(s.hp).toBe(MAX_HP);
   });
 });
 
@@ -399,14 +361,6 @@ describe('spell looks', () => {
     expect(s.mermaid).toBe(0);
   });
 
-  it('bursts water bubbles where the dash starts and where it ends', () => {
-    const s = createCombatState();
-    step(s, { actions: { dash: true }, move: { x: 1, z: 0 } });
-    expect(s.effects.filter((e) => e.type === 'bubbles')).toHaveLength(1);
-    run(s, DASH.duration + 0.1, { move: { x: 1, z: 0 } });
-    expect(s.effects.filter((e) => e.type === 'bubbles')).toHaveLength(2);
-  });
-
   it('fainting and getting up clear the temporary looks', () => {
     const s = createCombatState();
     step(s, { actions: { aura: true, attack: true } });
@@ -423,14 +377,15 @@ describe('cast events and companion', () => {
     const abilities = (events: { type: string; ability?: string }[]) =>
       events.filter((e) => e.type === 'cast').map((e) => e.ability);
     expect(abilities(step(s, { actions: { attack: true } }).events)).toEqual(['attack']);
-    expect(abilities(step(s, { actions: { dash: true } }).events)).toEqual(['dash']);
+    expect(
+      abilities(step(s, { actions: { blink: true }, resolveBlink: () => ({ x: 5, z: 0 }) }).events),
+    ).toEqual(['blink']);
     expect(abilities(step(s, { actions: { aura: true, spell: true } }).events).sort()).toEqual([
       'aura',
       'spell',
     ]);
     s.mana = 0;
     s.cooldowns.attack = 0;
-    s.dash.active = false;
     expect(abilities(step(s, { actions: { attack: true, spell: true } }).events)).toEqual([
       'attack',
     ]);
@@ -581,18 +536,18 @@ describe('the boss fight', () => {
   });
 });
 
-describe('teleport', () => {
+describe('blink', () => {
   const dest = { x: 8, z: 0 };
-  const blink = (s: CombatState, resolveTeleport: CombatParams['resolveTeleport'] = () => dest) =>
-    step(s, { actions: { teleport: true }, resolveTeleport });
+  const blink = (s: CombatState, resolveBlink: CombatParams['resolveBlink'] = () => dest) =>
+    step(s, { actions: { blink: true }, resolveBlink });
 
   it('blinks to the destination, costs mana, starts the cooldown and grants a moment of safety', () => {
     const s = createCombatState();
     const frame = blink(s);
-    expect(frame.teleportTo).toEqual(dest);
-    expect(frame.events).toContainEqual({ type: 'cast', ability: 'teleport' });
-    expect(s.mana).toBe(MAX_MANA - ABILITIES.teleport.mana);
-    expect(s.cooldowns.teleport).toBeGreaterThan(0);
+    expect(frame.blinkTo).toEqual(dest);
+    expect(frame.events).toContainEqual({ type: 'cast', ability: 'blink' });
+    expect(s.mana).toBe(MAX_MANA - ABILITIES.blink.mana);
+    expect(s.cooldowns.blink).toBeGreaterThan(0);
     expect(s.invuln).toBeGreaterThan(0);
     expect(s.blink).toBeGreaterThan(0);
     expect(s.effects.filter((e) => e.type === 'bubbles')).toHaveLength(2);
@@ -601,24 +556,24 @@ describe('teleport', () => {
   it('is on cooldown afterwards, and needs the mana', () => {
     const s = createCombatState();
     blink(s);
-    expect(blink(s).teleportTo).toBeNull();
+    expect(blink(s).blinkTo).toBeNull();
     const poor = createCombatState();
     poor.mana = 5;
-    expect(blink(poor).teleportTo).toBeNull();
+    expect(blink(poor).blinkTo).toBeNull();
   });
 
   it('is not cast (and costs nothing) when there is nowhere to land', () => {
     const s = createCombatState();
     const frame = blink(s, () => null);
-    expect(frame.teleportTo).toBeNull();
+    expect(frame.blinkTo).toBeNull();
     expect(s.mana).toBe(MAX_MANA);
-    expect(s.cooldowns.teleport).toBe(0);
+    expect(s.cooldowns.blink).toBe(0);
   });
 
   it('cannot be cast while downed', () => {
     const s = createCombatState();
     s.downed = true;
-    expect(blink(s).teleportTo).toBeNull();
+    expect(blink(s).blinkTo).toBeNull();
   });
 
   it('dodges a boss hazard that lands while the invulnerability lasts', () => {

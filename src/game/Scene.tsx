@@ -11,6 +11,7 @@ import { CombatEffects } from '@/game/entities/CombatEffects';
 import { CompanionActor } from '@/game/entities/CompanionActor';
 import { DungeonProps } from '@/game/entities/DungeonProps';
 import { EnemyActors } from '@/game/entities/EnemyActors';
+import { RecallEffect } from '@/game/entities/RecallEffect';
 import { HazardMarks } from '@/game/entities/HazardMarks';
 import { Gatherables } from '@/game/entities/Gatherables';
 import { Pickups } from '@/game/entities/Pickups';
@@ -46,6 +47,7 @@ export function Scene() {
         <Gatherables />
         <CombatEffects />
         <HazardMarks />
+        <RecallEffect />
         <DungeonProps />
       </Suspense>
 
