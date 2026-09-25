@@ -7,6 +7,7 @@ import { useGameStore } from '@/store/game-store';
 import { useProgressStore, selectStats } from '@/store/progress-store';
 import { xpToNext, MAX_LEVEL } from '@/systems/progression';
 import { ABILITIES, cooldownFraction, type AbilityId } from '@/systems/abilities';
+import { UNLOCK_LEVEL, isUnlocked } from '@/systems/skills';
 import { AbilityIcon } from '@/ui/icons';
 import { QuestTracker } from '@/ui/QuestTracker';
 import { addHudTask } from '@/ui/hud-ticker';
@@ -159,10 +160,24 @@ export function CombatHud({ touch }: { touch: boolean }) {
       {!touch && (
         <div className="ability-bar">
           {SLOTS.map((slot) => (
-            <div key={slot.id} className="ability-slot" title={slot.label}>
+            <div
+              key={slot.id}
+              className={`ability-slot${isUnlocked(slot.id, level) ? '' : ' locked'}`}
+              title={
+                isUnlocked(slot.id, level)
+                  ? slot.label
+                  : `${slot.label}: unlocks at level ${UNLOCK_LEVEL[slot.id]}`
+              }
+            >
               <b>{slot.key}</b>
               <AbilityIcon id={slot.id} size={30} form={form} />
-              <em>{slot.id === 'aura' && form === 'mermaid' ? 'Tidal Song' : slot.label}</em>
+              <em>
+                {!isUnlocked(slot.id, level)
+                  ? `Lv ${UNLOCK_LEVEL[slot.id]}`
+                  : slot.id === 'aura' && form === 'mermaid'
+                    ? 'Tidal Song'
+                    : slot.label}
+              </em>
               {ABILITIES[slot.id].mana > 0 && <i>{ABILITIES[slot.id].mana}</i>}
               <CooldownSweep id={slot.id} />
             </div>

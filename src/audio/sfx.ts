@@ -6,6 +6,7 @@ import {
   SWING,
   WAVE,
   bubbleBlips,
+  fillSoftNoise,
   giggleChirps,
   swell,
   type SfxKind,
@@ -20,7 +21,7 @@ function noiseBuffer(ctx: AudioContext): AudioBuffer {
   if (!noise) {
     noise = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
     const data = noise.getChannelData(0);
-    for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+    fillSoftNoise(data);
   }
   return noise;
 }

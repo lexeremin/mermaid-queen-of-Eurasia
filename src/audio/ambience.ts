@@ -1,4 +1,5 @@
 import { getContext, log, masterBus } from '@/audio/engine';
+import { fillSoftNoise } from '@/audio/recipes';
 import { weather } from '@/game/feedback';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { useGameStore } from '@/store/game-store';
@@ -35,7 +36,7 @@ const TAU = 1.2;
 function noiseBuffer(ctx: AudioContext): AudioBuffer {
   const buffer = ctx.createBuffer(1, ctx.sampleRate * 3, ctx.sampleRate);
   const data = buffer.getChannelData(0);
-  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  fillSoftNoise(data);
   return buffer;
 }
 
@@ -114,8 +115,9 @@ function build(ctx: AudioContext): Layers {
 
   const rain = gain();
   const rainFilter = ctx.createBiquadFilter();
-  rainFilter.type = 'highpass';
-  rainFilter.frequency.value = 2500;
+  rainFilter.type = 'bandpass';
+  rainFilter.frequency.value = 2200;
+  rainFilter.Q.value = 0.5;
   noise(ctx, buffer).connect(rainFilter).connect(rain);
 
   return { bus, wind, pad, drone, pulse, rain };

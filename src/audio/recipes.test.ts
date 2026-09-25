@@ -5,6 +5,7 @@ import {
   SPECS,
   WAVE,
   bubbleBlips,
+  fillSoftNoise,
   giggleChirps,
   specLength,
   swell,
@@ -97,6 +98,7 @@ describe('sounds described as data', () => {
       'bossRoar',
       'bossDown',
       'crit',
+      'blast',
     ] as const) {
       expect(kinds).toContain(kind);
     }
@@ -135,5 +137,21 @@ describe('sounds described as data', () => {
     expect([...down].sort((a, b) => b - a)).toEqual(down);
     expect(specLength(SPECS.ui)).toBeLessThan(0.1);
     expect(notes('bossRoar').every((f) => f < 200)).toBe(true);
+  });
+});
+
+describe('soft noise', () => {
+  it('stays within range and is quieter than white noise', () => {
+    let seed = 1;
+    const random = () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+    const soft = new Float32Array(4000);
+    fillSoftNoise(soft, random);
+    const rms = Math.sqrt(soft.reduce((a, v) => a + v * v, 0) / soft.length);
+    expect(Math.max(...soft.map(Math.abs))).toBeLessThanOrEqual(1);
+    expect(rms).toBeLessThan(0.5);
+    expect(rms).toBeGreaterThan(0.1);
   });
 });

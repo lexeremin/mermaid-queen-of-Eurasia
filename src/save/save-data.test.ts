@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { MAX_LEVEL } from '@/systems/progression';
 import {
   defaultSavedProgress,
   migrateSave,
@@ -192,7 +193,7 @@ describe('save v2: progress', () => {
         },
       }),
     )!;
-    expect(save.progress.level).toBe(10);
+    expect(save.progress.level).toBe(MAX_LEVEL);
     expect(save.progress.xp).toBe(0);
     expect(save.progress.awarded).toEqual(['a']);
     expect(save.progress.bag).toHaveLength(20);

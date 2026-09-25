@@ -4,6 +4,8 @@ import { createPointerTracker } from '@/input/pointer-tracker';
 import type { AbilityId } from '@/systems/abilities';
 import { CooldownSweep } from '@/ui/CombatHud';
 import { useGameStore } from '@/store/game-store';
+import { useProgressStore } from '@/store/progress-store';
+import { UNLOCK_LEVEL, isUnlocked } from '@/systems/skills';
 import { AbilityIcon } from '@/ui/icons';
 
 const ABILITY_OF: Record<Action, AbilityId | undefined> = {
@@ -20,6 +22,9 @@ type Props = { action: Action; label: string; size: number; style: CSSProperties
 
 export function ActionButton({ action, label, size, style }: Props) {
   const form = useGameStore((s) => s.form);
+  const level = useProgressStore((s) => s.level);
+  const ability = ABILITY_OF[action];
+  const locked = ability !== undefined && !isUnlocked(ability, level);
   const tracker = useMemo(() => createPointerTracker(), []);
   const release = () => {
     tracker.reset();
@@ -45,7 +50,7 @@ export function ActionButton({ action, label, size, style }: Props) {
   return (
     <button
       type="button"
-      className="action-btn"
+      className={locked ? 'action-btn locked' : 'action-btn'}
       style={{ width: size, height: size, ...style }}
       onContextMenu={(e) => e.preventDefault()}
       onPointerDown={(e) => {
@@ -65,7 +70,11 @@ export function ActionButton({ action, label, size, style }: Props) {
         <AbilityIcon id={ABILITY_OF[action]} size={Math.round(size * 0.46)} form={form} />
       )}
       <span className="action-label">
-        {action === 'aura' && form === 'mermaid' ? 'TIDE' : label}
+        {locked && ability
+          ? `LV ${UNLOCK_LEVEL[ability]}`
+          : action === 'aura' && form === 'mermaid'
+            ? 'TIDE'
+            : label}
       </span>
       {ABILITY_OF[action] && <CooldownSweep id={ABILITY_OF[action]} />}
     </button>

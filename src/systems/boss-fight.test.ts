@@ -1,6 +1,7 @@
+import { writeFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { BOSS_KINDS, ENEMIES, isBossKind, type EnemyKind } from '@/data/enemies';
-import { generateLayer, layerPower } from '@/data/maps/underground';
+import { bossKindFor, generateLayer, layerPower } from '@/data/maps/underground';
 import { canUse } from '@/systems/abilities';
 import { directionTo } from '@/systems/combat-math';
 import { createCombatState, stepCombat, type CombatState } from '@/systems/combat';
@@ -102,6 +103,7 @@ function fight(
       world,
       arena,
       stats,
+      level,
       // Blink away from the marked spot (straight out of the hazard).
       resolveBlink: (from) => escapePoint(from, danger),
     });
@@ -116,31 +118,33 @@ function fight(
 
 describe('the fight is beatable', () => {
   it.skipIf(!process.env.BOSS_REPORT)('report', () => {
-    for (const kind of BOSS_KINDS) {
-      for (const level of [3, 5, 7, 10]) {
-        const r = fight(level, 300, 1, kind);
-        console.log(
-          `${kind} level ${level}: ${r.won ? 'WON' : 'lost'} in ${r.time.toFixed(0)} s, hp left ${Math.round(r.hp)}`,
-        );
+    const lines: string[] = [];
+    for (let layerNo = 10; layerNo <= 100; layerNo += 10) {
+      const kind = bossKindFor(layerNo);
+      let first = 0;
+      for (let level = 6; level <= 60 && !first; level++) {
+        if (fight(level, 400, layerPower(layerNo), kind).won) first = level;
       }
+      lines.push(`layer ${layerNo} ${kind}: first level that wins ${first || 'none'}`);
     }
+    writeFileSync(process.env.BOSS_REPORT!, lines.join('\n'));
   });
 
-  it('a level-5 Rosa with starter gear wins with basic dodging', () => {
-    const result = fight(5, 300);
+  it('a level-10 Rosa with starter gear wins with basic dodging', () => {
+    const result = fight(10, 300);
     expect(result.won, `hp ${result.hp} after ${result.time.toFixed(0)} s`).toBe(true);
   });
 
   it('is a real fight: it takes a while and it hurts', () => {
-    const result = fight(5, 300);
-    expect(result.time).toBeGreaterThan(25);
-    expect(result.hp).toBeLessThan(computeStats(5, STARTER_EQUIPMENT).maxHp);
+    const result = fight(10, 300);
+    expect(result.time).toBeGreaterThan(15);
+    expect(result.hp).toBeLessThan(computeStats(10, STARTER_EQUIPMENT).maxHp);
   });
 
-  it('gets harder with depth: the layer-10 boss beats a level-7 Rosa in starter gear, a level-10 one wins', () => {
+  it('gets harder with depth: the layer-10 boss beats a level-7 Rosa in starter gear, a level-12 one wins', () => {
     const power = layerPower(10);
     expect(fight(7, 300, power).won).toBe(false);
-    expect(fight(10, 300, power).won).toBe(true);
+    expect(fight(12, 300, power).won).toBe(true);
     const boss = createCombatState(layer.enemies.map((e) => ({ ...e, power }))).enemies.find(
       (e) => e.kind === 'boss',
     )!;
@@ -153,6 +157,19 @@ describe('the fight is beatable', () => {
       expect(result.won, `${kind}: hp ${result.hp} after ${result.time.toFixed(0)} s`).toBe(true);
       expect(result.time, kind).toBeGreaterThan(15);
       expect(result.hp, kind).toBeLessThan(computeStats(10, STARTER_EQUIPMENT).maxHp);
+    }
+  });
+
+  it('deeper boss layers ask for a much stronger Rosa: the last one for one of the top levels', () => {
+    for (const [layerNo, wins, loses] of [
+      [20, 16, 8],
+      [50, 26, 14],
+      [100, 60, 30],
+    ] as const) {
+      const kind = bossKindFor(layerNo);
+      const power = layerPower(layerNo);
+      expect(fight(wins, 400, power, kind).won, `layer ${layerNo}: level ${wins}`).toBe(true);
+      expect(fight(loses, 400, power, kind).won, `layer ${layerNo}: level ${loses}`).toBe(false);
     }
   });
 

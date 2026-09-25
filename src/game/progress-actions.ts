@@ -11,6 +11,7 @@ import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { firstIndexOf } from '@/systems/inventory';
 import { XP_REWARDS } from '@/systems/progression';
+import { gainsAtLevel } from '@/systems/skills';
 import { MESMERIZED_AT } from '@/systems/relationship';
 
 const toast = (text: string, kind: 'xp' | 'item' | 'warn' | 'info' = 'info') =>
@@ -24,6 +25,9 @@ function onLevelUp(levelsGained: number): void {
   combat.mana = stats.maxMana;
   const level = useProgressStore.getState().level;
   useToastStore.getState().announceLevelUp(level);
+  for (let l = level - levelsGained + 1; l <= level; l++) {
+    for (const gain of gainsAtLevel(l)) toast(`${gain.title}: ${gain.text}`, 'info');
+  }
   playSfx('levelUp');
   track('level_up', { level });
 }

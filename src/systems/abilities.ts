@@ -77,6 +77,32 @@ export const SPELL = {
   /** Seconds Rosa looks like a mermaid while casting. */
   mermaid: 1.3,
 } as const;
+/** Level 20 passive of the trident: a sea wave rolls out along the swing and hits everything it passes. */
+export const SEA_WAVE = {
+  speed: 9,
+  life: 0.75,
+  radius: 1.4,
+  damageFactor: 0.7,
+  knockback: 1.6,
+} as const;
+/** Level 30 passive of the Aura: rays of light sweep around Rosa while she sings. */
+export const LIGHT_BEAMS = { count: 6, halfWidth: 0.6, spin: 1.7, tick: 0.5, damage: 9 } as const;
+/** Level 40 passive of Surge: sharks leap from the wave and crash down outside it. */
+export const SHARKS = {
+  count: 6,
+  /** Where they leave the wave, and where they land, as multiples of the Surge radius. */
+  startAt: 0.55,
+  landFrom: 1.05,
+  landTo: 1.45,
+  stagger: 0.07,
+  flight: 0.75,
+  height: 2.2,
+  blastRadius: 1.8,
+  damageFactor: 0.6,
+  knockback: 3,
+} as const;
+/** Level 50 passive of Blink: an arcane blast where Rosa arrives. */
+export const ARCANE_BLAST = { radius: 4.2, damage: 30, knockback: 4.5, life: 0.75 } as const;
 /** Length of the trident swing animation. */
 export const SWING_TIME = 0.34;
 

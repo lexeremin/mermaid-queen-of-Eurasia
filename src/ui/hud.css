@@ -2108,3 +2108,11 @@
   color: var(--ui-gold-bright);
   letter-spacing: 0.04em;
 }
+
+/* An ability that is not unlocked yet: dimmed, with the level that opens it. */
+.ability-slot.locked,
+.action-btn.locked {
+  opacity: 0.45;
+  filter: grayscale(0.8);
+  pointer-events: none;
+}

@@ -22,6 +22,7 @@ import { METRO } from '@/data/maps/red-square';
 import { onEnemyDefeatedForQuests } from '@/game/quest-actions';
 import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
+import { UNLOCK_LEVEL, abilityName, isUnlocked } from '@/systems/skills';
 import { ITEMS } from '@/data/items';
 import { XP_REWARDS } from '@/systems/progression';
 import { stepArchangelHints } from '@/game/archangel-actions';
@@ -76,6 +77,22 @@ const ndc = new Vector2();
 const raycaster = new Raycaster();
 const stepper = createFixedStepper(SIM_STEP, MAX_STEPS_PER_FRAME);
 const STUCK_SECONDS = 0.5;
+const LOCKED_TOAST_GAP_MS = 1500;
+let lockedToastAt = -Infinity;
+
+/** Pressing a skill Rosa has not earned yet says when she gets it. */
+function hintLockedSkills(level: number): void {
+  for (const id of ['aura', 'blink', 'spell'] as const) {
+    if (!input.pressed[id] || isUnlocked(id, level)) continue;
+    const now = performance.now();
+    if (now - lockedToastAt < LOCKED_TOAST_GAP_MS) return;
+    lockedToastAt = now;
+    useToastStore
+      .getState()
+      .push(`${abilityName(id)} unlocks at level ${UNLOCK_LEVEL[id]}`, 'warn');
+    return;
+  }
+}
 const SPOTS = [...currentMap.npcs, ...(currentMap.archangels ?? []), ...(currentMap.locals ?? [])];
 const PLACE_OF_ASSET = new Map<string, PlaceId>([
   ['questBoard', 'board'],
@@ -205,6 +222,8 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       else if (event.ability === 'spell') playSfx('wave');
       else if (event.ability === 'aura') playAuraSong();
       else if (event.ability === 'blink') playSfx('blink');
+    } else if (event.type === 'passive') {
+      playSfx(event.ability === 'blink' ? 'blast' : 'splash');
     } else if (event.type === 'enemyHit') {
       playSfx('hit');
       showDamage(event.x, event.z, event.amount, 'enemy');
@@ -322,6 +341,7 @@ export function GameLoop() {
 
     aimPoint = input.pointer ? groundPoint(state.camera, input.pointer) : null;
     const stats = currentStats();
+    hintLockedSkills(useProgressStore.getState().level);
     sim.alpha = stepper.advance(delta, (dt) => {
       let move = getMove(input);
       const frame = stepCombat(combat, {
@@ -341,6 +361,7 @@ export function GameLoop() {
         arena: activeLevel()?.arena ?? null,
         form: useGameStore.getState().form,
         stats,
+        level: useProgressStore.getState().level,
         companion: followingId ? { id: followingId } : null,
       });
       if (frame.blinkTo) {

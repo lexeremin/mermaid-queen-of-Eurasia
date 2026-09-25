@@ -31,4 +31,4 @@ Sound, Volume, Ambience, Screen shake, Weather, Damage numbers, Anonymous stats,
 - Draw calls at spawn: 66 dry, 67 in drizzle (the budget is 70); a fight in the plaza plus drizzle reached 71 on the software renderer, so the drizzle is the first thing to drop when Auto lowers the graphics.
 
 ## Not done
-The real-device frame rate and the sound levels on phone speakers are unchecked (Phase 26).
+The real-device frame rate and the sound levels on phone speakers are unchecked (Phase 27).

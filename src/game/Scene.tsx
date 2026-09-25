@@ -9,6 +9,7 @@ import { GameLoop } from '@/game/GameLoop';
 import { ActorRings } from '@/game/entities/ActorRings';
 import { ClickMarker } from '@/game/entities/ClickMarker';
 import { CombatEffects } from '@/game/entities/CombatEffects';
+import { SkillEffects } from '@/game/entities/SkillEffects';
 import { CompanionActor } from '@/game/entities/CompanionActor';
 import { DungeonProps } from '@/game/entities/DungeonProps';
 import { EnemyActors } from '@/game/entities/EnemyActors';
@@ -76,6 +77,7 @@ export function Scene() {
         <Pickups />
         <Gatherables />
         <CombatEffects />
+        <SkillEffects />
         <HazardMarks />
         <RecallEffect />
         <SwimEffect />

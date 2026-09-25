@@ -48,7 +48,8 @@ const ARENAS: Readonly<Record<string, { label: string; color: string }>> = {
 
 export const isBossLayer = (layer: number): boolean => layer % BOSS_EVERY === 0;
 /** How much tougher the monsters of a layer are than the base kind (see `Enemy.power`). */
-export const layerPower = (layer: number): number => 1 + 0.06 * (layer - 1);
+export const layerPower = (layer: number): number =>
+  1 + 0.06 * (layer - 1) + 0.0004 * (layer - 1) ** 2;
 /** Ten layers make a tier: it sets the light colour and the quality of the chests. */
 export const layerTier = (layer: number): number => Math.floor((layer - 1) / BOSS_EVERY);
 

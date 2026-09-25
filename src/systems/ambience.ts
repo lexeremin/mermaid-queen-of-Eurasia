@@ -36,7 +36,7 @@ export function pickBell(random: () => number): number {
 }
 
 /** The drizzle's hiss: silent when dry, faint at most. */
-export const rainHiss = (rain: number): number => 0.045 * Math.min(1, Math.max(0, rain));
+export const rainHiss = (rain: number): number => 0.025 * Math.min(1, Math.max(0, rain));
 
 /** What each layer's ceiling is, as an audio gain (kept low: this sits under the game). */
-export const CEILING = { wind: 0.05, pad: 0.022, drone: 0.05, pulse: 0.05 } as const;
+export const CEILING = { wind: 0.03, pad: 0.022, drone: 0.05, pulse: 0.05 } as const;

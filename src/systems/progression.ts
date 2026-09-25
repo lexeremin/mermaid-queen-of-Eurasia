@@ -1,9 +1,15 @@
 import { MERMAID, type Form } from '@/systems/abilities';
 import { ITEMS, isItemId, type Bonuses, type EquipSlot, type ItemId } from '@/data/items';
 
-export const MAX_LEVEL = 10;
+/** The level cap: skills come one by one up to level 10, passives every tenth level after (see `skills.ts`). */
+export const MAX_LEVEL = 60;
 
-export const xpToNext = (level: number): number => 40 + 30 * (level - 1);
+/** The level after which each level adds more (see `computeStats`). */
+const VETERAN_FROM = 10;
+
+/** Levels 1 to 9 cost 40, 70, 100... XP; from the tenth the steps are bigger, because the cap is sixty. */
+export const xpToNext = (level: number): number =>
+  level < 10 ? 40 + 30 * (level - 1) : 280 + 70 * (level - 9);
 
 export type Progress = { level: number; xp: number };
 
@@ -70,10 +76,12 @@ export function computeStats(
 ): PlayerStats {
   const l = Math.min(MAX_LEVEL, Math.max(1, Math.floor(level)));
   const b = equipmentBonuses(equipment);
+  /** Levels past the tenth grow a little faster: the dungeon below gets a lot harder. */
+  const veteran = Math.max(0, l - VETERAN_FROM);
   return {
-    maxHp: BASE_HP + 10 * (l - 1) + b.maxHp,
-    maxMana: BASE_MANA + 8 * (l - 1) + b.maxMana,
-    damageMult: 1 + 0.06 * (l - 1) + b.damagePct / 100,
+    maxHp: BASE_HP + 10 * (l - 1) + 4 * veteran + b.maxHp,
+    maxMana: BASE_MANA + 8 * (l - 1) + 4 * veteran + b.maxMana,
+    damageMult: 1 + 0.06 * (l - 1) + 0.03 * veteran + b.damagePct / 100,
     reduction: Math.min(MAX_REDUCTION, b.reductionPct / 100),
     manaRegen: BASE_MANA_REGEN + b.manaRegen + (form === 'mermaid' ? MERMAID.manaRegen : 0),
   };

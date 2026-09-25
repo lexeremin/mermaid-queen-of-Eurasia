@@ -1,7 +1,7 @@
 import { useAnimations, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import type { Group, Object3D } from 'three';
+import { Box3, Vector3, type Group, type Object3D } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
 import { applyHeroLook } from '@/game/assets/xray';
@@ -9,7 +9,10 @@ import { combat } from '@/game/combat-sim';
 import { renderStats } from '@/game/render-stats';
 import { sim } from '@/game/sim';
 import type { HeroForm } from '@/store/game-store';
+import { HolyCrown } from '@/game/entities/HolyCrown';
+import { useProgressStore } from '@/store/progress-store';
 import { SWING_TIME } from '@/systems/abilities';
+import { hasWings } from '@/systems/skills';
 
 const WALK_SPEED_THRESHOLD = 0.5;
 const CROSSFADE_SECONDS = 0.18;
@@ -31,6 +34,12 @@ export function swingAngle(t: number): number {
   return lerp(1.75, 0, smooth((t - 0.55) / 0.45));
 }
 
+/** Standing height of a figure, from its bounding box (1.75 m when it has none). */
+function heightOf(model: Object3D): number {
+  const size = new Box3().setFromObject(model).getSize(new Vector3());
+  return size.y > 0.5 && size.y < 4 ? size.y : 1.75;
+}
+
 const ASSET_BY_FORM = { human: 'rosa', mermaid: 'rosaMermaid' } as const;
 
 export function RosaModel({ form }: { form: HeroForm }) {
@@ -40,6 +49,8 @@ export function RosaModel({ form }: { form: HeroForm }) {
 
   const gltf = useGLTF(ASSETS[ASSET_BY_FORM[form]].url);
   const scene = useMemo(() => clone(gltf.scene) as Group, [gltf.scene]);
+  const height = useMemo(() => heightOf(scene), [scene]);
+  const crowned = useProgressStore((s) => hasWings(s.level)) && form === 'human';
   const { actions } = useAnimations(gltf.animations, root);
 
   useEffect(() => {
@@ -72,6 +83,7 @@ export function RosaModel({ form }: { form: HeroForm }) {
   return (
     <group ref={root}>
       <primitive object={scene} />
+      {crowned && <HolyCrown height={height} />}
     </group>
   );
 }

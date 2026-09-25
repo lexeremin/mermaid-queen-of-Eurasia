@@ -43,6 +43,8 @@ export function travelTo(dest: Vec2, arrivalToast?: string): void {
   sim.path = [];
   sim.talkTo = null;
   combat.projectiles = [];
+  combat.seaWaves = [];
+  combat.sharks = [];
   pushEffect(combat, 'bubbles', from.x, from.z, { x: 0, z: 1 }, 0.8, 1.2);
   pushEffect(combat, 'bubbles', pos.x, pos.z, { x: 0, z: 1 }, 0.8, 1.2);
   useGameStore.getState().setUnderground(isUnderground(pos));

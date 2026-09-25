@@ -48,7 +48,8 @@ export const QUESTS: readonly QuestDef[] = [
   {
     id: 'first-notes',
     title: 'First Notes',
-    blurb: 'Sergey has narrated the same fountain for years. Sing until he really listens.',
+    blurb:
+      'Sergey has narrated the same fountain for years. Sing until he really listens (the Aura opens at level 3).',
     minRank: 0,
     objectives: [{ kind: 'mesmerize', npc: 'sergei' }],
     reward: { xp: 30, rep: 8, items: [{ id: 'healingTea', qty: 2 }] },

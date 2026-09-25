@@ -14,15 +14,15 @@ export const AURA_FILE = '/assets/audio/rosa_aura.mp3';
 /** The sung "ah" is kept quiet so it sits under the game rather than on top of it. */
 export const AURA_GAIN = 0.32;
 
-export const SWING = { dur: 0.13, from: 2400, to: 800, gain: 0.1 } as const;
+export const SWING = { dur: 0.13, from: 2200, to: 700, gain: 0.05 } as const;
 
 export const HIT = {
   noiseDur: 0.05,
-  lowpass: 1500,
+  lowpass: 1100,
   thumpFrom: 180,
   thumpTo: 55,
   thumpDur: 0.12,
-  noiseGain: 0.22,
+  noiseGain: 0.1,
   thumpGain: 0.32,
 } as const;
 
@@ -32,7 +32,7 @@ export const WAVE = {
   cutoffFrom: 260,
   cutoffPeak: 1000,
   cutoffTo: 320,
-  gain: 0.2,
+  gain: 0.11,
   pad: [196, 247, 294] as readonly number[],
   padGain: 0.028,
 } as const;
@@ -142,7 +142,8 @@ export type SpecKind =
   | 'splash'
   | 'bossRoar'
   | 'bossDown'
-  | 'crit';
+  | 'crit'
+  | 'blast';
 
 /** UI clicks, level-up, quests, loot, blink, hurt, splash and the boss: every one short and quiet. */
 export const SPECS: Readonly<Record<SpecKind, SfxSpec>> = {
@@ -169,18 +170,18 @@ export const SPECS: Readonly<Record<SpecKind, SfxSpec>> = {
   },
   hurt: {
     tones: [{ at: 0, freq: 170, to: 60, dur: 0.16, gain: 0.3, type: 'sine' }],
-    noise: [{ at: 0, dur: 0.09, gain: 0.16, filter: 'lowpass', from: 1400 }],
+    noise: [{ at: 0, dur: 0.09, gain: 0.08, filter: 'lowpass', from: 1100 }],
   },
   downed: { tones: arpeggio([392, 329.63, 261.63, 196], 0.22, 0.6, 0.1, 'sine') },
   blink: {
     tones: [{ at: 0, freq: 320, to: 1500, dur: 0.14, gain: 0.09, type: 'sine' }],
-    noise: [{ at: 0, dur: 0.12, gain: 0.05, filter: 'bandpass', from: 1800, to: 3800, q: 1.4 }],
+    noise: [{ at: 0, dur: 0.12, gain: 0.025, filter: 'bandpass', from: 1600, to: 3200, q: 1.4 }],
   },
   splash: {
     tones: [],
     noise: [
-      { at: 0, dur: 0.35, gain: 0.16, filter: 'bandpass', from: 900, to: 400, q: 0.8 },
-      { at: 0.05, dur: 0.2, gain: 0.08, filter: 'highpass', from: 3000 },
+      { at: 0, dur: 0.35, gain: 0.09, filter: 'bandpass', from: 800, to: 380, q: 0.8 },
+      { at: 0.05, dur: 0.2, gain: 0.03, filter: 'bandpass', from: 2600, q: 0.6 },
     ],
   },
   bossRoar: {
@@ -188,7 +189,7 @@ export const SPECS: Readonly<Record<SpecKind, SfxSpec>> = {
       { at: 0, freq: 110, to: 52, dur: 1.1, gain: 0.22, type: 'sawtooth' },
       { at: 0, freq: 55, to: 40, dur: 1.2, gain: 0.25, type: 'sine' },
     ],
-    noise: [{ at: 0, dur: 0.9, gain: 0.12, filter: 'lowpass', from: 700, to: 200 }],
+    noise: [{ at: 0, dur: 0.9, gain: 0.07, filter: 'lowpass', from: 600, to: 200 }],
   },
   bossDown: {
     tones: [
@@ -198,7 +199,14 @@ export const SPECS: Readonly<Record<SpecKind, SfxSpec>> = {
         at: t.at + 0.5,
       })),
     ],
-    noise: [{ at: 0, dur: 1.1, gain: 0.14, filter: 'lowpass', from: 900, to: 150 }],
+    noise: [{ at: 0, dur: 1.1, gain: 0.08, filter: 'lowpass', from: 800, to: 150 }],
+  },
+  blast: {
+    tones: [
+      { at: 0, freq: 220, to: 70, dur: 0.3, gain: 0.16, type: 'sine' },
+      { at: 0, freq: 660, to: 1500, dur: 0.22, gain: 0.05, type: 'triangle' },
+      { at: 0.05, freq: 990, to: 1980, dur: 0.3, gain: 0.03, type: 'sine' },
+    ],
   },
   crit: {
     tones: [
@@ -215,3 +223,16 @@ export const specLength = (spec: SfxSpec): number =>
     ...spec.tones.map((t) => t.at + t.dur),
     ...(spec.noise ?? []).map((n) => n.at + n.dur),
   );
+
+/**
+ * Fills a buffer with soft noise: white noise run through a gentle one-pole low-pass, so it hisses less and rumbles a
+ * little instead. The samples stay within -1..1.
+ */
+export function fillSoftNoise(data: Float32Array, random: () => number = Math.random): void {
+  const smoothing = 0.5;
+  let y = 0;
+  for (let i = 0; i < data.length; i++) {
+    y += smoothing * (random() * 2 - 1 - y);
+    data[i] = y;
+  }
+}

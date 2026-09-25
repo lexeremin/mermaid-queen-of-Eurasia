@@ -1,7 +1,11 @@
 import { RESPAWN_SECONDS, isBossKind, type EnemyKind } from '@/data/enemies';
 import {
   AIM_ASSIST,
+  ARCANE_BLAST,
   AURA,
+  LIGHT_BEAMS,
+  SEA_WAVE,
+  SHARKS,
   songFor,
   type Form,
   type SongSpec,
@@ -39,11 +43,17 @@ import { bossTuning, stepBoss, type Box } from '@/systems/boss';
 import { overlapsHazard, stepHazards, type Hazard } from '@/systems/hazards';
 import { PLAYER_RADIUS } from '@/systems/movement';
 import { BASE_STATS, type PlayerStats } from '@/systems/progression';
+import { ALL_UNLOCKED_LEVEL, hasPassive, isUnlocked } from '@/systems/skills';
 import type { Vec2 } from '@/utils/vec2';
 
 export type Projectile = { id: number; pos: Vec2; vel: Vec2; damage: number; age: number };
 
-export type EffectType = 'arc' | 'wave' | 'bubbles' | 'puff';
+/** The level-20 passive of the trident: a sea wave rolling out along the swing. */
+export type SeaWave = { id: number; pos: Vec2; dir: Vec2; age: number; hit: Set<string> };
+/** A level-40 shark leaping from the Surge wave; `age` starts below zero while it waits its turn. */
+export type Shark = { id: number; from: Vec2; to: Vec2; age: number };
+
+export type EffectType = 'arc' | 'wave' | 'bubbles' | 'puff' | 'arcane' | 'splash';
 export type Effect = {
   id: number;
   type: EffectType;
@@ -64,6 +74,8 @@ export type CombatEvent =
   | { type: 'enemyHit'; x: number; z: number; amount: number }
   /** Rosa used an ability (drives voice and sound). */
   | { type: 'cast'; ability: AbilityId }
+  /** A passive effect fired (sea wave, sharks, arcane blast). */
+  | { type: 'passive'; ability: AbilityId }
   /** The boss entered his second or third phase. */
   | { type: 'bossPhase'; phase: 2 | 3; kind: EnemyKind }
   /** The boss woke helpers. */
@@ -80,9 +92,21 @@ export type CombatState = {
   downed: boolean;
   attackLock: number;
   /** The song being sung (the human Aura or the mermaid's Tidal Song), kept from the moment it was cast. */
-  aura: { active: boolean; t: number; hit: Set<string>; song: SongSpec };
+  aura: {
+    active: boolean;
+    t: number;
+    hit: Set<string>;
+    song: SongSpec;
+    /** The level-30 passive was on when the song began. */
+    beams: boolean;
+    /** Enemy id -> time (sim seconds) until which the beams will not hurt it again. */
+    beamAt: Record<string, number>;
+  };
   enemies: Enemy[];
   projectiles: Projectile[];
+  /** Rosa's sea waves (level 20 trident) and leaping sharks (level 40 Surge). */
+  seaWaves: SeaWave[];
+  sharks: Shark[];
   /** Telegraphed danger zones (boss moves) waiting to land. */
   hazards: Hazard[];
   effects: Effect[];
@@ -121,7 +145,7 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     hurtFlash: 0,
     downed: false,
     attackLock: 0,
-    aura: { active: false, t: 0, hit: new Set(), song: AURA },
+    aura: { active: false, t: 0, hit: new Set(), song: AURA, beams: false, beamAt: {} },
     enemies: spawns.map((s) =>
       createEnemy(
         s.id,
@@ -131,6 +155,8 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
       ),
     ),
     projectiles: [],
+    seaWaves: [],
+    sharks: [],
     hazards: [],
     effects: [],
     companion: null,
@@ -158,6 +184,8 @@ export type CombatParams = {
   actions: CombatActions;
   npcs: readonly { id: string; pos: Vec2 }[];
   world: CollisionWorld;
+  /** Rosa's level: it decides which abilities she has and which passives (default: all abilities, no passives). */
+  level?: number;
   /** Derived player stats (level and equipment); defaults to the base stats. */
   stats?: PlayerStats;
   /** Rosa's form: the mermaid sings Tidal Song instead of the Aura. */
@@ -221,6 +249,8 @@ function hurtPlayer(
     s.swing = 0;
     s.mermaid = 0;
     s.hazards = [];
+    s.seaWaves = [];
+    s.sharks = [];
     events.push({ type: 'playerDowned' });
     for (const e of s.enemies) standDown(e);
   }
@@ -267,6 +297,139 @@ function collapseHelpers(s: CombatState): void {
   }
 }
 
+const TAU = Math.PI * 2;
+
+/** The angle of ray `k` of the Aura's light beams `t` seconds into the song. */
+export const beamAngle = (t: number, k: number): number =>
+  t * LIGHT_BEAMS.spin + (k / LIGHT_BEAMS.count) * TAU;
+
+/** Sends a sea wave out along `dir`, starting just past the trident's reach. */
+function castSeaWave(s: CombatState, from: Vec2, dir: Vec2): void {
+  s.seaWaves.push({
+    id: s.nextId++,
+    pos: { x: from.x + dir.x * 1.4, z: from.z + dir.z * 1.4 },
+    dir,
+    age: 0,
+    hit: new Set(),
+  });
+}
+
+/** Sends the sharks off: they leave the Surge wave and land at fixed spots outside it. */
+function releaseSharks(s: CombatState, from: Vec2, facing: Vec2, world: CollisionWorld): void {
+  const base = Math.atan2(facing.z, facing.x) + (s.nextId % 7) * 0.09;
+  for (let k = 0; k < SHARKS.count; k++) {
+    const a = base + (k / SHARKS.count) * TAU;
+    const dx = Math.cos(a);
+    const dz = Math.sin(a);
+    const reach = SHARKS.landFrom + ((k % 3) / 2) * (SHARKS.landTo - SHARKS.landFrom);
+    const land = resolveCircle(
+      { x: from.x + dx * SPELL.radius * reach, z: from.z + dz * SPELL.radius * reach },
+      0.4,
+      world,
+    );
+    s.sharks.push({
+      id: s.nextId++,
+      from: {
+        x: from.x + dx * SPELL.radius * SHARKS.startAt,
+        z: from.z + dz * SPELL.radius * SHARKS.startAt,
+      },
+      to: land,
+      age: -k * SHARKS.stagger,
+    });
+  }
+}
+
+/** Rosa's own passive effects for one step: sea waves in flight, sharks in the air, the Aura's light beams. */
+function stepPassives(
+  s: CombatState,
+  p: { dt: number; playerPos: Vec2; world: CollisionWorld; mult: number },
+  events: CombatEvent[],
+): void {
+  const { dt, playerPos, world, mult } = p;
+
+  s.seaWaves = s.seaWaves.filter((w) => {
+    w.age += dt;
+    const next = {
+      x: w.pos.x + w.dir.x * SEA_WAVE.speed * dt,
+      z: w.pos.z + w.dir.z * SEA_WAVE.speed * dt,
+    };
+    const blocked = resolveCircle(next, 0.15, world);
+    if (w.age > SEA_WAVE.life || Math.hypot(blocked.x - next.x, blocked.z - next.z) > 0.05) {
+      return false;
+    }
+    w.pos = next;
+    for (const e of s.enemies) {
+      if (e.state === 'dead' || e.dormant || w.hit.has(e.id)) continue;
+      if (!inCircle(w.pos, e.pos, defOf(e).radius, SEA_WAVE.radius)) continue;
+      w.hit.add(e.id);
+      hitEnemy(
+        s,
+        e,
+        Math.round(TRIDENT.damage * SEA_WAVE.damageFactor * mult),
+        w.pos,
+        SEA_WAVE.knockback,
+        events,
+      );
+    }
+    return true;
+  });
+
+  s.sharks = s.sharks.filter((shark) => {
+    shark.age += dt;
+    if (shark.age < SHARKS.flight) return true;
+    pushEffect(s, 'splash', shark.to.x, shark.to.z, { x: 0, z: 1 }, 0.55, SHARKS.blastRadius);
+    for (const e of s.enemies) {
+      if (e.state === 'dead' || e.dormant) continue;
+      if (inCircle(shark.to, e.pos, defOf(e).radius, SHARKS.blastRadius)) {
+        hitEnemy(
+          s,
+          e,
+          Math.round(SPELL.damage * SHARKS.damageFactor * mult),
+          shark.to,
+          SHARKS.knockback,
+          events,
+        );
+      }
+    }
+    return false;
+  });
+
+  if (s.aura.active && s.aura.beams) {
+    const song = s.aura.song;
+    const reach = song.maxRadius * Math.min(1, s.aura.t / song.duration);
+    for (const e of s.enemies) {
+      if (e.state === 'dead' || e.dormant) continue;
+      if ((s.aura.beamAt[e.id] ?? 0) > s.time) continue;
+      const dx = e.pos.x - playerPos.x;
+      const dz = e.pos.z - playerPos.z;
+      const r = Math.hypot(dx, dz);
+      const er = defOf(e).radius;
+      if (r > reach + er) continue;
+      for (let k = 0; k < LIGHT_BEAMS.count; k++) {
+        const a = beamAngle(s.aura.t, k);
+        const along = dx * Math.cos(a) + dz * Math.sin(a);
+        const across = Math.abs(-dx * Math.sin(a) + dz * Math.cos(a));
+        if (along < -er || across > LIGHT_BEAMS.halfWidth + er) continue;
+        s.aura.beamAt[e.id] = s.time + LIGHT_BEAMS.tick;
+        hitEnemy(s, e, Math.round(LIGHT_BEAMS.damage * mult), playerPos, 0.5, events);
+        break;
+      }
+    }
+  }
+}
+
+/** The arcane blast of the level-50 Blink, where Rosa lands. */
+function arcaneBlast(s: CombatState, at: Vec2, mult: number, events: CombatEvent[]): void {
+  events.push({ type: 'passive', ability: 'blink' });
+  pushEffect(s, 'arcane', at.x, at.z, { x: 0, z: 1 }, ARCANE_BLAST.life, ARCANE_BLAST.radius);
+  for (const e of s.enemies) {
+    if (e.state === 'dead' || e.dormant) continue;
+    if (inCircle(at, e.pos, defOf(e).radius, ARCANE_BLAST.radius)) {
+      hitEnemy(s, e, Math.round(ARCANE_BLAST.damage * mult), at, ARCANE_BLAST.knockback, events);
+    }
+  }
+}
+
 /** Advances combat by one fixed step. Mutates `s`. */
 export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   const { dt, playerPos, world } = p;
@@ -301,9 +464,10 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
 
   const alive = !s.downed;
   let facing = p.playerFacing;
+  const level = p.level ?? ALL_UNLOCKED_LEVEL;
 
   if (alive) {
-    if (p.actions.blink && canUse(s.cooldowns, s.mana, 'blink')) {
+    if (p.actions.blink && isUnlocked('blink', level) && canUse(s.cooldowns, s.mana, 'blink')) {
       const dest = p.resolveBlink?.(playerPos) ?? null;
       if (dest) {
         s.mana = spendAbility(s.cooldowns, s.mana, 'blink') ?? s.mana;
@@ -317,10 +481,11 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
         frame.cancelWalk = true;
         frame.faceOverride = dir;
         facing = dir;
+        if (hasPassive('blink', level)) arcaneBlast(s, dest, stats.damageMult, events);
       }
     }
 
-    if (p.actions.attack && canUse(s.cooldowns, s.mana, 'attack')) {
+    if (p.actions.attack && isUnlocked('attack', level) && canUse(s.cooldowns, s.mana, 'attack')) {
       const targets = s.enemies
         .filter((e) => e.state !== 'dead' && !e.dormant)
         .map((e) => ({ id: e.id, pos: e.pos, radius: defOf(e).radius }));
@@ -336,6 +501,10 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       frame.faceOverride = facing;
       frame.cancelWalk = true;
       pushEffect(s, 'arc', playerPos.x, playerPos.z, facing, 0.16, TRIDENT.range);
+      if (hasPassive('attack', level)) {
+        castSeaWave(s, playerPos, facing);
+        events.push({ type: 'passive', ability: 'attack' });
+      }
       for (const e of s.enemies) {
         if (e.state === 'dead' || e.dormant) continue;
         if (inCone(playerPos, facing, e.pos, defOf(e).radius, TRIDENT.range, TRIDENT.halfAngle)) {
@@ -351,12 +520,16 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       }
     }
 
-    if (p.actions.spell && canUse(s.cooldowns, s.mana, 'spell')) {
+    if (p.actions.spell && isUnlocked('spell', level) && canUse(s.cooldowns, s.mana, 'spell')) {
       s.mana = spendAbility(s.cooldowns, s.mana, 'spell') ?? s.mana;
       events.push({ type: 'cast', ability: 'spell' });
       frame.cancelWalk = true;
       startMermaid(s, SPELL.mermaid, playerPos);
       pushEffect(s, 'wave', playerPos.x, playerPos.z, facing, 0.95, SPELL.radius);
+      if (hasPassive('spell', level)) {
+        releaseSharks(s, playerPos, facing, world);
+        events.push({ type: 'passive', ability: 'spell' });
+      }
       for (const e of s.enemies) {
         if (e.state === 'dead' || e.dormant) continue;
         if (inCircle(playerPos, e.pos, defOf(e).radius, SPELL.radius)) {
@@ -372,11 +545,23 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       }
     }
 
-    if (p.actions.aura && !s.aura.active && canUse(s.cooldowns, s.mana, 'aura')) {
+    if (
+      p.actions.aura &&
+      isUnlocked('aura', level) &&
+      !s.aura.active &&
+      canUse(s.cooldowns, s.mana, 'aura')
+    ) {
       s.mana = spendAbility(s.cooldowns, s.mana, 'aura') ?? s.mana;
       events.push({ type: 'cast', ability: 'aura' });
       const song = songFor(p.form);
-      s.aura = { active: true, t: 0, hit: new Set(), song };
+      s.aura = {
+        active: true,
+        t: 0,
+        hit: new Set(),
+        song,
+        beams: hasPassive('aura', level),
+        beamAt: {},
+      };
       startMermaid(s, song.duration + song.mermaidTail, playerPos);
       frame.cancelWalk = true;
     }
@@ -410,6 +595,8 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     }
     if (s.aura.t >= song.duration) s.aura.active = false;
   }
+
+  stepPassives(s, { dt, playerPos, world, mult: stats.damageMult }, events);
 
   if (p.companion) {
     if (s.companion?.id !== p.companion.id) {
@@ -545,6 +732,8 @@ export function revive(s: CombatState, stats: PlayerStats = BASE_STATS): void {
   s.invuln = 2;
   s.sinceHurt = 0;
   s.projectiles = [];
+  s.seaWaves = [];
+  s.sharks = [];
   s.hazards = [];
   s.aura.active = false;
   s.swing = 0;
