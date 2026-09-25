@@ -1,4 +1,5 @@
 import type { MapData, Placement, Point, Ribbon } from '@/data/maps/types';
+import { assembleWallRun, type WallRun } from '@/data/maps/wall-runs';
 import { mulberry32 } from '@/utils/random';
 
 // +x east, +z south, camera looks toward -z. Rotated 180° from real north so the camera looks
@@ -20,34 +21,59 @@ const range = (from: number, to: number, step: number): number[] => {
   return values;
 };
 
+// The Kremlin's wall is assembled from a kit: each run is filled exactly between its towers, corners and the
+// gate, with varied pieces (see wall-runs.ts). Tower half-widths are 2.2 x the tower's scale.
+const CORNER_TOWER = { x: 16.2, z: 36 };
+const KREMLIN_RUNS: WallRun[] = [
+  {
+    // West side along Red Square, from the far end down to the corner tower beside the Resurrection Gate.
+    from: { x: 15, z: -36 },
+    to: { x: 15, z: 36 },
+    rotY: -HALF_PI,
+    nodes: [
+      { at: 7, half: 2.2 },
+      { at: 34, half: 1.76 },
+      { at: 65, half: 1.87 },
+      { at: 72, half: 2.2 },
+    ],
+    seed: 101,
+  },
+  {
+    // South side, along Manezhnaya Square, from the corner tower to the south-east tower.
+    from: { x: CORNER_TOWER.x, z: CORNER_TOWER.z },
+    to: { x: 44, z: 36 },
+    rotY: 0,
+    nodes: [
+      { at: 0, half: 2.2 },
+      { at: 27.8, half: 1.98 },
+    ],
+    seed: 202,
+  },
+  {
+    // East side, along the Alexander Garden.
+    from: { x: 44, z: 36 },
+    to: { x: 44, z: -36 },
+    rotY: HALF_PI,
+    nodes: [
+      { at: 0, half: 1.98 },
+      { at: 8, half: 2.09 },
+      { at: 46, half: 1.87 },
+    ],
+    seed: 303,
+  },
+];
+const kremlinWalls: Placement[] = KREMLIN_RUNS.flatMap(assembleWallRun);
+
 // Structures outside the walkable bounds or inside blocked areas need no collision.
 const skyline: Placement[] = [
   { asset: 'basil', x: -3, z: -37, collide: false },
   { asset: 'museum', x: -4.5, z: 36.5, rotY: Math.PI, scale: 1.15, collide: false },
   { asset: 'kazan', x: -17, z: 36, rotY: Math.PI, collide: false },
   { asset: 'resurrectionGate', x: 9, z: 33.5, rotY: Math.PI },
-  ...range(-33, 33, 6).map((z) => ({
-    asset: 'kremlinWall' as const,
-    x: 15,
-    z,
-    rotY: -HALF_PI,
-    collide: false,
-  })),
-  ...range(18, 42, 6).map((x) => ({
-    asset: 'kremlinWall' as const,
-    x,
-    z: 36,
-    collide: false,
-  })),
-  ...range(-33, 33, 6).map((z) => ({
-    asset: 'kremlinWall' as const,
-    x: 44,
-    z,
-    rotY: HALF_PI,
-    collide: false,
-  })),
+  ...kremlinWalls,
   { asset: 'kremlinInside', x: 27, z: -16, scale: 1.2, collide: false },
   { asset: 'kremlinInside', x: 28, z: 12, rotY: Math.PI, scale: 1.1, collide: false },
+  { asset: 'kremlinTower', x: CORNER_TOWER.x, z: CORNER_TOWER.z, rotY: -HALF_PI },
   { asset: 'kremlinTower', x: 44, z: 36, scale: 0.9 },
   { asset: 'kremlinTower', x: 44, z: 28, rotY: HALF_PI, scale: 0.95 },
   { asset: 'kremlinTower', x: 44, z: -10, rotY: HALF_PI, scale: 0.85 },
@@ -243,7 +269,7 @@ export const RED_SQUARE: MapData = {
   paths: [
     {
       points: [
-        [PROMENADE_X, 42],
+        [PROMENADE_X, 38.4],
         [PROMENADE_X, 22],
         [PROMENADE_X, -28],
       ],
@@ -256,21 +282,24 @@ export const RED_SQUARE: MapData = {
       ],
       width: 2.4,
     },
-    {
-      // Leaves the Manezhnaya plaza at its east edge (x = 45) and curves up to the garden gate.
-      points: [
-        [45.2, 48.5],
-        [48.5, 48],
-        [51.6, 45.8],
-        [PROMENADE_X, 43],
-        [PROMENADE_X, 41],
-      ],
-      width: 3.2,
-    },
   ],
   plazas: [
-    { cx: -6.5, cz: -1, w: 40, d: 70 },
+    { cx: -6.5, cz: -1, w: 41, d: 70 },
     { cx: 25, cz: 56.75, w: 40, d: 40.5 },
+    // Paving through and around the Resurrection Gate, joining Red Square to Manezhnaya Square.
+    { cx: 9.25, cz: 35.25, w: 8.5, d: 3.6 },
+  ],
+  lanes: [
+    {
+      // From Manezhnaya Square's east edge, then straight up to the garden gate; the paving runs right into it.
+      // Straight, cell-aligned legs give clean kerbs on the 1 m paving grid (4 cells wide, centred on the gate).
+      points: [
+        [43, 49],
+        [PROMENADE_X, 49],
+        [PROMENADE_X, 38.4],
+      ],
+      width: 3.6,
+    },
   ],
   npcs: [
     { id: 'grisha', x: 4.2, z: 11.5, rotY: Math.PI * 0.85 },

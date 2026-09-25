@@ -1,6 +1,7 @@
 """Generates tiling ground textures in palette colors: public/assets/atlas/{cobble,grass}_tile.png (64x64).
 
 Usage: python3 tools/make-tiles.py   (standard library only)
+Outputs cobble_atlas.png (four 64x64 paving variants in a 2x2 grid) and grass_tile.png (64x64).
 Cobble: irregular stones in 8 px rows (10-14 px wide), each with its own tone, a lit top-left edge, a dark
 bottom-right edge, 1 px grout with the odd fleck of moss. Grass: soft clumps of three greens with short blades
 and a few flowers. Both wrap seamlessly. The game samples them with mipmaps and anisotropic filtering so they
@@ -38,8 +39,8 @@ def stone_widths(rng):
     return widths
 
 
-def cobble(colors):
-    rng = random.Random(21)
+def cobble(colors, seed=21):
+    rng = random.Random(seed)
     names = [[GROUT] * SIZE for _ in range(SIZE)]
     for row in range(SIZE // ROW_H):
         y0 = row * ROW_H
@@ -97,20 +98,35 @@ def grass(colors):
 
 
 def write_png(path, pixels):
+    height, width = len(pixels), len(pixels[0])
     raw = b"".join(b"\x00" + bytes(v for px in row for v in px) for row in pixels)
 
     def chunk(tag, data):
         body = tag + data
         return struct.pack(">I", len(data)) + body + struct.pack(">I", zlib.crc32(body) & 0xFFFFFFFF)
 
-    header = struct.pack(">IIBBBBB", SIZE, SIZE, 8, 6, 0, 0, 0)
+    header = struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)
     path.write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", header) + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+
+
+def atlas(tiles):
+    """2x2 atlas of tiles (row-major): variants of the same paving, so the ground autotiler can vary it per block."""
+    size = len(tiles[0])
+    out = []
+    for row in range(2):
+        for y in range(size):
+            out.append(tiles[row * 2][y] + tiles[row * 2 + 1][y])
+    return out
 
 
 if __name__ == "__main__":
     colors = json.loads((ROOT / "tools" / "palette.json").read_text())["colors"]
     out_dir = ROOT / "public" / "assets" / "atlas"
-    for name, build in (("cobble_tile", cobble), ("grass_tile", grass)):
+    outputs = {
+        "cobble_atlas": atlas([cobble(colors, seed) for seed in (21, 22, 23, 24)]),
+        "grass_tile": grass(colors),
+    }
+    for name, pixels in outputs.items():
         out = out_dir / f"{name}.png"
-        write_png(out, build(colors))
+        write_png(out, pixels)
         print(f"wrote {out} ({out.stat().st_size} bytes)")

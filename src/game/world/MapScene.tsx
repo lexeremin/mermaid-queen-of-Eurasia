@@ -10,24 +10,20 @@ import {
   SRGBColorSpace,
   TextureLoader,
 } from 'three';
-import { COBBLE_URL, GRASS_URL, type AssetId } from '@/data/assets';
+import { GRASS_URL, type AssetId } from '@/data/assets';
 import type { Placement } from '@/data/maps/types';
 import { PALETTE } from '@/data/palette';
 import { InstancedModel, type Transform } from '@/game/assets/InstancedModel';
 import { useGameStore } from '@/store/game-store';
+import { GroundPaving } from '@/game/world/GroundPaving';
 import { EntranceGlow } from '@/game/world/EntranceGlow';
 import { ContactShadows } from '@/game/world/ContactShadows';
 import { currentMap } from '@/game/world/current-map';
 import { buildRibbon, mergeRibbons, type RibbonMesh } from '@/game/world/ribbon';
 
 /** 64 px tiles at 16 px per metre (cobble) and about 11 px per metre (grass). */
-const COBBLE_TILE_METERS = 4;
 const GRASS_TILE_METERS = 6;
-const KERB_COLOR = '#8f97a3';
-const KERB_WIDTH = 0.35;
-const KERB_Y = 0.012;
 const GROUND_ANISOTROPY = 8;
-const PLAZA_Y = 0.02;
 const ICE_Y = 0.03;
 const WATER_Y = 0.04;
 const PATH_Y = 0.05;
@@ -41,7 +37,7 @@ function groupByAsset(placements: readonly Placement[]): [AssetId, Transform[]][
   const groups = new Map<AssetId, Transform[]>();
   for (const p of placements) {
     const list = groups.get(p.asset) ?? [];
-    list.push({ x: p.x, z: p.z, rotY: p.rotY, scale: p.scale });
+    list.push({ x: p.x, z: p.z, rotY: p.rotY, scale: p.scale, stretch: p.stretch });
     groups.set(p.asset, list);
   }
   return [...groups];
@@ -160,21 +156,7 @@ export function MapScene() {
         d={400}
         y={0}
       />
-      {map.plazas.map((plaza, i) => (
-        <mesh key={`kerb${i}`} rotation-x={-Math.PI / 2} position={[plaza.cx, KERB_Y, plaza.cz]}>
-          <planeGeometry args={[plaza.w + KERB_WIDTH * 2, plaza.d + KERB_WIDTH * 2]} />
-          <meshLambertMaterial color={KERB_COLOR} />
-        </mesh>
-      ))}
-      {map.plazas.map((plaza, i) => (
-        <TiledGround
-          key={i}
-          url={COBBLE_URL}
-          tileMeters={COBBLE_TILE_METERS}
-          {...plaza}
-          y={PLAZA_Y}
-        />
-      ))}
+      <GroundPaving />
       {map.paths.length > 0 && <RibbonMeshView data={paths} color={GRAVEL_COLOR} />}
       <RibbonMeshView data={ice} color={PALETTE.slate_light} />
       <RibbonMeshView data={water} color={PALETTE.slate} />

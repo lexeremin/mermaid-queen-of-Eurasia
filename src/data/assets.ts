@@ -1,7 +1,7 @@
 import type { Shape } from '@/data/types';
 
 export const ATLAS_URL = '/assets/atlas/palette_atlas.png';
-export const COBBLE_URL = '/assets/atlas/cobble_tile.png';
+export const COBBLE_ATLAS_URL = '/assets/atlas/cobble_atlas.png';
 export const GRASS_URL = '/assets/atlas/grass_tile.png';
 
 type AssetDef = {
@@ -19,6 +19,9 @@ export const ASSETS = {
   rosaMermaid: { url: '/assets/char/char_rosa_mermaid.glb', clips: ['idle', 'walk'] },
   basil: { url: '/assets/lmk/lmk_basil.glb', clips: [], footprint: [box(6.7, 5.2)] },
   kremlinWall: { url: '/assets/bld/bld_kremlin_wall.glb', clips: [], footprint: [box(3.0, 1.2)] },
+  kremlinWallB: { url: '/assets/bld/bld_kremlin_wall_b.glb', clips: [] },
+  kremlinWallC: { url: '/assets/bld/bld_kremlin_wall_c.glb', clips: [] },
+  kremlinWallShort: { url: '/assets/bld/bld_kremlin_wall_short.glb', clips: [] },
   kremlinTower: { url: '/assets/bld/bld_kremlin_tower.glb', clips: [], footprint: [box(2.2, 2.2)] },
   gumFacade: {
     url: '/assets/bld/bld_gum_facade.glb',

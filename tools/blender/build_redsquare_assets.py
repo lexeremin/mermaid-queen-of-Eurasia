@@ -63,20 +63,57 @@ def build_basil():
     return _done("lmk_basil", p)
 
 
-def build_kremlin_wall():
+def _wall_piece(name, length, variant):
+    """One piece of the Kremlin wall kit. All pieces share the same cross-section, so any two butt together without a
+    seam: 2.4 m thick base, 2.2 m body, 5.9 m to the top of the merlons. `variant` only changes the surface details."""
     clear_scene()
-    p = Part("bld_kremlin_wall")
-    p.box((6, 2.4, 0.5), (0, 0, 0.25), "stone")
-    p.box((6, 2.2, 4.1), (0, 0, 2.55), "brick_light")
-    _seams(p, (6.02, 2.22), (1.3, 2.1, 2.9, 3.7))
-    p.box((6, 2.3, 0.14), (0, 0, 4.62), "stone")
-    for i in range(5):
-        x = -2.4 + i * 1.2
+    p = Part(name)
+    half = length / 2
+    p.box((length, 2.4, 0.5), (0, 0, 0.25), "stone")
+    p.box((length, 2.2, 4.1), (0, 0, 2.55), "brick_light")
+    _seams(p, (length + 0.02, 2.22), (1.3, 2.1, 2.9, 3.7))
+    p.box((length, 2.3, 0.14), (0, 0, 4.62), "stone")
+    count = max(2, int(round(length / 1.2)))
+    for i in range(count):
+        x = (i - (count - 1) / 2) * 1.2
         p.box((0.75, 2.2, 1.0), (x, 0, 5.2), "brick_light")
         p.box((0.85, 2.3, 0.12), (x, 0, 5.76), "stone")
-    for x in (-1.5, 1.5):
-        p.box((0.14, 0.06, 0.6), (x, -1.12, 2.5), "ink")
-    return _done("bld_kremlin_wall", p)
+    slots = (-1.5, 1.5) if length > 4 else (0.0,)
+    if variant == "a":
+        for x in slots:
+            for y in (-1.12, 1.12):
+                p.box((0.14, 0.06, 0.6), (x, y, 2.5), "ink")
+    elif variant == "b":
+        for y in (-1.12, 1.12):
+            p.box((0.16, 0.06, 1.1), (0, y, 2.6), "ink")
+            p.box((1.0, 0.05, 0.5), (0, y * 1.005, 3.8), "stone")
+            p.box((0.5, 0.06, 0.22), (0, y * 1.02, 3.8), "gold")
+            for x in (-2.0, 2.0):
+                p.box((0.12, 0.06, 0.5), (x, y, 2.4), "ink")
+    elif variant == "c":
+        for x in (-1.9, 1.9):
+            for y in (-1, 1):
+                p.box((0.55, 0.3, 4.6), (x, y * 1.23, 2.6), "brick_light")
+                p.box((0.65, 0.34, 0.16), (x, y * 1.24, 4.72), "stone")
+        for y in (-1.12, 1.12):
+            p.box((0.14, 0.06, 0.6), (0, y, 2.5), "ink")
+    return _done(name, p)
+
+
+def build_kremlin_wall():
+    return _wall_piece("bld_kremlin_wall", 6.0, "a")
+
+
+def build_kremlin_wall_b():
+    return _wall_piece("bld_kremlin_wall_b", 6.0, "b")
+
+
+def build_kremlin_wall_c():
+    return _wall_piece("bld_kremlin_wall_c", 6.0, "c")
+
+
+def build_kremlin_wall_short():
+    return _wall_piece("bld_kremlin_wall_short", 3.0, "a")
 
 
 def build_kremlin_tower():
@@ -208,7 +245,8 @@ def build_fir_tub():
 
 def build_all_redsquare():
     fns = [
-        build_basil, build_kremlin_wall, build_kremlin_tower, build_museum,
+        build_basil, build_kremlin_wall, build_kremlin_wall_b, build_kremlin_wall_c, build_kremlin_wall_short,
+        build_kremlin_tower, build_museum,
         build_arch_bridge, build_garden_gate, build_lamppost, build_fir_tub,
     ]
     return [fn() for fn in fns]

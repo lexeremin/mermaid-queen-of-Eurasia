@@ -13,6 +13,8 @@ export type Placement = {
   /** Radians about Y (three.js convention: +90° turns +Z, south, toward +X, east). */
   rotY?: number;
   scale?: number;
+  /** Extra scale along the model's long (local x) axis only, used to fit wall pieces exactly between two points. */
+  stretch?: number;
   /** Uses the asset footprint for collision. Defaults to true. */
   collide?: boolean;
 };
@@ -57,6 +59,8 @@ export type MapData = {
   paths: readonly Ribbon[];
   /** Cobblestone rectangles: center and size. */
   plazas: readonly { cx: number; cz: number; w: number; d: number }[];
+  /** Paved lanes: cobbles laid along a centre line (a way between two paved areas, or to a gate). */
+  lanes?: readonly Ribbon[];
   zones: readonly Zone[];
   npcs: readonly NpcSpot[];
   enemies: readonly EnemySpawn[];
