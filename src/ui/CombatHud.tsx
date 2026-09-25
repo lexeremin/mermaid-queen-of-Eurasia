@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { ENEMIES, isBossKind } from '@/data/enemies';
 import { maxHpOf } from '@/systems/enemy-ai';
+import { bossTuning } from '@/systems/boss';
 import { combat, reviveAtSpawn } from '@/game/combat-sim';
 import { useCombatStore } from '@/store/combat-store';
 import { useGameStore } from '@/store/game-store';
@@ -81,38 +82,83 @@ function HurtVignette() {
   return <div ref={ref} className="hurt-vignette" />;
 }
 
-/** The boss's health bar, shown at the top while he is fighting. Updated every frame without re-rendering. */
+/** The health bar shows the boss of the fight: awake, alive and inside the layer's combat state. */
+const activeBoss = (): (typeof combat.enemies)[number] | undefined =>
+  combat.enemies.find((e) => isBossKind(e.kind) && e.state !== 'dead' && !!e.brain?.awake);
+
+/** How fast the pale "just lost" part of the bar catches up with the real health (fraction per second, at most). */
+const TRAIL_SPEED = 0.35;
+
+/**
+ * The boss's health bar, at the top while he is fighting, like the big bosses of an action RPG: his name and phase
+ * above a wide bar with notches where his phases change, the health as numbers on it, and a pale trail that shows how
+ * much the last hits took. Updated every frame without re-rendering.
+ */
 function BossBar() {
   const root = useRef<HTMLDivElement>(null);
   const fill = useRef<HTMLDivElement>(null);
-  const name = useRef<HTMLElement>(null);
+  const trail = useRef<HTMLDivElement>(null);
+  const name = useRef<HTMLSpanElement>(null);
+  const phase = useRef<HTMLSpanElement>(null);
+  const numbers = useRef<HTMLSpanElement>(null);
+  const notches = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    let source: typeof combat | null = null;
-    let boss: (typeof combat.enemies)[number] | undefined;
+    let shownFor: string | null = null;
+    let trailAt = 1;
+    let last = performance.now();
     const tick = () => {
-      // The boss is looked up again only when the combat state was replaced (a new game).
-      if (source !== combat) {
-        source = combat;
-        boss = combat.enemies.find((e) => isBossKind(e.kind));
-      }
+      const now = performance.now();
+      const dt = Math.min(0.1, (now - last) / 1000);
+      last = now;
       const el = root.current;
-      if (el && boss) {
-        const show = !!boss.brain?.awake && boss.state !== 'dead';
-        el.style.display = show ? 'flex' : 'none';
-        if (show && fill.current && name.current) {
-          fill.current.style.width = `${Math.max(0, (boss.hp / maxHpOf(boss)) * 100)}%`;
-          const phase = boss.brain?.phase ?? 1;
-          name.current.textContent = `${ENEMIES[boss.kind].name}${phase > 1 ? ' · ' + (phase === 3 ? 'FURIOUS' : 'ANGRY') : ''}`;
-        }
+      if (!el) return;
+      const boss = activeBoss();
+      if (!boss) {
+        if (el.style.display !== 'none') el.style.display = 'none';
+        shownFor = null;
+        return;
       }
+      if (el.style.display !== 'flex') el.style.display = 'flex';
+      const max = maxHpOf(boss);
+      const fraction = Math.max(0, Math.min(1, boss.hp / max));
+      if (shownFor !== boss.id) {
+        // A new fight: the trail starts at the current health, and the notches move to this boss's phases.
+        shownFor = boss.id;
+        trailAt = fraction;
+        const cfg = bossTuning(boss.kind);
+        const marks = notches.current?.children;
+        if (marks?.[0]) (marks[0] as HTMLElement).style.left = `${cfg.phase2At * 100}%`;
+        if (marks?.[1]) (marks[1] as HTMLElement).style.left = `${cfg.phase3At * 100}%`;
+        if (name.current) name.current.textContent = ENEMIES[boss.kind].name;
+      }
+      trailAt = fraction >= trailAt ? fraction : Math.max(fraction, trailAt - TRAIL_SPEED * dt);
+      if (fill.current) fill.current.style.width = `${fraction * 100}%`;
+      if (trail.current) trail.current.style.width = `${trailAt * 100}%`;
+      if (numbers.current) {
+        const full = Math.round(max);
+        numbers.current.textContent = `${Math.min(full, Math.ceil(boss.hp)).toLocaleString('en-US')} / ${full.toLocaleString('en-US')}`;
+      }
+      const stage = boss.brain?.phase ?? 1;
+      if (phase.current)
+        phase.current.textContent = stage === 3 ? 'FURIOUS' : stage === 2 ? 'ANGRY' : '';
+      el.dataset.phase = String(stage);
     };
     return addHudTask(tick);
   }, []);
   return (
-    <div ref={root} className="boss-bar" style={{ display: 'none' }}>
-      <em ref={name} />
-      <div className="boss-track">
-        <div ref={fill} className="boss-fill" />
+    <div ref={root} className="boss-bar" style={{ display: 'none' }} data-phase="1">
+      <div className="boss-title">
+        <span ref={name} className="boss-name" />
+        <span ref={phase} className="boss-phase" />
+      </div>
+      <div className="boss-hp">
+        <div ref={trail} className="boss-hp-trail" />
+        <div ref={fill} className="boss-hp-fill" />
+        <div ref={notches} className="boss-hp-notches">
+          <i />
+          <i />
+        </div>
+        <span ref={numbers} className="boss-hp-num" />
       </div>
     </div>
   );

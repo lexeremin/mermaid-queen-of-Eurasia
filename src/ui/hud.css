@@ -1034,33 +1034,6 @@
   pointer-events: none;
 }
 
-.boss-bar em {
-  font:
-    700 14px/1.1 ui-monospace,
-    'SF Mono',
-    monospace;
-  font-style: normal;
-  letter-spacing: 0.08em;
-  color: #ffd9de;
-  text-align: center;
-  text-shadow: 0 1px 4px #000;
-}
-
-.boss-track {
-  height: 16px;
-  border: 2px solid #ffd9de;
-  border-radius: 4px;
-  background: rgba(20, 8, 16, 0.85);
-  overflow: hidden;
-}
-
-.boss-fill {
-  height: 100%;
-  width: 100%;
-  background: linear-gradient(#e8506a, #a02040);
-  transition: width 0.15s linear;
-}
-
 .boss-banner {
   position: absolute;
   top: 24%;
@@ -1460,23 +1433,6 @@
 .ability-slot em {
   color: var(--ui-dim);
   opacity: 1;
-}
-
-.boss-bar em {
-  color: #f0d99a;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.boss-track {
-  border: 2px solid var(--ui-line);
-  border-radius: 3px;
-  background: #0c0805;
-  box-shadow: inset 0 0 0 1px #000;
-}
-
-.boss-fill {
-  background: linear-gradient(#e0574a, #8e1b1b);
 }
 
 .boss-banner {
@@ -2115,4 +2071,120 @@
   opacity: 0.45;
   filter: grayscale(0.8);
   pointer-events: none;
+}
+
+/* The boss's health bar: a wide gilded bar under his name, with phase notches, the numbers and a pale trail. */
+.boss-bar {
+  gap: 6px;
+  width: min(680px, calc(100vw - 32px));
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.7));
+}
+
+.boss-title {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--ui-font);
+  text-shadow:
+    0 1px 0 #000,
+    0 0 8px #000;
+}
+
+.boss-name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #f4dc9a;
+}
+
+.boss-phase {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  color: #ff8a70;
+}
+
+.boss-hp {
+  position: relative;
+  height: 24px;
+  border: 3px solid var(--ui-gold, #c9a35a);
+  border-radius: 2px;
+  background: #120806;
+  box-shadow:
+    inset 0 0 0 1px #000,
+    0 0 0 1px #000,
+    inset 0 4px 8px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+}
+
+.boss-hp-trail,
+.boss-hp-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 100%;
+}
+
+.boss-hp-trail {
+  background: linear-gradient(#f6d9a4, #b9834a);
+  opacity: 0.85;
+}
+
+.boss-hp-fill {
+  background: linear-gradient(#f0604f 0%, #c02a2a 45%, #7a1212 100%);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.28);
+  transition: width 0.08s linear;
+}
+
+.boss-bar[data-phase='2'] .boss-hp-fill {
+  background: linear-gradient(#f28a3e 0%, #d05a1c 45%, #7d2a0c 100%);
+}
+
+.boss-bar[data-phase='3'] .boss-hp-fill {
+  background: linear-gradient(#ff5a4a 0%, #d01818 45%, #5c0606 100%);
+  animation: boss-rage 0.9s ease-in-out infinite alternate;
+}
+
+@keyframes boss-rage {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.35);
+  }
+}
+
+.boss-hp-notches i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: rgba(0, 0, 0, 0.75);
+  box-shadow: 1px 0 0 rgba(201, 163, 90, 0.5);
+}
+
+.boss-hp-num {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font: 700 13px var(--ui-font);
+  letter-spacing: 0.06em;
+  color: #fff4dc;
+  text-shadow:
+    0 1px 2px #000,
+    0 0 4px #000;
+}
+
+@media (max-width: 700px) {
+  .boss-name {
+    font-size: 16px;
+  }
+
+  .boss-hp {
+    height: 20px;
+  }
 }

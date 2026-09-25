@@ -65,6 +65,9 @@ Rosa grows for much longer. The four abilities arrive one by one over the first 
 - **His swings are his own**, not Rosa's: a diagonal cut from high right down across the body to low left, a rising cut back up to the high right, and an overhead chop as the finisher (`sword` chain in `swing-pose.ts`, which now also rolls the arm out to the side). Rosa keeps the level sweeps and the chop of the trident. Both go back to their rest pose after each swing.
 - **Right mouse button** attacks toward the cursor: while it is held, Rosa turns to the cursor's direction on the ground and strikes that way (aim assist is off for it), following the mouse as it moves, like the left-click movement. Closer than 0.4 m to Rosa the cursor gives no direction, and the usual aim assist applies. Touch and keyboard attacks are unchanged.
 
+### Boss health bar
+The bar was there but never showed in the dungeon: it looked the boss up once and remembered it, and the underground layers reuse the same combat state, so it kept looking at "no boss". It now looks every frame for an awake boss, and is redone in the style of the big-boss bars of action RPGs: his name in gold over a wide gilded bar with the health as numbers ("595 / 1,415"), notches where his phases change (60% and 30%), a pale trail that shows how much the last hits took, an ANGRY / FURIOUS tag and a bar that turns orange, then a pulsing red. It appears when Rosa enters the arena and the fight starts, and goes when he falls or she leaves or faints.
+
 ## Verification
 - 603 tests (new: `skills.test.ts`, `combat-passives.test.ts` with locks, all four passives and fainting, soft noise, deeper boss-layer balance), lint, prettier, build, `assets:check`.
 - Browser (headless): level 1 shows the locked slots and "Aura unlocks at level 3" with no cast; level 60 shows halo and wings, sea wave, Aura beams, sharks around the Surge wave and the violet blast; no errors.
