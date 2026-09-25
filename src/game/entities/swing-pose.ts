@@ -74,11 +74,28 @@ export const restPose = (restTool: number): SwingPose => ({
 
 /**
  * Puts the weapon node into the pose: turned relative to the arm so its own pitch is `pose.tool`, and slid along
- * itself by `pose.slide * maxSlide` from its resting position `base`.
+ * itself by `pose.slide * maxSlide` from its resting position `base`. The exported node sits at the centre of the
+ * weapon's mesh, not in the hand, so it turns about `grip`: the hand's place, as an offset from the node in the
+ * arm's frame at rest.
  */
-export function poseTool(tool: Object3D, base: Vector3, pose: SwingPose, maxSlide: number): void {
+export function poseTool(
+  tool: Object3D,
+  base: Vector3,
+  grip: Vector3,
+  pose: SwingPose,
+  maxSlide: number,
+): void {
   const pitch = pose.tool - pose.arm;
   const slide = pose.slide * maxSlide;
+  const cos = Math.cos(pitch);
+  const sin = Math.sin(pitch);
+  // Turning about the grip moves the node by grip - R * grip.
+  const turnedY = grip.y * cos - grip.z * sin;
+  const turnedZ = grip.y * sin + grip.z * cos;
   tool.rotation.x = pitch;
-  tool.position.set(base.x, base.y + Math.cos(pitch) * slide, base.z + Math.sin(pitch) * slide);
+  tool.position.set(
+    base.x,
+    base.y + grip.y - turnedY + cos * slide,
+    base.z + grip.z - turnedZ + sin * slide,
+  );
 }

@@ -53,11 +53,24 @@ describe('swing poses', () => {
   it('poses a weapon node relative to the arm and slides it along itself', () => {
     const node = new Object3D();
     const base = new Vector3(0, -0.5, 0.1);
-    poseTool(node, base, swingPose(0, 0.4, 0), 0.8);
+    const noGrip = new Vector3(0, 0, 0);
+    poseTool(node, base, noGrip, swingPose(0, 0.4, 0), 0.8);
     expect(node.rotation.x).toBeCloseTo(swingPose(0, 0.4, 0).tool - swingPose(0, 0.4, 0).arm);
     expect(node.position.distanceTo(base)).toBeCloseTo(0.8, 5);
-    poseTool(node, base, restPose(0), 0.8);
+    poseTool(node, base, noGrip, restPose(0), 0.8);
     expect(node.position.distanceTo(base)).toBe(0);
     expect(node.rotation.x).toBe(0);
+  });
+
+  it('turns the weapon about the hand, which stays where it was', () => {
+    const node = new Object3D();
+    const base = new Vector3(0, -0.14, 0.06);
+    const grip = new Vector3(0, -0.52, 0);
+    for (const pitch of [0.4, 1.05, 2.3]) {
+      poseTool(node, base, grip, { arm: 0, tool: pitch, twist: 0, lean: 0, slide: 0 }, 0);
+      // The grip point of the weapon, carried along with the node's turn and position.
+      const hand = grip.clone().applyEuler(node.rotation).add(node.position);
+      expect(hand.distanceTo(base.clone().add(grip))).toBeLessThan(1e-9);
+    }
   });
 });

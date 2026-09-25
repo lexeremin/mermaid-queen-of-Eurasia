@@ -1,7 +1,7 @@
 import { useAnimations, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import type { Group, Object3D, Vector3 } from 'three';
+import { Vector3, type Group, type Object3D } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS, type AssetId } from '@/data/assets';
 import { NPC_BY_ID } from '@/data/npcs';
@@ -20,6 +20,8 @@ const IDLE_GRACE_SECONDS = 0.15;
 const CROSSFADE_SECONDS = 0.18;
 /** The sword rests pointing forward and up (0 would be straight up), clear of his arm. */
 const SWORD_REST = 1.05;
+/** Where his hand holds the sword, relative to the sword node (the centre of its mesh), in the arm's frame. */
+const SWORD_GRIP = new Vector3(0, -0.52, 0);
 
 type Clip = 'idle' | 'walk';
 
@@ -66,7 +68,7 @@ function CompanionModel({ asset }: { asset: AssetId }) {
     const pose =
       c.swing > 0 ? swingPose(c.swingKind, 1 - c.swing / total, SWORD_REST) : restPose(SWORD_REST);
     if (arm.current) arm.current.rotation.x += pose.arm;
-    if (sword.current) poseTool(sword.current.node, sword.current.base, pose, 0);
+    if (sword.current) poseTool(sword.current.node, sword.current.base, SWORD_GRIP, pose, 0);
     if (model.current) {
       model.current.rotation.y = pose.twist;
       model.current.rotation.x = pose.lean;

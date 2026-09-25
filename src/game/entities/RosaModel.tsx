@@ -19,6 +19,8 @@ const WALK_SPEED_THRESHOLD = 0.5;
 const CROSSFADE_SECONDS = 0.18;
 /** How far the trident slides along itself in a swing, so it is gripped near its butt end. */
 const TRIDENT_SLIDE = 0.8;
+/** Where her hand holds the trident, relative to the trident node (the centre of its mesh), in the arm's frame. */
+const TRIDENT_GRIP = new Vector3(0, -0.285, 0);
 
 type Clip = 'idle' | 'walk';
 
@@ -61,7 +63,8 @@ export function RosaModel({ form }: { form: HeroForm }) {
     const total = TRIDENT_COMBO[kind]?.swing ?? TRIDENT_COMBO[0].swing;
     const pose = combat.swing > 0 ? swingPose(kind, 1 - combat.swing / total, 0) : restPose(0);
     if (arm.current) arm.current.rotation.x += pose.arm;
-    if (trident.current) poseTool(trident.current.node, trident.current.base, pose, TRIDENT_SLIDE);
+    if (trident.current)
+      poseTool(trident.current.node, trident.current.base, TRIDENT_GRIP, pose, TRIDENT_SLIDE);
     if (root.current) {
       root.current.rotation.y = pose.twist;
       root.current.rotation.x = pose.lean;
