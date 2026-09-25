@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { ENEMIES } from '@/data/enemies';
 import { combat, reviveAtSpawn } from '@/game/combat-sim';
 import { useCombatStore } from '@/store/combat-store';
 import { useGameStore } from '@/store/game-store';
@@ -52,6 +53,40 @@ function HurtVignette() {
   return <div ref={ref} className="hurt-vignette" />;
 }
 
+/** The boss's health bar, shown at the top while he is fighting. Updated every frame without re-rendering. */
+function BossBar() {
+  const root = useRef<HTMLDivElement>(null);
+  const fill = useRef<HTMLDivElement>(null);
+  const name = useRef<HTMLElement>(null);
+  useEffect(() => {
+    let raf = 0;
+    const tick = () => {
+      const boss = combat.enemies.find((e) => e.kind === 'boss');
+      const el = root.current;
+      if (el && boss) {
+        const show = !!boss.brain?.awake && boss.state !== 'dead';
+        el.style.display = show ? 'flex' : 'none';
+        if (show && fill.current && name.current) {
+          fill.current.style.width = `${Math.max(0, (boss.hp / ENEMIES.boss.maxHp) * 100)}%`;
+          const phase = boss.brain?.phase ?? 1;
+          name.current.textContent = `${ENEMIES.boss.name}, the Great Registrar${phase > 1 ? ' · ' + (phase === 3 ? 'FURIOUS' : 'ANGRY') : ''}`;
+        }
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    tick();
+    return () => cancelAnimationFrame(raf);
+  }, []);
+  return (
+    <div ref={root} className="boss-bar" style={{ display: 'none' }}>
+      <em ref={name} />
+      <div className="boss-track">
+        <div ref={fill} className="boss-fill" />
+      </div>
+    </div>
+  );
+}
+
 export function CombatHud({ touch }: { touch: boolean }) {
   const hp = useCombatStore((s) => s.hp);
   const mana = useCombatStore((s) => s.mana);
@@ -65,6 +100,7 @@ export function CombatHud({ touch }: { touch: boolean }) {
   return (
     <>
       <HurtVignette />
+      <BossBar />
       <div className="vitals" aria-label={`Health ${hp}, mana ${mana}`}>
         <div className="bar bar-hp">
           <div

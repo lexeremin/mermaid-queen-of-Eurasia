@@ -7,7 +7,7 @@ import { BAG_SIZE } from '@/systems/inventory';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 export type SavedNpc = {
   relationship: number;
@@ -31,6 +31,13 @@ export type SavedQuests = {
 
 export type SavedGarden = { pearlsTaken: string[]; shrineGift: boolean };
 
+export type SavedDungeon = {
+  stampFound: boolean;
+  gateOpen: boolean;
+  bossDefeated: boolean;
+  cachesTaken: string[];
+};
+
 export type SaveData = {
   version: number;
   savedAt: string;
@@ -40,6 +47,7 @@ export type SaveData = {
   progress: SavedProgress;
   quests: SavedQuests;
   garden: SavedGarden;
+  dungeon: SavedDungeon;
 };
 
 type Raw = Record<string, unknown>;
@@ -50,9 +58,17 @@ export const MIGRATIONS: Migrations = {
   1: (data) => ({ ...data, progress: defaultSavedProgress() }),
   2: (data) => ({ ...data, quests: defaultSavedQuests() }),
   3: (data) => ({ ...data, garden: defaultSavedGarden() }),
+  4: (data) => ({ ...data, dungeon: defaultSavedDungeon() }),
 };
 
 export const defaultSavedGarden = (): SavedGarden => ({ pearlsTaken: [], shrineGift: false });
+
+export const defaultSavedDungeon = (): SavedDungeon => ({
+  stampFound: false,
+  gateOpen: false,
+  bossDefeated: false,
+  cachesTaken: [],
+});
 
 export const defaultSavedQuests = (): SavedQuests => ({ active: {}, completed: [] });
 
@@ -151,6 +167,25 @@ function parseGarden(raw: unknown): SavedGarden {
   return result;
 }
 
+const CHEST_IDS: ReadonlySet<string> = new Set((RED_SQUARE.chests ?? []).map((c) => c.id));
+
+function parseDungeon(raw: unknown): SavedDungeon {
+  const result = defaultSavedDungeon();
+  if (!isRecord(raw)) return result;
+  result.bossDefeated = raw.bossDefeated === true;
+  // Beating the boss implies the gate was opened and the stamp was found.
+  result.gateOpen = raw.gateOpen === true || result.bossDefeated;
+  result.stampFound = raw.stampFound === true || result.gateOpen;
+  if (Array.isArray(raw.cachesTaken)) {
+    result.cachesTaken = [
+      ...new Set(
+        raw.cachesTaken.filter((id): id is string => typeof id === 'string' && CHEST_IDS.has(id)),
+      ),
+    ];
+  }
+  return result;
+}
+
 function parseQuests(raw: unknown): SavedQuests {
   const result = defaultSavedQuests();
   if (!isRecord(raw)) return result;
@@ -224,6 +259,7 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
     progress: parseProgress(data.progress),
     quests: parseQuests(data.quests),
     garden: parseGarden(data.garden),
+    dungeon: parseDungeon(data.dungeon),
   };
 }
 

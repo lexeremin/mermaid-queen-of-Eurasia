@@ -3,6 +3,7 @@ import { ITEMS } from '@/data/items';
 import { QUEST_BY_ID } from '@/data/quests';
 import { grantXp } from '@/game/progress-actions';
 import { track } from '@/net/stats';
+import { useDungeonStore } from '@/store/dungeon-store';
 import { useGameStore } from '@/store/game-store';
 import { useNpcStore } from '@/store/npc-store';
 import { useProgressStore } from '@/store/progress-store';
@@ -26,11 +27,17 @@ const toast = (text: string, kind: 'xp' | 'item' | 'warn' | 'info' = 'info') =>
 export function worldView(): WorldView {
   const { level, bag } = useProgressStore.getState();
   const npcs = useNpcStore.getState().npcs;
+  const dungeon = useDungeonStore.getState();
   return {
     level,
     bag,
     joinedCount: Object.values(npcs).filter((n) => n.joined).length,
     relationship: (id) => npcs[id]?.relationship ?? 0,
+    dungeon: {
+      stampFound: dungeon.stampFound,
+      gateOpen: dungeon.gateOpen,
+      bossDefeated: dungeon.bossDefeated,
+    },
   };
 }
 
@@ -110,4 +117,5 @@ export function startQuestHooks(): void {
   useQuestStore.subscribe(refresh);
   useProgressStore.subscribe(refresh);
   useNpcStore.subscribe(refresh);
+  useDungeonStore.subscribe(refresh);
 }

@@ -74,7 +74,7 @@ export function ActorRings() {
 
     let nr = 0;
     for (const e of combat.enemies) {
-      if (e.state === 'dead' || !near(e.pos.x, e.pos.z) || nr >= MAX_ENEMY) continue;
+      if (e.state === 'dead' || e.dormant || !near(e.pos.x, e.pos.z) || nr >= MAX_ENEMY) continue;
       place(r, nr++, e.pos.x, e.pos.z, defOf(e).radius + ENEMY_MARGIN);
     }
     r.count = nr;

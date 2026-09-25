@@ -1,3 +1,4 @@
+import type { AssetId } from '@/data/assets';
 import type { Placement } from '@/data/maps/types';
 import { mulberry32 } from '@/utils/random';
 
@@ -11,12 +12,30 @@ const MIN_SPAN = 0.9;
 export const MIN_STRETCH = 0.3;
 export const MAX_STRETCH = 1.7;
 
-/** The 6 m variants share one profile and differ only in their surface details; pick by weight. */
-const LONG_VARIANTS = [
-  { asset: 'kremlinWall', weight: 5 },
-  { asset: 'kremlinWallB', weight: 2 },
-  { asset: 'kremlinWallC', weight: 2 },
-] as const;
+/** A wall kit: 6 m variants that share one profile and differ only in their surface details, plus a 3 m piece. */
+export type WallKit = {
+  long: readonly { asset: AssetId; weight: number }[];
+  short: AssetId;
+};
+
+export const KREMLIN_KIT: WallKit = {
+  long: [
+    { asset: 'kremlinWall', weight: 5 },
+    { asset: 'kremlinWallB', weight: 2 },
+    { asset: 'kremlinWallC', weight: 2 },
+  ],
+  short: 'kremlinWallShort',
+};
+
+/** Dark brick walls of the Moscow underground. */
+export const UNDERGROUND_KIT: WallKit = {
+  long: [
+    { asset: 'ugWall', weight: 4 },
+    { asset: 'ugWallB', weight: 3 },
+    { asset: 'ugWallC', weight: 2 },
+  ],
+  short: 'ugWallShort',
+};
 
 /** A tower, corner or gate that a wall run butts into: its centre along the run and half its width along the run. */
 export type RunNode = { at: number; half: number };
@@ -60,7 +79,7 @@ export function fitSpan(
 }
 
 /** Turns one wall run into placements: every span between nodes is filled exactly, with varied pieces. */
-export function assembleWallRun(run: WallRun): Placement[] {
+export function assembleWallRun(run: WallRun, kit: WallKit = KREMLIN_KIT): Placement[] {
   const dx = run.to.x - run.from.x;
   const dz = run.to.z - run.from.z;
   const length = Math.hypot(dx, dz);
@@ -79,7 +98,7 @@ export function assembleWallRun(run: WallRun): Placement[] {
   spans.push({ start: cursorIsNode ? cursor - EMBED : cursor, end: length });
 
   const placements: Placement[] = [];
-  let previous = '';
+  let previous: AssetId | '' = '';
   for (const span of spans) {
     const fit = fitSpan(span.end - span.start);
     if (!fit) continue;
@@ -93,7 +112,7 @@ export function assembleWallRun(run: WallRun): Placement[] {
     }
     let offset = span.start;
     for (const piece of pieces) {
-      const asset = piece.long ? pickLong(random, previous) : 'kremlinWallShort';
+      const asset: AssetId = piece.long ? pickLong(kit, random, previous) : kit.short;
       previous = asset;
       const stretched = piece.length * fit.stretch;
       const mid = offset + stretched / 2;
@@ -111,11 +130,8 @@ export function assembleWallRun(run: WallRun): Placement[] {
   return placements;
 }
 
-function pickLong(
-  random: () => number,
-  previous: string,
-): 'kremlinWall' | 'kremlinWallB' | 'kremlinWallC' {
-  const options = LONG_VARIANTS.filter((v) => v.asset !== previous);
+function pickLong(kit: WallKit, random: () => number, previous: AssetId | ''): AssetId {
+  const options = kit.long.filter((v) => v.asset !== previous);
   const total = options.reduce((sum, v) => sum + v.weight, 0);
   let roll = random() * total;
   for (const v of options) {

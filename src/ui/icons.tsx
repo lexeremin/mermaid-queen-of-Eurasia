@@ -441,6 +441,34 @@ const ITEM_ICONS: Record<ItemId, ReactNode> = {
       <Sparkle x={39} y={36} s={2.2} />
     </>
   ),
+  registrarStamp: (
+    <>
+      <rect x="14" y="36" width="20" height="7" rx="2" fill="#d94a5c" {...line} />
+      <rect x="21" y="18" width="6" height="19" rx="2" fill="#9a6b3f" {...line} />
+      <ellipse cx="24" cy="15" rx="9" ry="7" fill="#c98a4b" {...line} />
+      <circle cx="24" cy="39.5" r="2" fill="#fff5fa" />
+      <Sparkle x={38} y={10} s={2.2} />
+    </>
+  ),
+  registrarSeal: (
+    <>
+      <path
+        d="M24 5 L28 9 L34 8 L35 14 L41 17 L38 23 L41 29 L35 32 L34 38 L28 37 L24 42 L20 37 L14 38 L13 32 L7 29 L10 23 L7 17 L13 14 L14 8 L20 9 Z"
+        fill="#e05a6c"
+        {...line}
+      />
+      <circle cx="24" cy="23" r="9" fill="#ffd36e" {...line} />
+      <path
+        d="M20 23 L23 26 L29 19"
+        fill="none"
+        stroke={INK}
+        strokeWidth={2.6}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <Sparkle x={39} y={9} s={2.2} />
+    </>
+  ),
   songbirdWhistle: (
     <>
       <path

@@ -1,4 +1,5 @@
 import type { MapData, Placement, Point, Ribbon } from '@/data/maps/types';
+import { UNDERGROUND } from '@/data/maps/underground';
 import { assembleWallRun, type WallRun } from '@/data/maps/wall-runs';
 import { mulberry32 } from '@/utils/random';
 
@@ -8,7 +9,11 @@ import { mulberry32 } from '@/utils/random';
 // the far side of the Kremlin (outside its west wall).
 const HALF_PI = Math.PI / 2;
 
-const BOUNDS = { minX: -28, maxX: 62, minZ: -30, maxZ: 76 };
+// The surface ends at z = 76; the Moscow underground lives in a distant region below z = 100 (see underground.ts),
+// with a solid block between so nothing on the surface can walk into it.
+const BOUNDS = { minX: -28, maxX: 62, minZ: -30, maxZ: 200 };
+/** The metro pavilion on Manezhnaya Square: the way down. Its mouth faces south, toward the camera. */
+export const METRO = { x: 25, z: 65.5, rotY: 0, door: { x: 25, z: 69.4 } };
 
 const GALLERY_X = -23.3;
 const FACADE_X = -16.5;
@@ -62,7 +67,7 @@ const KREMLIN_RUNS: WallRun[] = [
     seed: 303,
   },
 ];
-const kremlinWalls: Placement[] = KREMLIN_RUNS.flatMap(assembleWallRun);
+const kremlinWalls: Placement[] = KREMLIN_RUNS.flatMap((run) => assembleWallRun(run));
 
 // Structures outside the walkable bounds or inside blocked areas need no collision.
 const skyline: Placement[] = [
@@ -148,7 +153,7 @@ const manezhnaya: Placement[] = [
   { asset: 'fountain', x: 25, z: 56, scale: 1.4 },
   { asset: 'bench', x: 17, z: 56, rotY: HALF_PI },
   { asset: 'bench', x: 33, z: 56, rotY: -HALF_PI },
-  { asset: 'bench', x: 25, z: 64, rotY: Math.PI },
+  { asset: 'metroEntrance', x: METRO.x, z: METRO.z, rotY: METRO.rotY },
   { asset: 'bench', x: 25, z: 48, rotY: 0 },
   // Nothing stands on the axis of the Resurrection Gate (x = 9), so the west row starts further in.
   ...[50, 62, 72].map((z) => ({ asset: 'lamppost' as const, x: 9, z })),
@@ -216,7 +221,7 @@ function surroundingTrees(): Placement[] {
   while (trees.length < 200) {
     const x = (random() * 2 - 1) * 110;
     const z = (random() * 2 - 1) * 110;
-    if (x > -36 && x < 80 && z > -60 && z < 92) continue;
+    if (x > -36 && x < 80 && z > -60 && z < 230) continue;
     trees.push({
       asset: pickTree(random()),
       x,
@@ -256,6 +261,7 @@ export const RED_SQUARE: MapData = {
     ...redSquare,
     ...manezhnaya,
     ...alexanderGarden,
+    ...UNDERGROUND.placements,
     ...surroundingTrees(),
   ],
   waters: [
@@ -315,7 +321,7 @@ export const RED_SQUARE: MapData = {
     { id: 'tycoon-basil', kind: 'tycoon', x: -3, z: -26 },
     { id: 'speaker-basil', kind: 'speaker', x: 4, z: -21 },
     { id: 'tycoon-manezh', kind: 'tycoon', x: 14, z: 70 },
-    { id: 'demagogue-manezh', kind: 'demagogue', x: 28, z: 64 },
+    { id: 'demagogue-manezh', kind: 'demagogue', x: 33, z: 63.5 },
     { id: 'speaker-manezh', kind: 'speaker', x: 36, z: 46 },
     { id: 'tycoon-garden-1', kind: 'tycoon', x: 52, z: -25 },
     { id: 'demagogue-garden', kind: 'demagogue', x: 53.5, z: -23.5 },
@@ -327,7 +333,9 @@ export const RED_SQUARE: MapData = {
     { id: 'speaker-garden-2', kind: 'speaker', x: 55.5, z: 24 },
     { id: 'speaker-shrine', kind: 'speaker', x: 57.6, z: -21.2 },
     { id: 'demagogue-shrine', kind: 'demagogue', x: 60.6, z: -21 },
+    ...UNDERGROUND.enemies,
   ],
+  chests: UNDERGROUND.chests,
   entrances: [
     ...PORTALS_Z.map((z) => ({
       id: `gum-portal-${z}`,
@@ -385,16 +393,19 @@ export const RED_SQUARE: MapData = {
       label: 'Alexander Garden',
       box: { cx: 53.8, cz: 10, hx: 8.2, hz: 40 },
     },
+    ...UNDERGROUND.zones,
   ],
   floors: [
     { cx: GALLERY_X, cz: 0, w: 9, d: 55, color: GALLERY_FLOOR, y: 0.04 },
     ...PORTALS_Z.map((z) => ({ cx: FACADE_X, cz: z, w: 5, d: 4.6, color: GALLERY_FLOOR, y: 0.04 })),
+    ...UNDERGROUND.floors,
   ],
   glass: [{ cx: GALLERY_X, cz: 0, w: 9.4, d: 55, y: 10.9 }],
   lights: [
     { x: GALLERY_X, y: 6.5, z: -12, color: '#ffd9a8', intensity: 60, distance: 24 },
     { x: GALLERY_X, y: 6.5, z: 12, color: '#ffd9a8', intensity: 60, distance: 24 },
   ],
+  undergroundLights: UNDERGROUND.lights,
   colliders: [
     { kind: 'box', cx: GALLERY_X, cz: -28.6, hx: 4.7, hz: 1.7 },
     { kind: 'box', cx: GALLERY_X, cz: 28.6, hx: 4.7, hz: 1.7 },
@@ -402,5 +413,8 @@ export const RED_SQUARE: MapData = {
     { kind: 'box', cx: 29.3, cz: 3.65, hx: 16.1, hz: 33.65 },
     // Museum, Kazan Cathedral and everything behind them.
     { kind: 'box', cx: -12, cz: 53, hx: 16.5, hz: 23 },
+    // Solid ground between the surface and the underground region.
+    { kind: 'box', cx: 17, cz: 88, hx: 46, hz: 12 },
+    ...UNDERGROUND.colliders,
   ],
 };

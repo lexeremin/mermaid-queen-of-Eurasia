@@ -1,7 +1,14 @@
 import { ENEMIES, type EnemyKind } from '@/data/enemies';
 import { ITEMS } from '@/data/items';
 import { NPC_BY_ID } from '@/data/npcs';
-import { JOIN_REPUTATION, QUEST_BY_ID, RANKS, type Objective, type QuestDef } from '@/data/quests';
+import {
+  JOIN_REPUTATION,
+  QUEST_BY_ID,
+  RANKS,
+  type DungeonFlag,
+  type Objective,
+  type QuestDef,
+} from '@/data/quests';
 import { addToBag, removeFromBag, countOf, type Bag } from '@/systems/inventory';
 import { MESMERIZED_AT } from '@/systems/relationship';
 
@@ -18,6 +25,8 @@ export type WorldView = {
   bag: Bag;
   joinedCount: number;
   relationship: (npc: string) => number;
+  /** Which dungeon milestones have been reached. */
+  dungeon: Readonly<Record<DungeonFlag, boolean>>;
 };
 
 export const emptyLog = (): QuestLog => ({ active: {}, completed: [] });
@@ -101,13 +110,17 @@ export function objectiveState(
       have = view.level;
       text = `Reach level ${objective.level}`;
       break;
+    case 'flag':
+      have = view.dungeon[objective.flag] ? 1 : 0;
+      text = objective.label;
+      break;
   }
   return {
     text,
     have: Math.min(have, need),
     need,
     done: have >= need,
-    countable: objective.kind !== 'mesmerize',
+    countable: objective.kind !== 'mesmerize' && objective.kind !== 'flag',
   };
 }
 

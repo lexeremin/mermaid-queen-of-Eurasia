@@ -16,6 +16,7 @@ import { ENEMIES } from '@/data/enemies';
 import { combat } from '@/game/combat-sim';
 import { getRetroMaterial } from '@/game/assets/retro-material';
 import { BlindMark } from '@/game/entities/BlindMark';
+import { BossActor } from '@/game/entities/BossActor';
 import { defOf, type Enemy } from '@/systems/enemy-ai';
 import { currentMap } from '@/game/world/current-map';
 
@@ -60,7 +61,7 @@ function EnemyActor({ index }: { index: number }) {
     const blind = enemy.state === 'blinded';
     const t = clock.elapsedTime;
 
-    g.visible = !dead || enemy.deadFor < 0.5;
+    g.visible = !enemy.dormant && (!dead || enemy.deadFor < 0.5);
     g.position.set(enemy.pos.x, 0, enemy.pos.z);
     yawGroup.rotation.y = Math.atan2(enemy.facing.x, enemy.facing.z);
 
@@ -151,9 +152,13 @@ function EnemyActor({ index }: { index: number }) {
 export function EnemyActors() {
   return (
     <>
-      {currentMap.enemies.map((spawn, index) => (
-        <EnemyActor key={spawn.id} index={index} />
-      ))}
+      {currentMap.enemies.map((spawn, index) =>
+        spawn.kind === 'boss' ? (
+          <BossActor key={spawn.id} index={index} />
+        ) : (
+          <EnemyActor key={spawn.id} index={index} />
+        ),
+      )}
     </>
   );
 }

@@ -11,6 +11,8 @@ export type NavGrid = {
   cellCenter: (i: number, j: number) => Vec2;
   /** Fills the walkability cache in small chunks so the first click does not stall. */
   prewarm: () => Promise<void>;
+  /** Forgets the cache (a gate opened or closed, so walkability changed). */
+  reset: () => void;
 };
 
 const UNKNOWN = 0;
@@ -48,6 +50,7 @@ export function createNavGrid(world: CollisionWorld, radius: number, cell = 0.5)
     isFreePoint,
     toCell: (x, z) => [Math.round((x - minX) / cell), Math.round((z - minZ) / cell)],
     cellCenter: (i, j) => ({ x: minX + i * cell, z: minZ + j * cell }),
+    reset: () => state.fill(UNKNOWN),
     async prewarm() {
       for (let j = 0; j < rows; j++) {
         for (let i = 0; i < cols; i++) isFreeCell(i, j);

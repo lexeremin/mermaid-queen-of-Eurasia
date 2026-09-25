@@ -7,6 +7,17 @@ import { combat } from '@/game/combat-sim';
 import { loot, spawnDrops } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
 import { prayAtShrine, stepGather } from '@/game/garden-actions';
+import {
+  goDown,
+  goUp,
+  onBossDefeated,
+  onItemCollected,
+  onRegistrarDefeated,
+  openBossDoor,
+  stepChests,
+} from '@/game/dungeon-actions';
+import { gateIsShut } from '@/game/dungeon-sim';
+import { METRO } from '@/data/maps/red-square';
 import { onEnemyDefeatedForQuests } from '@/game/quest-actions';
 import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
@@ -27,6 +38,7 @@ import { isSimRunning, useGameStore, type PlaceId } from '@/store/game-store';
 import { currentMap, currentWorld } from '@/game/world/current-map';
 import { PLAYER_SPEED, stepPlayer } from '@/systems/movement';
 import { findPath, steerAlongPath } from '@/systems/pathfinding';
+import { UNDERGROUND, isUnderground } from '@/data/maps/underground';
 import { zoneAt } from '@/systems/zones';
 import {
   approachPoint,
@@ -44,19 +56,32 @@ const raycaster = new Raycaster();
 const stepper = createFixedStepper(SIM_STEP, MAX_STEPS_PER_FRAME);
 const STUCK_SECONDS = 0.5;
 const SPOTS = currentMap.npcs;
+const ARENA = currentMap.zones.find((z) => z.id === 'ug-arena')?.box ?? null;
 const PLACE_OF_ASSET = new Map<string, PlaceId>([
   ['questBoard', 'board'],
   ['shrine', 'shrine'],
 ]);
 /** Things Rosa can walk up to and use: the notice board and the Pearl Shrine. */
-const PLACES = currentMap.placements.flatMap((p) => {
-  const id = PLACE_OF_ASSET.get(p.asset);
-  return id ? [{ id, x: p.x, z: p.z }] : [];
-});
+const PLACES: { id: PlaceId; x: number; z: number }[] = [
+  ...currentMap.placements.flatMap((p) => {
+    const id = PLACE_OF_ASSET.get(p.asset);
+    return id ? [{ id, x: p.x, z: p.z }] : [];
+  }),
+  // The metro pavilion on Manezhnaya Square, the stairs up in the Ticket Hall and the boss gate.
+  { id: 'metro-down', x: METRO.door.x, z: METRO.door.z },
+  { id: 'metro-up', x: UNDERGROUND.stairs.x, z: UNDERGROUND.stairs.z - 2.4 },
+  { id: 'boss-door', x: UNDERGROUND.gate.x, z: UNDERGROUND.gate.z + 2.4 },
+];
 
-function visitPlace(id: string): void {
+/** The places that can be used right now (the boss door only while the gate is shut). */
+const activePlaces = () => (gateIsShut() ? PLACES : PLACES.filter((p) => p.id !== 'boss-door'));
+
+export function visitPlace(id: string): void {
   if (id === 'board') useGameStore.getState().openQuestPanel('board');
   else if (id === 'shrine') prayAtShrine();
+  else if (id === 'metro-down') goDown();
+  else if (id === 'metro-up') goUp();
+  else if (id === 'boss-door') openBossDoor();
 }
 const NPC_TARGETS = currentMap.npcs.map((n) => ({ id: n.id, pos: { x: n.x, z: n.z } }));
 const STUCK_SPEED_FRACTION = 0.25;
@@ -78,6 +103,7 @@ function tryCollect(item: (typeof ITEMS)[keyof typeof ITEMS]['id']): boolean {
   const result = useProgressStore.getState().addItem(item);
   if (result.added === 0) return false;
   useToastStore.getState().push(`Picked up ${ITEMS[item].name}`, 'item');
+  onItemCollected(item);
   return true;
 }
 
@@ -96,6 +122,17 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       grantXp(XP_REWARDS.enemy[event.kind], ENEMIES[event.kind].name);
       onEnemyDefeatedForQuests(event.kind);
       spawnDrops(event.kind, { x: event.x, z: event.z });
+      if (event.kind === 'registrar') onRegistrarDefeated({ x: event.x, z: event.z });
+      if (event.kind === 'boss') onBossDefeated({ x: event.x, z: event.z });
+    } else if (event.type === 'bossPhase') {
+      useToastStore
+        .getState()
+        .push(
+          event.phase === 2 ? 'Bumazhnik calls for backup!' : 'Form 27-B: he is furious!',
+          'warn',
+        );
+    } else if (event.type === 'bossSummon') {
+      playSfx('hit');
     } else if (event.type === 'cast') {
       if (event.ability === 'attack') playSfx('swing');
       else if (event.ability === 'dash') playSfx('bubbles');
@@ -133,7 +170,7 @@ export function GameLoop() {
         useDialogueStore.getState().open(near.id);
         return;
       }
-      const place = nearestTalkable(PLACES, sim.curr.pos);
+      const place = nearestTalkable(activePlaces(), sim.curr.pos);
       if (place) {
         sim.path = [];
         sim.talkTo = null;
@@ -162,8 +199,8 @@ export function GameLoop() {
           }
           sim.talkTo = npc.id;
           walkTo(approachPoint(npc, sim.curr.pos));
-        } else if (npcAtPoint(PLACES, target)) {
-          const place = npcAtPoint(PLACES, target);
+        } else if (npcAtPoint(activePlaces(), target)) {
+          const place = npcAtPoint(activePlaces(), target);
           if (
             place &&
             Math.hypot(place.x - sim.curr.pos.x, place.z - sim.curr.pos.z) <= TALK_RANGE
@@ -205,6 +242,7 @@ export function GameLoop() {
         },
         npcs: followingId ? NPC_TARGETS.filter((n) => n.id !== followingId) : NPC_TARGETS,
         world: currentWorld,
+        arena: ARENA,
         stats,
         companion: followingId ? { id: followingId } : null,
       });
@@ -239,6 +277,7 @@ export function GameLoop() {
         sim.stuckTime = 0;
       }
       stepGather(dt, sim.curr.pos);
+      stepChests(sim.curr.pos);
       const picked = stepPickups(loot.pickups, sim.curr.pos, dt, tryCollect, (item) =>
         hasSpaceFor(useProgressStore.getState().bag, item),
       );
@@ -253,11 +292,14 @@ export function GameLoop() {
     const zone = zoneAt(currentMap.zones, sim.curr.pos);
     if (zone !== store.zone) store.setZone(zone);
 
+    const below = isUnderground(sim.curr.pos);
+    if (below !== store.underground) store.setUnderground(below);
+
     const near = nearestTalkable(spots, sim.curr.pos);
     const nearId = near?.id ?? null;
     if (nearId !== store.nearbyNpc) store.setNearbyNpc(nearId);
 
-    const nearPlace = (nearestTalkable(PLACES, sim.curr.pos)?.id ?? null) as PlaceId | null;
+    const nearPlace = (nearestTalkable(activePlaces(), sim.curr.pos)?.id ?? null) as PlaceId | null;
     if (nearPlace !== store.nearPlace) store.setNearPlace(nearPlace);
 
     if (sim.talkTo && sim.path.length === 0) {

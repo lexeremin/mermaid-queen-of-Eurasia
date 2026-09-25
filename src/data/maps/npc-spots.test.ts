@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { NPC_BY_ID, NPCS } from '@/data/npcs';
 import { RED_SQUARE } from '@/data/maps/red-square';
+import { isUnderground } from '@/data/maps/underground';
 import { approachPoint, TALK_RANGE } from '@/systems/interaction';
 import { resolveCircle } from '@/systems/collision';
 import { buildCollisionWorld } from '@/systems/map-collision';
@@ -59,11 +60,11 @@ describe('NPC placement', () => {
 describe('enemy placement', () => {
   const bare = buildCollisionWorld({ ...RED_SQUARE, npcs: [] });
 
-  it('has unique ids and all three enemy kinds', () => {
+  it('has unique ids and every enemy kind', () => {
     const ids = RED_SQUARE.enemies.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(RED_SQUARE.enemies.map((e) => e.kind))).toEqual(
-      new Set(['tycoon', 'speaker', 'demagogue']),
+      new Set(['tycoon', 'speaker', 'demagogue', 'registrar', 'boss']),
     );
   });
 
@@ -89,8 +90,8 @@ describe('enemy placement', () => {
     }
   });
 
-  it('lets Rosa walk to every enemy spawn', () => {
-    for (const e of RED_SQUARE.enemies) {
+  it('lets Rosa walk to every surface enemy spawn (the underground is entered by the metro)', () => {
+    for (const e of RED_SQUARE.enemies.filter((enemy) => !isUnderground(enemy))) {
       expect(findPath(grid, RED_SQUARE.spawn, { x: e.x, z: e.z }), e.id).not.toBeNull();
     }
   });

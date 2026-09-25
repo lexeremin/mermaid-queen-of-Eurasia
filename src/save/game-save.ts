@@ -7,6 +7,8 @@ import { isSimRunning, useGameStore } from '@/store/game-store';
 import { useNpcStore, type NpcRuntime } from '@/store/npc-store';
 import { useProgressStore, currentStats } from '@/store/progress-store';
 import { useGardenStore } from '@/store/garden-store';
+import { useDungeonStore } from '@/store/dungeon-store';
+import { syncDungeonWorld } from '@/game/dungeon-sim';
 import { useQuestStore } from '@/store/quest-store';
 import { rebuildGather } from '@/game/gather-sim';
 import { resolveCircle } from '@/systems/collision';
@@ -51,6 +53,12 @@ export function collectSave(): SaveData {
     garden: {
       pearlsTaken: [...useGardenStore.getState().pearlsTaken],
       shrineGift: useGardenStore.getState().shrineGift,
+    },
+    dungeon: {
+      stampFound: useDungeonStore.getState().stampFound,
+      gateOpen: useDungeonStore.getState().gateOpen,
+      bossDefeated: useDungeonStore.getState().bossDefeated,
+      cachesTaken: [...useDungeonStore.getState().cachesTaken],
     },
   };
 }
@@ -104,6 +112,8 @@ export function applySave(save: SaveData): void {
     pearlsTaken: [...save.garden.pearlsTaken],
     shrineGift: save.garden.shrineGift,
   });
+  useDungeonStore.getState().hydrate(save.dungeon);
+  syncDungeonWorld();
   rebuildGather();
   useNpcStore.getState().hydrate(npcs);
   useGameStore.getState().setForm(save.hero.form);
@@ -149,11 +159,13 @@ export function resetProgress(): void {
   useProgressStore.getState().reset();
   useQuestStore.getState().reset();
   useGardenStore.getState().reset();
+  useDungeonStore.getState().reset();
   rebuildGather();
   useNpcStore.getState().reset();
   useGameStore.getState().setForm('human');
   resetSim();
   resetCombat();
+  syncDungeonWorld();
   refreshVitals();
   writeLocalSave();
 }
@@ -175,6 +187,7 @@ export function startPersistence(): void {
   useProgressStore.subscribe(scheduleSave);
   useQuestStore.subscribe(scheduleSave);
   useGardenStore.subscribe(scheduleSave);
+  useDungeonStore.subscribe(scheduleSave);
 
   window.setInterval(() => {
     if (isSimRunning(useGameStore.getState()) && !document.hidden)

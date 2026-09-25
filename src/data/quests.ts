@@ -7,7 +7,11 @@ export type Objective =
   | { kind: 'mesmerize'; npc: string }
   | { kind: 'recruit'; count: number }
   | { kind: 'collect'; item: ItemId; count: number }
-  | { kind: 'level'; level: number };
+  | { kind: 'level'; level: number }
+  /** A dungeon milestone (see the dungeon store): the stamp was found, the gate opened, the boss beaten. */
+  | { kind: 'flag'; flag: DungeonFlag; label: string };
+
+export type DungeonFlag = 'stampFound' | 'gateOpen' | 'bossDefeated';
 
 export type QuestReward = {
   xp: number;
@@ -146,6 +150,62 @@ export const QUESTS: readonly QuestDef[] = [
       items: [
         { id: 'healingTea', qty: 2 },
         { id: 'coldKvass', qty: 1 },
+      ],
+    },
+  },
+  {
+    id: 'into-the-depths',
+    title: 'Into the Depths',
+    blurb:
+      'A metro pavilion has appeared on Manezhnaya Square, and it hums. Go down and see what waits in the Ticket Hall.',
+    minRank: 2,
+    objectives: [
+      { kind: 'visit', zones: ['ug-hall'], label: 'Descend into the Moscow underground' },
+    ],
+    reward: {
+      xp: 90,
+      rep: 15,
+      items: [
+        { id: 'healingTea', qty: 3 },
+        { id: 'coldKvass', qty: 2 },
+      ],
+    },
+  },
+  {
+    id: 'the-registrars-stamp',
+    title: "The Registrar's Stamp",
+    blurb:
+      'The Registry Vault is sealed, and the only key is a rubber stamp in the pocket of the Chief Registrar, deep in the Records Cellar.',
+    minRank: 2,
+    objectives: [
+      {
+        kind: 'flag',
+        flag: 'stampFound',
+        label: "Take the Registrar's Stamp from the Chief Registrar",
+      },
+    ],
+    reward: {
+      xp: 120,
+      rep: 18,
+      items: [
+        { id: 'healingTea', qty: 2 },
+        { id: 'coldKvass', qty: 2 },
+      ],
+    },
+  },
+  {
+    id: 'tear-up-the-paperwork',
+    title: 'Tear Up the Paperwork',
+    blurb:
+      'Lord Bumazhnik has filed the whole square under "denied". Open the Registry Vault and file him under "defeated".',
+    minRank: 3,
+    objectives: [{ kind: 'flag', flag: 'bossDefeated', label: 'Defeat Lord Bumazhnik' }],
+    reward: {
+      xp: 300,
+      rep: 30,
+      items: [
+        { id: 'healingTea', qty: 4 },
+        { id: 'coldKvass', qty: 4 },
       ],
     },
   },

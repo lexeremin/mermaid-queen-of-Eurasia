@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 15 complete (Alexander Garden content).** Next: **Phase 16 — Moscow underground + boss** (`docs/phases/phase-16.md` — write it first, it does not exist yet).
+**Phase 16 complete (Moscow underground + boss).** Next: **Phase 17 — Transformations** (`docs/phases/phase-17.md` — write it first, it does not exist yet).
 
 ---
 
@@ -65,7 +65,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-16.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-17.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -101,8 +101,8 @@ Read these files before starting any work:
 | Phase 15c — Entrances | ✅ Complete | Arched GUM portals and gates, obstacles removed from doorway axes (tested), curved garden path, glowing entrance markers | 105b02f |
 | Phase 15d — Gate fixes, glow, hitbox rings | ✅ Complete | Floating seam plates removed from the gates, one united entrance glow, green/red hitbox rings, ground flicker fix, Trident reach 3.4 m | 85ba93c |
 | Phase 15e — Kits and generators | ✅ Complete | Wall-run assembler with a four-piece kit and a corner tower, ground autotiler (grid, variants, kerbs, connectors through both gates), see-through fade for occluding buildings | 75457cc |
-| Phase 16 — Moscow underground + boss | ⬜ Next | 3 rooms, loot, boss arena + fight | |
-| Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
+| Phase 16 — Moscow underground + boss | ✅ Complete | Generated underground level (3 rooms, corridors, boss arena) reached by a metro pavilion, dark-brick wall kit, torch-lit mood with fade transitions, chests, Chief Registrar and the stamp, boss gate, Lord Bumazhnik (three phases, telegraphed hazards, helpers), save v5 | |
+| Phase 17 — Transformations | ⬜ Next | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
 | Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings (hero X-ray silhouette already done in Phase 8) | |
 | Phase 19 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
 | Phase 20 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |

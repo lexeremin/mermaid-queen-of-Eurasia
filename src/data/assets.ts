@@ -83,6 +83,21 @@ export const ASSETS = {
   linden: { url: '/assets/tree/tree_linden.glb', clips: [], footprint: [circle(0.45)] },
   flowerbed: { url: '/assets/prop/prop_flowerbed.glb', clips: [], footprint: [box(1.2, 0.6)] },
   birch: { url: '/assets/tree/tree_birch.glb', clips: [], footprint: [circle(0.35)] },
+  ugWall: { url: '/assets/bld/bld_ug_wall.glb', clips: [] },
+  ugWallB: { url: '/assets/bld/bld_ug_wall_b.glb', clips: [] },
+  ugWallC: { url: '/assets/bld/bld_ug_wall_c.glb', clips: [] },
+  ugWallShort: { url: '/assets/bld/bld_ug_wall_short.glb', clips: [] },
+  ugColumn: { url: '/assets/prop/prop_ug_column.glb', clips: [], footprint: [circle(0.75)] },
+  ugGate: { url: '/assets/bld/bld_ug_gate.glb', clips: [] },
+  ugStairs: { url: '/assets/bld/bld_ug_stairs.glb', clips: [] },
+  chandelier: { url: '/assets/prop/prop_chandelier.glb', clips: [] },
+  paperStack: { url: '/assets/prop/prop_paper_stack.glb', clips: [], footprint: [circle(0.6)] },
+  metroEntrance: {
+    url: '/assets/bld/bld_metro_entrance.glb',
+    clips: [],
+    footprint: [box(3.2, 2.2)],
+  },
+  bossRegistrar: { url: '/assets/boss/boss_registrar.glb', clips: ['idle'] },
 } as const satisfies Record<string, AssetDef>;
 
 export type AssetId = keyof typeof ASSETS;

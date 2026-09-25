@@ -29,6 +29,16 @@ export const LOOT_TABLES: Readonly<Record<EnemyKind, LootTable>> = {
     ],
     gear: { chance: 0.15, pool: ['roseBrooch', 'songbirdWhistle', 'velvetGown'] },
   },
+  registrar: {
+    rolls: [
+      { id: 'healingTea', chance: 0.9 },
+      { id: 'coldKvass', chance: 0.6 },
+      { id: 'pearl', chance: 0.8 },
+    ],
+    gear: { chance: 0.6, pool: ['pearlTrident', 'velvetGown', 'songbirdWhistle'] },
+  },
+  // The boss's rewards are handed out by the boss fight itself (see progress-actions).
+  boss: { rolls: [], gear: { chance: 0, pool: [] } },
 };
 
 /** Rolls the drops for one kill. `random` returns [0, 1). */

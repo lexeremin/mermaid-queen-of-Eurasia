@@ -475,3 +475,107 @@ describe('hit events', () => {
     expect(hits(step(empty, { actions: { attack: true } }).events)).toBe(0);
   });
 });
+
+describe('the boss fight', () => {
+  const arena = { cx: 0, cz: -10, hx: 12, hz: 12 };
+  const fight = () =>
+    createCombatState([
+      { id: 'boss', kind: 'boss', x: 0, z: -12 },
+      { id: 'h1', kind: 'tycoon', x: 6, z: -12, dormant: true },
+      { id: 'h2', kind: 'demagogue', x: -6, z: -12, dormant: true },
+      { id: 'h3', kind: 'tycoon', x: 6, z: -6, dormant: true },
+    ]);
+  const boss = (s: CombatState) => s.enemies.find((e) => e.kind === 'boss')!;
+
+  it('keeps dormant helpers out of every hit and ignores them for aim', () => {
+    const s = fight();
+    const helper = s.enemies[1]!;
+    helper.pos = { x: 0, z: -1.6 };
+    step(s, { actions: { attack: true } });
+    expect(helper.hp).toBe(ENEMIES.tycoon.maxHp);
+    expect(helper.dormant).toBe(true);
+  });
+
+  it('marks a telegraphed circle and hurts Rosa only if she stays in it', () => {
+    const s = fight();
+    let hazard = s.hazards[0];
+    for (let t = 0; t < 3 && !hazard; t += DT) {
+      step(s, { arena, playerPos: { x: 0, z: -4 } });
+      hazard = s.hazards[0];
+    }
+    expect(hazard).toBeDefined();
+    expect(hazard!.hit).toBe(false);
+    expect(s.hp).toBe(MAX_HP);
+
+    const mark = (x: number) => ({
+      id: 999,
+      shape: { kind: 'circle', x, z: 0, r: 3 } as const,
+      delay: 0.5,
+      age: 0,
+      damage: 25,
+      hit: false,
+    });
+    const standing = createCombatState();
+    standing.hazards.push(mark(0));
+    const events = run(standing, 1);
+    expect(events.filter((e) => e.type === 'playerHurt')).toHaveLength(1);
+    expect(standing.hp).toBe(MAX_HP - 25);
+    expect(standing.hazards).toHaveLength(0);
+
+    const away = createCombatState();
+    away.hazards.push(mark(10));
+    expect(run(away, 1).some((e) => e.type === 'playerHurt')).toBe(false);
+    expect(away.hp).toBe(MAX_HP);
+  });
+
+  it('wakes helpers in phase two and takes them down with him', () => {
+    const s = fight();
+    s.hp = 9999;
+    const b = boss(s);
+    run(s, 1, { arena, playerPos: { x: 0, z: -6 }, stats: { ...BASE_STATS, maxHp: 9999 } });
+    b.hp = ENEMIES.boss.maxHp * 0.5;
+    const events = run(s, 20, {
+      arena,
+      playerPos: { x: 0, z: -6 },
+      stats: { ...BASE_STATS, maxHp: 9999 },
+    });
+    expect(events.some((e) => e.type === 'bossPhase')).toBe(true);
+    expect(events.some((e) => e.type === 'bossSummon')).toBe(true);
+    expect(s.enemies.filter((e) => e.helper && !e.dormant).length).toBeGreaterThan(0);
+    b.state = 'chase';
+    b.pos = { x: 0, z: -7 };
+    b.hp = 1;
+    const kill = run(s, 0.1, {
+      arena,
+      playerPos: { x: 0, z: -6 },
+      actions: { attack: true },
+      stats: { ...BASE_STATS, maxHp: 9999 },
+    });
+    expect(kill.some((e) => e.type === 'enemyDefeated' && e.kind === 'boss')).toBe(true);
+    expect(s.enemies.filter((e) => e.helper).every((e) => e.state === 'dead')).toBe(true);
+    expect(s.hazards).toHaveLength(0);
+  });
+
+  it('never respawns once beaten', () => {
+    const s = fight();
+    const b = boss(s);
+    b.hp = 0;
+    b.state = 'dead';
+    run(s, 60, { arena });
+    expect(b.state).toBe('dead');
+  });
+
+  it('Aura blinds him for only a quarter of the usual time', () => {
+    const s = fight();
+    const b = boss(s);
+    s.hp = 9999;
+    step(s, { arena, playerPos: { x: 0, z: -8 }, actions: { aura: true } });
+    run(s, AURA.duration + 0.2, {
+      arena,
+      playerPos: { x: 0, z: -8 },
+      stats: { ...BASE_STATS, maxHp: 9999 },
+    });
+    expect(b.blindedUntil - s.time).toBeLessThanOrEqual(AURA.enemyBlind * 0.25 + 0.01);
+    expect(b.blindedUntil).toBeGreaterThan(0);
+  });
+});

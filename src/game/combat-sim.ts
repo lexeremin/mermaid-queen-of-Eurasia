@@ -1,3 +1,4 @@
+import { UNDERGROUND, isUnderground } from '@/data/maps/underground';
 import { resetSim, sim } from '@/game/sim';
 import { currentMap } from '@/game/world/current-map';
 import { useCombatStore } from '@/store/combat-store';
@@ -16,10 +17,16 @@ export function resetCombat(): void {
   useGameStore.getState().setDowned(false);
 }
 
-/** "Get up": back at the spawn with partial health, enemies calmed. */
+/** "Get up": back at the spawn (or, underground, at the foot of the stairs) with partial health, enemies calmed. */
 export function reviveAtSpawn(): void {
+  const below = isUnderground(sim.curr.pos);
   revive(combat, currentStats());
   resetSim();
+  if (below) {
+    const pos = { ...UNDERGROUND.arrival };
+    sim.prev = { ...sim.curr, pos };
+    sim.curr = { ...sim.curr, pos };
+  }
   sim.path = [];
   useGameStore.getState().setDowned(false);
   useCombatStore.getState().set(combat.hp, combat.mana);

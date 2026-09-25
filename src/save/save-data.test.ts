@@ -328,3 +328,52 @@ describe('save v4: garden', () => {
     }
   });
 });
+
+describe('save v5: the underground', () => {
+  const v4 = () => ({
+    version: 4,
+    savedAt: '2026-09-25T12:00:00.000Z',
+    playSeconds: 30,
+    hero: { form: 'human', x: 1, z: 1, facingX: 0, facingZ: 1 },
+    npcs: {},
+    garden: { pearlsTaken: ['pearl-1'], shrineGift: true },
+  });
+
+  it('migrates a v4 save: everything kept, an untouched dungeon added', () => {
+    const save = parseSave(v4())!;
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.garden.shrineGift).toBe(true);
+    expect(save.dungeon).toEqual({
+      stampFound: false,
+      gateOpen: false,
+      bossDefeated: false,
+      cachesTaken: [],
+    });
+  });
+
+  it('keeps a saved dungeon and drops unknown chests', () => {
+    const save = parseSave(
+      good({
+        dungeon: {
+          stampFound: true,
+          gateOpen: true,
+          bossDefeated: false,
+          cachesTaken: ['chest-hall', 'chest-hall', 'chest-nowhere', 7],
+        },
+      }),
+    )!;
+    expect(save.dungeon.gateOpen).toBe(true);
+    expect(save.dungeon.cachesTaken).toEqual(['chest-hall']);
+  });
+
+  it('never contradicts itself: a beaten boss means an open gate and a found stamp', () => {
+    const save = parseSave(good({ dungeon: { bossDefeated: true } }))!;
+    expect(save.dungeon).toMatchObject({ bossDefeated: true, gateOpen: true, stampFound: true });
+    expect(parseSave(good({ dungeon: { gateOpen: true } }))!.dungeon.stampFound).toBe(true);
+  });
+
+  it('survives a garbage dungeon section', () => {
+    expect(parseSave(good({ dungeon: 'nope' }))!.dungeon.bossDefeated).toBe(false);
+    expect(parseSave(good({ dungeon: { cachesTaken: 'all' } }))!.dungeon.cachesTaken).toEqual([]);
+  });
+});

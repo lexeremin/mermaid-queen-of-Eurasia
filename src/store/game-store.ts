@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import type { Zone } from '@/systems/zones';
 
 export type HeroForm = 'human' | 'mermaid';
-export type PlaceId = 'board' | 'shrine';
+export type PlaceId = 'board' | 'shrine' | 'metro-down' | 'metro-up' | 'boss-door';
 export type QuestPanel = 'log' | 'board' | null;
 
 export type GameState = {
@@ -16,9 +16,15 @@ export type GameState = {
   /** The notice board or shrine Rosa is close enough to use, if any. */
   nearPlace: PlaceId | null;
   zone: Zone | null;
+  /** Rosa is in the Moscow underground region (drives the mood, the lights and what is drawn). */
+  underground: boolean;
+  /** A fade between the surface and the underground is running; the world waits. */
+  transitioning: boolean;
   form: HeroForm;
   setForm: (form: HeroForm) => void;
   setZone: (zone: Zone | null) => void;
+  setUnderground: (underground: boolean) => void;
+  setTransitioning: (transitioning: boolean) => void;
   setDialogueOpen: (open: boolean) => void;
   setDowned: (downed: boolean) => void;
   setNearbyNpc: (id: string | null) => void;
@@ -41,6 +47,10 @@ export const useGameStore = create<GameState>((set, get) => ({
   nearbyNpc: null,
   nearPlace: null,
   zone: null,
+  underground: false,
+  transitioning: false,
+  setUnderground: (underground) => set({ underground }),
+  setTransitioning: (transitioning) => set({ transitioning }),
   setDialogueOpen: (dialogueOpen) => set({ dialogueOpen }),
   setDowned: (downed) => set({ downed }),
   setNearbyNpc: (nearbyNpc) => set({ nearbyNpc }),
@@ -72,13 +82,17 @@ export const useGameStore = create<GameState>((set, get) => ({
 }));
 
 export function isSimRunning(
-  state: Pick<GameState, 'paused' | 'inventoryOpen' | 'questPanel' | 'dialogueOpen' | 'downed'>,
+  state: Pick<
+    GameState,
+    'paused' | 'inventoryOpen' | 'questPanel' | 'dialogueOpen' | 'downed' | 'transitioning'
+  >,
 ): boolean {
   return (
     !state.paused &&
     !state.inventoryOpen &&
     !state.questPanel &&
     !state.dialogueOpen &&
-    !state.downed
+    !state.downed &&
+    !state.transitioning
   );
 }

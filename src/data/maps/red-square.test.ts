@@ -89,6 +89,7 @@ describe('Red Square map (real layout)', () => {
     expect(canReach(9, 38.5)).toBe(true);
     expect(canReach(25, 45)).toBe(true);
     expect(canReach(25, 70)).toBe(true);
+    expect(canReach(30, 70)).toBe(true);
     expect(zoneAt(RED_SQUARE.zones, { x: 25, z: 45 })?.id).toBe('manezh');
   });
 

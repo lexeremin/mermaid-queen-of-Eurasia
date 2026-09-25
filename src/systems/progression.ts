@@ -75,7 +75,7 @@ export function computeStats(level: number, equipment: Equipment): PlayerStats {
 }
 
 export const XP_REWARDS = {
-  enemy: { tycoon: 15, speaker: 40, demagogue: 22 },
+  enemy: { tycoon: 15, speaker: 40, demagogue: 22, registrar: 120, boss: 400 },
   npcMesmerized: 25,
   npcJoined: 50,
 } as const;

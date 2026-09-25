@@ -5,3 +5,6 @@ export function clamp(value: number, min: number, max: number): number {
 export function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
+
+/** Eases 0 to 1 with a gentle start and end. */
+export const smoothstep = (t: number): number => t * t * (3 - 2 * t);

@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import {
   BufferGeometry,
+  Color,
   DoubleSide,
   Float32BufferAttribute,
   LinearFilter,
@@ -18,6 +19,7 @@ import { useGameStore } from '@/store/game-store';
 import { GroundPaving } from '@/game/world/GroundPaving';
 import { EntranceGlow } from '@/game/world/EntranceGlow';
 import { ContactShadows } from '@/game/world/ContactShadows';
+import { UG_MIN_Z } from '@/data/maps/underground';
 import { currentMap } from '@/game/world/current-map';
 import { buildRibbon, mergeRibbons, type RibbonMesh } from '@/game/world/ribbon';
 
@@ -95,16 +97,37 @@ function TiledGround({
   );
 }
 
-function Floors({ map }: { map: typeof currentMap }) {
+/** All the flat coloured floors of one group merged into a single mesh (one draw call, colours per vertex). */
+function Floors({ floors }: { floors: NonNullable<typeof currentMap.floors> }) {
+  const geometry = useMemo(() => {
+    const positions: number[] = [];
+    const colors: number[] = [];
+    const indices: number[] = [];
+    const color = new Color();
+    for (const f of floors) {
+      const base = positions.length / 3;
+      const y = f.y ?? 0.03;
+      const x0 = f.cx - f.w / 2;
+      const x1 = f.cx + f.w / 2;
+      const z0 = f.cz - f.d / 2;
+      const z1 = f.cz + f.d / 2;
+      positions.push(x0, y, z0, x1, y, z0, x1, y, z1, x0, y, z1);
+      color.set(f.color);
+      for (let k = 0; k < 4; k++) colors.push(color.r, color.g, color.b);
+      indices.push(base, base + 3, base + 2, base, base + 2, base + 1);
+    }
+    const g = new BufferGeometry();
+    g.setAttribute('position', new Float32BufferAttribute(positions, 3));
+    g.setAttribute('color', new Float32BufferAttribute(colors, 3));
+    g.setIndex(indices);
+    g.computeVertexNormals();
+    return g;
+  }, [floors]);
+  if (floors.length === 0) return null;
   return (
-    <>
-      {(map.floors ?? []).map((f, i) => (
-        <mesh key={i} rotation-x={-Math.PI / 2} position={[f.cx, f.y ?? 0.03, f.cz]}>
-          <planeGeometry args={[f.w, f.d]} />
-          <meshLambertMaterial color={f.color} />
-        </mesh>
-      ))}
-    </>
+    <mesh geometry={geometry}>
+      <meshLambertMaterial vertexColors />
+    </mesh>
   );
 }
 
@@ -131,6 +154,12 @@ export function MapScene() {
   const map = currentMap;
   const groups = useMemo(() => groupByAsset(map.placements), [map]);
   const inGum = useGameStore((s) => s.zone?.id === 'gum');
+  const underground = useGameStore((s) => s.underground);
+  const surfaceFloors = useMemo(() => (map.floors ?? []).filter((f) => f.cz < UG_MIN_Z), [map]);
+  const undergroundFloors = useMemo(
+    () => (map.floors ?? []).filter((f) => f.cz >= UG_MIN_Z),
+    [map],
+  );
   const ice = useMemo(
     () => mergeRibbons(map.waters.map((w) => buildRibbon(w.ribbon.points, w.edgeWidth, ICE_Y))),
     [map],
@@ -160,16 +189,19 @@ export function MapScene() {
       {map.paths.length > 0 && <RibbonMeshView data={paths} color={GRAVEL_COLOR} />}
       <RibbonMeshView data={ice} color={PALETTE.slate_light} />
       <RibbonMeshView data={water} color={PALETTE.slate} />
-      <Floors map={map} />
-      {(map.lights ?? []).map((l, i) => (
-        <pointLight
-          key={i}
-          position={[l.x, l.y, l.z]}
-          color={l.color}
-          intensity={l.intensity}
-          distance={l.distance}
-        />
-      ))}
+      <Floors floors={surfaceFloors} />
+      {underground && <Floors floors={undergroundFloors} />}
+      {[...(map.lights ?? []), ...(underground ? (map.undergroundLights ?? []) : [])].map(
+        (l, i) => (
+          <pointLight
+            key={i}
+            position={[l.x, l.y, l.z]}
+            color={l.color}
+            intensity={l.intensity}
+            distance={l.distance}
+          />
+        ),
+      )}
       {groups.map(([id, transforms]) => (
         <group key={id} visible={!(inGum && ROOF_STRUCTURE.has(id))}>
           <InstancedModel id={id} transforms={transforms} />

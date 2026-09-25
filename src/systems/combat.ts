@@ -29,8 +29,11 @@ import {
   respawnEnemy,
   standDown,
   stepEnemy,
+  wakeEnemy,
   type Enemy,
 } from '@/systems/enemy-ai';
+import { BOSS, stepBoss, type Box } from '@/systems/boss';
+import { overlapsHazard, stepHazards, type Hazard } from '@/systems/hazards';
 import { PLAYER_RADIUS, PLAYER_SPEED } from '@/systems/movement';
 import { BASE_STATS, type PlayerStats } from '@/systems/progression';
 import { isZero, normalize, type Vec2 } from '@/utils/vec2';
@@ -57,7 +60,11 @@ export type CombatEvent =
   /** A hit landed on an enemy (from Rosa or a companion). */
   | { type: 'enemyHit' }
   /** Rosa used an ability (drives voice and sound). */
-  | { type: 'cast'; ability: AbilityId };
+  | { type: 'cast'; ability: AbilityId }
+  /** The boss entered his second or third phase. */
+  | { type: 'bossPhase'; phase: 2 | 3 }
+  /** The boss woke helpers. */
+  | { type: 'bossSummon'; count: number };
 
 export type CombatState = {
   time: number;
@@ -73,6 +80,8 @@ export type CombatState = {
   aura: { active: boolean; t: number; hit: Set<string> };
   enemies: Enemy[];
   projectiles: Projectile[];
+  /** Telegraphed danger zones (boss moves) waiting to land. */
+  hazards: Hazard[];
   effects: Effect[];
   /** A companion fighting beside Rosa, or null. */
   companion: Companion | null;
@@ -86,7 +95,7 @@ export type CombatState = {
   nextId: number;
 };
 
-export type SpawnPoint = { id: string; kind: EnemyKind; x: number; z: number };
+export type SpawnPoint = { id: string; kind: EnemyKind; x: number; z: number; dormant?: boolean };
 
 export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatState {
   return {
@@ -101,8 +110,11 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     attackLock: 0,
     dash: { active: false, t: 0, dir: { x: 0, z: 1 } },
     aura: { active: false, t: 0, hit: new Set() },
-    enemies: spawns.map((s) => createEnemy(s.id, s.kind, { x: s.x, z: s.z })),
+    enemies: spawns.map((s) =>
+      createEnemy(s.id, s.kind, { x: s.x, z: s.z }, { dormant: s.dormant }),
+    ),
     projectiles: [],
+    hazards: [],
     effects: [],
     companion: null,
     swing: 0,
@@ -127,6 +139,8 @@ export type CombatParams = {
   stats?: PlayerStats;
   /** The NPC currently following Rosa as a companion, if any. */
   companion?: { id: string } | null;
+  /** The boss arena; the boss only fights while Rosa is inside. */
+  arena?: Box | null;
 };
 
 export type CombatFrame = {
@@ -180,6 +194,7 @@ function hurtPlayer(
     s.swing = 0;
     s.mermaid = 0;
     s.dash.active = false;
+    s.hazards = [];
     events.push({ type: 'playerDowned' });
     for (const e of s.enemies) standDown(e);
   }
@@ -199,6 +214,24 @@ function hitEnemy(
     s.kills += 1;
     events.push({ type: 'enemyDefeated', kind: e.kind, x: e.pos.x, z: e.pos.z });
     pushEffect(s, 'puff', e.pos.x, e.pos.z, dir, 0.5, defOf(e).radius * 2.2);
+    if (e.kind === 'boss') collapseHelpers(s);
+  }
+}
+
+/** The boss's paperwork falls apart with him: every helper is gone, with no reward. */
+function collapseHelpers(s: CombatState): void {
+  s.hazards = [];
+  s.projectiles = [];
+  for (const h of s.enemies) {
+    if (!h.helper || h.state === 'dead') continue;
+    if (h.dormant) {
+      h.dormant = false;
+      h.deadFor = 1;
+    } else {
+      pushEffect(s, 'puff', h.pos.x, h.pos.z, { x: 0, z: 1 }, 0.5, defOf(h).radius * 2.2);
+    }
+    h.hp = 0;
+    h.state = 'dead';
   }
 }
 
@@ -249,7 +282,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
 
     if (p.actions.attack && !s.dash.active && canUse(s.cooldowns, s.mana, 'attack')) {
       const targets = s.enemies
-        .filter((e) => e.state !== 'dead')
+        .filter((e) => e.state !== 'dead' && !e.dormant)
         .map((e) => ({ id: e.id, pos: e.pos, radius: defOf(e).radius }));
       const assisted = aimAssist(playerPos, facing, targets, AIM_ASSIST.range, AIM_ASSIST.maxAngle);
       facing =
@@ -264,7 +297,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       frame.cancelWalk = true;
       pushEffect(s, 'arc', playerPos.x, playerPos.z, facing, 0.16, TRIDENT.range);
       for (const e of s.enemies) {
-        if (e.state === 'dead') continue;
+        if (e.state === 'dead' || e.dormant) continue;
         if (inCone(playerPos, facing, e.pos, defOf(e).radius, TRIDENT.range, TRIDENT.halfAngle)) {
           hitEnemy(
             s,
@@ -285,7 +318,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       startMermaid(s, SPELL.mermaid, playerPos);
       pushEffect(s, 'wave', playerPos.x, playerPos.z, facing, 0.95, SPELL.radius);
       for (const e of s.enemies) {
-        if (e.state === 'dead') continue;
+        if (e.state === 'dead' || e.dormant) continue;
         if (inCircle(playerPos, e.pos, defOf(e).radius, SPELL.radius)) {
           hitEnemy(
             s,
@@ -332,10 +365,10 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       }
     }
     for (const e of s.enemies) {
-      if (e.state === 'dead' || s.aura.hit.has(e.id)) continue;
+      if (e.state === 'dead' || e.dormant || s.aura.hit.has(e.id)) continue;
       if (inCircle(playerPos, e.pos, defOf(e).radius, radius)) {
         s.aura.hit.add(e.id);
-        blindEnemy(e, s.time + AURA.enemyBlind);
+        blindEnemy(e, s.time + AURA.enemyBlind * (e.kind === 'boss' ? BOSS.blindFactor : 1));
       }
     }
     if (s.aura.t >= AURA.duration) s.aura.active = false;
@@ -348,7 +381,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     const targets = s.downed
       ? []
       : s.enemies
-          .filter((e) => e.state !== 'dead')
+          .filter((e) => e.state !== 'dead' && !e.dormant)
           .map((e) => ({ id: e.id, pos: e.pos, radius: defOf(e).radius }));
     const hit = stepCompanion(s.companion, {
       dt,
@@ -374,9 +407,47 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     s.companion = null;
   }
 
+  const dormantLeft = s.enemies.filter((e) => e.dormant).length;
   for (const e of s.enemies) {
+    if (e.dormant) continue;
+    if (e.kind === 'boss') {
+      const out = stepBoss(
+        e,
+        {
+          player: playerPos,
+          playerAlive: alive,
+          time: s.time,
+          world,
+          arena: p.arena ?? null,
+          dormantLeft,
+        },
+        dt,
+      );
+      for (const spec of out.hazards)
+        s.hazards.push({ ...spec, id: s.nextId++, age: 0, hit: false });
+      for (const dart of out.darts) {
+        s.projectiles.push({
+          id: s.nextId++,
+          pos: { ...dart.from },
+          vel: { x: dart.dir.x * dart.speed, z: dart.dir.z * dart.speed },
+          damage: dart.damage,
+          age: 0,
+        });
+      }
+      if (out.phaseChanged) events.push({ type: 'bossPhase', phase: out.phaseChanged });
+      if (out.summon > 0) {
+        const woken = s.enemies.filter((h) => h.dormant).slice(0, out.summon);
+        for (const h of woken) {
+          wakeEnemy(h);
+          pushEffect(s, 'puff', h.pos.x, h.pos.z, { x: 0, z: 1 }, 0.6, defOf(h).radius * 3);
+        }
+        if (woken.length > 0) events.push({ type: 'bossSummon', count: woken.length });
+      }
+      continue;
+    }
     const action = stepEnemy(e, { player: playerPos, playerAlive: alive, time: s.time, world }, dt);
-    if (e.state === 'dead' && e.deadFor >= RESPAWN_SECONDS) respawnEnemy(e);
+    // The boss and his helpers stay down once beaten.
+    if (e.state === 'dead' && e.deadFor >= RESPAWN_SECONDS && !e.helper) respawnEnemy(e);
     if (!action) continue;
     if (action.kind === 'melee') {
       const reach = action.blind ? BLIND_MELEE_REACH : action.range + PLAYER_RADIUS;
@@ -391,6 +462,14 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
         damage: action.damage,
         age: 0,
       });
+    }
+  }
+
+  const stepped = stepHazards(s.hazards, dt);
+  s.hazards = stepped.remaining;
+  for (const h of stepped.landed) {
+    if (alive && overlapsHazard(h.shape, playerPos, PLAYER_RADIUS)) {
+      hurtPlayer(s, h.damage, events, stats.reduction);
     }
   }
 
@@ -427,6 +506,7 @@ export function revive(s: CombatState, stats: PlayerStats = BASE_STATS): void {
   s.invuln = 2;
   s.sinceHurt = 0;
   s.projectiles = [];
+  s.hazards = [];
   s.aura.active = false;
   s.dash.active = false;
   s.swing = 0;

@@ -48,7 +48,17 @@ export type GatherKind = 'roseHip' | 'moonMint' | 'pearl';
 /** A herb plant (regrows) or a hidden pearl (taken once ever). */
 export type Gatherable = { id: string; kind: GatherKind; x: number; z: number };
 
-export type EnemySpawn = { id: string; kind: EnemyKind; x: number; z: number };
+export type EnemySpawn = {
+  id: string;
+  kind: EnemyKind;
+  x: number;
+  z: number;
+  /** Waits out of the fight until something (the boss) wakes it. */
+  dormant?: boolean;
+};
+
+/** A treasure chest that is opened by walking up to it, once ever. */
+export type ChestSpawn = { id: string; x: number; z: number };
 
 export type MapData = {
   id: string;
@@ -66,10 +76,13 @@ export type MapData = {
   enemies: readonly EnemySpawn[];
   gatherables?: readonly Gatherable[];
   entrances?: readonly Entrance[];
+  chests?: readonly ChestSpawn[];
   /** Colored ground rectangles (e.g. interior floors). */
   floors?: readonly { cx: number; cz: number; w: number; d: number; color: string; y?: number }[];
   /** Translucent glass roofs. */
   glass?: readonly { cx: number; cz: number; w: number; d: number; y: number }[];
+  /** Lights that only exist while Rosa is underground (the surface has its own sky). */
+  undergroundLights?: MapData['lights'];
   lights?: readonly {
     x: number;
     y: number;

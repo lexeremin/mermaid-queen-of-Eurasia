@@ -1,5 +1,6 @@
 import { Canvas } from '@react-three/fiber';
 import { Stats } from '@react-three/drei';
+import { AtmosphereRig } from '@/game/AtmosphereRig';
 import { CameraRig } from '@/game/CameraRig';
 import { ATMOSPHERE } from '@/game/atmosphere';
 import { CAMERA_FOV, CAMERA_OFFSET } from '@/game/camera';
@@ -8,7 +9,9 @@ import { ActorRings } from '@/game/entities/ActorRings';
 import { ClickMarker } from '@/game/entities/ClickMarker';
 import { CombatEffects } from '@/game/entities/CombatEffects';
 import { CompanionActor } from '@/game/entities/CompanionActor';
+import { DungeonProps } from '@/game/entities/DungeonProps';
 import { EnemyActors } from '@/game/entities/EnemyActors';
+import { HazardMarks } from '@/game/entities/HazardMarks';
 import { Gatherables } from '@/game/entities/Gatherables';
 import { Pickups } from '@/game/entities/Pickups';
 import { Player } from '@/game/entities/Player';
@@ -26,18 +29,7 @@ export function Scene() {
     >
       <color attach="background" args={[ATMOSPHERE.background]} />
       <fogExp2 attach="fog" args={[ATMOSPHERE.fogColor, ATMOSPHERE.fogDensity]} />
-      <hemisphereLight
-        args={[
-          ATMOSPHERE.hemisphere.sky,
-          ATMOSPHERE.hemisphere.ground,
-          ATMOSPHERE.hemisphere.intensity,
-        ]}
-      />
-      <directionalLight
-        position={ATMOSPHERE.sun.position}
-        color={ATMOSPHERE.sun.color}
-        intensity={ATMOSPHERE.sun.intensity}
-      />
+      <AtmosphereRig />
 
       <GameLoop />
       <CameraRig />
@@ -53,6 +45,8 @@ export function Scene() {
         <Pickups />
         <Gatherables />
         <CombatEffects />
+        <HazardMarks />
+        <DungeonProps />
       </Suspense>
 
       {import.meta.env.DEV && (

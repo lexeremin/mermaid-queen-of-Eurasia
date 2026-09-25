@@ -4,6 +4,7 @@ import { App } from '@/App';
 import '@/index.css';
 import { startProgressHooks } from '@/game/progress-actions';
 import { startGardenHooks } from '@/game/garden-actions';
+import { startDungeonHooks } from '@/game/dungeon-actions';
 import { startQuestHooks } from '@/game/quest-actions';
 import { startPersistence } from '@/save/game-save';
 import { startSync } from '@/net/sync';
@@ -20,6 +21,7 @@ startPersistence();
 startProgressHooks();
 startQuestHooks();
 startGardenHooks();
+startDungeonHooks();
 startSync();
 
 for (const type of ['pointerdown', 'keydown'] as const) {

@@ -19,6 +19,8 @@ import { AURA, TRIDENT } from '@/systems/abilities';
 import type { Effect } from '@/systems/combat';
 
 const POOL = 6;
+/** Enemy projectiles on screen at once (a paper storm sends two rings of twelve). */
+const MAX_SHOTS = 48;
 const WAVE_SLOTS = 3;
 const WAVE_LAYERS = 3;
 const BUBBLES_PER_BURST = 14;
@@ -61,7 +63,7 @@ export function CombatEffects() {
     () => Array.from({ length: POOL }, () => ({ mesh: null, material: null })),
     [],
   );
-  const shots = useMemo<(Mesh | null)[]>(() => Array.from({ length: 12 }, () => null), []);
+  const shots = useRef<InstancedMesh>(null);
   const notes = useRef<InstancedMesh>(null);
   const auraDisc = useRef<Mesh>(null);
   const auraMaterial = useRef<MeshBasicMaterial>(null);
@@ -164,16 +166,20 @@ export function CombatEffects() {
     }
 
     const projectiles = combat.projectiles;
-    shots.forEach((mesh, i) => {
-      const p = projectiles[i];
-      if (!mesh) return;
-      mesh.visible = p !== undefined;
-      if (p) {
-        mesh.position.set(p.pos.x, 1.0, p.pos.z);
-        mesh.rotation.y = yawOf({ x: p.vel.x, z: p.vel.z });
-        mesh.scale.setScalar(0.9 + p.age * 1.4);
+    const shotMesh = shots.current;
+    if (shotMesh) {
+      let n = 0;
+      for (const p of projectiles) {
+        if (n >= MAX_SHOTS) break;
+        dummy.position.set(p.pos.x, 1.0, p.pos.z);
+        dummy.rotation.set(0, yawOf({ x: p.vel.x, z: p.vel.z }), 0);
+        dummy.scale.setScalar(0.9 + p.age * 1.4);
+        dummy.updateMatrix();
+        shotMesh.setMatrixAt(n++, dummy.matrix);
       }
-    });
+      shotMesh.count = n;
+      shotMesh.instanceMatrix.needsUpdate = true;
+    }
 
     const notesMesh = notes.current;
     const disc = auraDisc.current;
@@ -287,18 +293,9 @@ export function CombatEffects() {
           </mesh>
         );
       })}
-      {Array.from({ length: 12 }, (_, i) => (
-        <mesh
-          key={`shot${i}`}
-          ref={(m) => {
-            shots[i] = m;
-          }}
-          geometry={waveGeometry}
-          visible={false}
-        >
-          <meshBasicMaterial color="#ffcf5a" side={DoubleSide} transparent opacity={0.9} />
-        </mesh>
-      ))}
+      <instancedMesh ref={shots} args={[waveGeometry, undefined, MAX_SHOTS]} frustumCulled={false}>
+        <meshBasicMaterial color="#ffcf5a" side={DoubleSide} transparent opacity={0.9} />
+      </instancedMesh>
       <instancedMesh
         ref={notes}
         args={[noteGeo, undefined, AURA.rings * NOTES_PER_RING]}

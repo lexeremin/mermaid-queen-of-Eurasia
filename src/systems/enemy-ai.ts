@@ -29,7 +29,44 @@ export type Enemy = {
   strafe: 1 | -1;
   /** Time until which the health bar is shown after taking damage. */
   barUntil: number;
+  /** Waits out of the fight (invisible, untargetable) until the boss wakes it. */
+  dormant: boolean;
+  /** One of the boss's four helpers (they collapse when the boss falls). */
+  helper: boolean;
+  /** The boss's state machine; null for everyone else. */
+  brain: BossBrain | null;
 };
+
+export type BossActionKind = 'stomp' | 'stamp' | 'darts' | 'summon' | 'storm' | 'form';
+export type BossAction = {
+  kind: BossActionKind;
+  /** Seconds into the action. */
+  t: number;
+  duration: number;
+  /** Where the action is aimed (locked when it starts). */
+  target: Vec2;
+  /** Direction the boss faced when it started. */
+  dir: Vec2;
+  /** How many timed emissions have gone out already (storm rings). */
+  fired: number;
+};
+export type BossBrain = {
+  phase: 1 | 2 | 3;
+  action: BossAction | null;
+  /** Seconds until the next action may start. */
+  cooldown: number;
+  /** Position in the phase's move list. */
+  sequence: number;
+  awake: boolean;
+};
+
+export const createBrain = (): BossBrain => ({
+  phase: 1,
+  action: null,
+  cooldown: 1.2,
+  sequence: 0,
+  awake: false,
+});
 
 export type EnemyContext = {
   player: Vec2;
@@ -77,7 +114,12 @@ function randomDirection(enemy: Enemy): Vec2 {
 
 export const defOf = (enemy: Pick<Enemy, 'kind'>): EnemyDef => ENEMIES[enemy.kind];
 
-export function createEnemy(id: string, kind: EnemyKind, spawn: Vec2): Enemy {
+export function createEnemy(
+  id: string,
+  kind: EnemyKind,
+  spawn: Vec2,
+  options: { dormant?: boolean } = {},
+): Enemy {
   return {
     id,
     kind,
@@ -98,12 +140,22 @@ export function createEnemy(id: string, kind: EnemyKind, spawn: Vec2): Enemy {
     deadFor: 0,
     strafe: 1,
     barUntil: 0,
+    dormant: options.dormant ?? false,
+    helper: options.dormant ?? false,
+    brain: kind === 'boss' ? createBrain() : null,
   };
 }
 
 /** Back to full health at the spawn point (respawn). */
 export function respawnEnemy(enemy: Enemy): void {
-  Object.assign(enemy, createEnemy(enemy.id, enemy.kind, enemy.spawn));
+  Object.assign(enemy, createEnemy(enemy.id, enemy.kind, enemy.spawn), { helper: enemy.helper });
+}
+
+/** Wakes a dormant helper where it stands, ready to fight. */
+export function wakeEnemy(enemy: Enemy): void {
+  enemy.dormant = false;
+  enemy.state = 'chase';
+  enemy.timer = 0;
 }
 
 /** The player is gone or fainted: stand down and head home. */
@@ -134,7 +186,7 @@ export function damageEnemy(
   }
   const push = knockback * (1 - def.knockbackResist);
   enemy.knock = { x: knockDir.x * push, z: knockDir.z * push };
-  const armored = def.knockbackResist >= 0.5 && enemy.state === 'windup';
+  const armored = (def.knockbackResist >= 0.5 && enemy.state === 'windup') || enemy.kind === 'boss';
   if (!armored && enemy.state !== 'blinded') {
     enemy.state = 'stunned';
     enemy.timer = 0.3 * (1 - def.knockbackResist);
@@ -146,6 +198,18 @@ export function blindEnemy(enemy: Enemy, until: number): void {
   if (enemy.state === 'dead') return;
   enemy.blindedUntil = until;
   enemy.state = 'blinded';
+}
+
+/** Carries the enemy along its knockback, which fades quickly. */
+export function slide(enemy: Enemy, world: CollisionWorld, dt: number): void {
+  if (Math.hypot(enemy.knock.x, enemy.knock.z) <= 0.05) return;
+  enemy.pos = resolveCircle(
+    { x: enemy.pos.x + enemy.knock.x * dt, z: enemy.pos.z + enemy.knock.z * dt },
+    defOf(enemy).radius,
+    world,
+  );
+  const k = Math.exp(-KNOCK_DECAY * dt);
+  enemy.knock = { x: enemy.knock.x * k, z: enemy.knock.z * k };
 }
 
 const distance = (a: Vec2, b: Vec2): number => Math.hypot(b.x - a.x, b.z - a.z);
@@ -166,27 +230,11 @@ export function stepEnemy(enemy: Enemy, ctx: EnemyContext, dt: number): EnemyAct
 
   if (enemy.state === 'dead') {
     enemy.deadFor += dt;
-    if (Math.hypot(enemy.knock.x, enemy.knock.z) > 0.05) {
-      enemy.pos = resolveCircle(
-        { x: enemy.pos.x + enemy.knock.x * dt, z: enemy.pos.z + enemy.knock.z * dt },
-        def.radius,
-        ctx.world,
-      );
-      const k = Math.exp(-KNOCK_DECAY * dt);
-      enemy.knock = { x: enemy.knock.x * k, z: enemy.knock.z * k };
-    }
+    slide(enemy, ctx.world, dt);
     return null;
   }
 
-  if (Math.hypot(enemy.knock.x, enemy.knock.z) > 0.05) {
-    enemy.pos = resolveCircle(
-      { x: enemy.pos.x + enemy.knock.x * dt, z: enemy.pos.z + enemy.knock.z * dt },
-      def.radius,
-      ctx.world,
-    );
-    const k = Math.exp(-KNOCK_DECAY * dt);
-    enemy.knock = { x: enemy.knock.x * k, z: enemy.knock.z * k };
-  }
+  slide(enemy, ctx.world, dt);
 
   if (enemy.state === 'blinded') {
     if (ctx.time >= enemy.blindedUntil) {

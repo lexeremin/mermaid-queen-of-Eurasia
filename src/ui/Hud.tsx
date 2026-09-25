@@ -1,6 +1,7 @@
 import { useGameStore } from '@/store/game-store';
 import { NPC_BY_ID } from '@/data/npcs';
-import { prayAtShrine } from '@/game/garden-actions';
+import { visitPlace } from '@/game/GameLoop';
+import type { PlaceId } from '@/store/game-store';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
@@ -14,6 +15,14 @@ import { TouchControls } from '@/ui/TouchControls';
 import { useTouchDevice } from '@/ui/use-touch-device';
 import '@/ui/hud.css';
 
+const PLACE_LABEL: Record<PlaceId, { touch: string; key: string }> = {
+  board: { touch: 'NOTICE BOARD', key: 'Notice Board' },
+  shrine: { touch: 'PEARL SHRINE', key: 'Pearl Shrine' },
+  'metro-down': { touch: 'GO DOWN', key: 'Descend to the metro' },
+  'metro-up': { touch: 'GO UP', key: 'Climb the stairs' },
+  'boss-door': { touch: 'SEALED GATE', key: 'Sealed gate' },
+};
+
 const GITHUB_URL = 'https://github.com/lexeremin/mermaid-queen-of-Eurasia';
 
 export function Hud() {
@@ -22,7 +31,7 @@ export function Hud() {
   const inventoryOpen = useGameStore((s) => s.inventoryOpen);
   const questPanel = useGameStore((s) => s.questPanel);
   const nearPlace = useGameStore((s) => s.nearPlace);
-  const openQuestPanel = useGameStore((s) => s.openQuestPanel);
+  const transitioning = useGameStore((s) => s.transitioning);
   const toggleQuestLog = useGameStore((s) => s.toggleQuestLog);
   const zone = useGameStore((s) => s.zone);
   const dialogueOpen = useGameStore((s) => s.dialogueOpen);
@@ -36,6 +45,8 @@ export function Hud() {
       {import.meta.env.DEV && <DebugOverlay />}
 
       <CombatHud touch={touch} />
+
+      <div className={`fade-overlay${transitioning ? ' on' : ''}`} aria-hidden="true" />
 
       <div className="hud-top">
         <button type="button" className="hud-btn" onClick={toggleQuestLog} aria-label="Quests">
@@ -62,18 +73,8 @@ export function Hud() {
       )}
 
       {nearPlace && !nearbyNpc && !paused && !inventoryOpen && !questPanel && !dialogueOpen && (
-        <button
-          type="button"
-          className="talk-prompt"
-          onClick={() => (nearPlace === 'board' ? openQuestPanel('board') : prayAtShrine())}
-        >
-          {nearPlace === 'board'
-            ? touch
-              ? 'NOTICE BOARD'
-              : 'E · Notice Board'
-            : touch
-              ? 'PEARL SHRINE'
-              : 'E · Pearl Shrine'}
+        <button type="button" className="talk-prompt" onClick={() => visitPlace(nearPlace)}>
+          {touch ? PLACE_LABEL[nearPlace].touch : `E · ${PLACE_LABEL[nearPlace].key}`}
         </button>
       )}
 

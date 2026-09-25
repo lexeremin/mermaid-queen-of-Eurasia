@@ -190,6 +190,28 @@ export const ITEMS = {
     slot: 'charm',
     bonuses: { maxMana: 20, manaRegen: 1 },
   }),
+  registrarStamp: item({
+    id: 'registrarStamp',
+    name: "Registrar's Stamp",
+    description: 'A heavy rubber stamp with a ruby seal. It opens the door to the Registry Vault.',
+    glyph: 'S',
+    color: '#d94a5c',
+    rarity: 'rare',
+    stack: 1,
+    kind: 'keepsake',
+  }),
+  registrarSeal: item({
+    id: 'registrarSeal',
+    name: "Registrar's Seal",
+    description: '+40 health, +2 mana per second, +10% damage. Officially approved.',
+    glyph: '*',
+    color: '#d94a5c',
+    rarity: 'rare',
+    stack: 1,
+    kind: 'equipment',
+    slot: 'charm',
+    bonuses: { maxHp: 40, manaRegen: 2, damagePct: 10 },
+  }),
 } as const satisfies Record<string, ItemDef>;
 
 export type ItemId = keyof typeof ITEMS;

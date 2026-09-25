@@ -1,7 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useRef } from 'react';
 import { FogExp2, Vector3 } from 'three';
-import { ATMOSPHERE } from '@/game/atmosphere';
+import { fogDensityFor, mood } from '@/game/atmosphere';
 import { CAMERA_DAMPING, CAMERA_OFFSET, cameraDistanceScale } from '@/game/camera';
 import { getRenderPosition } from '@/game/sim';
 
@@ -16,6 +16,7 @@ const lookAtTarget = new Vector3();
 export function CameraRig() {
   const smoothLook = useRef(new Vector3());
   const initialized = useRef(false);
+  const lastPlayer = useRef({ x: 0, z: 0 });
 
   useFrame((state, delta) => {
     const { camera, scene, size } = state;
@@ -29,6 +30,13 @@ export function CameraRig() {
     );
     lookAtTarget.set(player.x, 0, player.z);
 
+    // A teleport (metro, stairs) snaps the camera instead of gliding across the map.
+    if (Math.hypot(player.x - lastPlayer.current.x, player.z - lastPlayer.current.z) > 12) {
+      initialized.current = false;
+    }
+    lastPlayer.current.x = player.x;
+    lastPlayer.current.z = player.z;
+
     if (!initialized.current) {
       camera.position.copy(desired);
       smoothLook.current.copy(lookAtTarget);
@@ -40,7 +48,7 @@ export function CameraRig() {
     }
     camera.lookAt(smoothLook.current);
 
-    if (scene.fog instanceof FogExp2) scene.fog.density = ATMOSPHERE.fogDensity / scale;
+    if (scene.fog instanceof FogExp2) scene.fog.density = fogDensityFor(mood.k) / scale;
   });
 
   return null;
