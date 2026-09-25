@@ -54,6 +54,28 @@ function run(s: CombatState, seconds: number, over: Parameters<typeof step>[1] =
 
 const wisp = (x: number, z: number) => ({ id: `w${x}_${z}`, kind: 'tycoon' as const, x, z });
 
+describe('attacking toward the mouse', () => {
+  it('strikes in the aimed direction, ignoring the aim assist and where Rosa is facing', () => {
+    const s = createCombatState([wisp(0, -2), wisp(2, 0)]);
+    for (const e of s.enemies) e.state = 'blinded';
+    const frame = step(s, {
+      actions: { attack: true },
+      playerFacing: north,
+      aim: { x: 1, z: 0 },
+    });
+    expect(frame.faceOverride).toEqual({ x: 1, z: 0 });
+    expect(s.enemies[0]?.hp).toBe(ENEMIES.tycoon.maxHp);
+    expect(s.enemies[1]?.hp).toBeLessThan(ENEMIES.tycoon.maxHp);
+  });
+
+  it('keeps the aim assist when there is no aimed direction', () => {
+    const s = createCombatState([wisp(0, -2)]);
+    s.enemies[0]!.state = 'blinded';
+    step(s, { actions: { attack: true }, playerFacing: north, aim: null });
+    expect(s.enemies[0]?.hp).toBeLessThan(ENEMIES.tycoon.maxHp);
+  });
+});
+
 describe('trident attack', () => {
   it('damages enemies in front, not behind, and starts the cooldown', () => {
     const s = createCombatState([wisp(0, -1.6), wisp(0, 1.6)]);

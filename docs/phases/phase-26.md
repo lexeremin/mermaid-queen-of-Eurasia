@@ -60,6 +60,11 @@ Rosa grows for much longer. The four abilities arrive one by one over the first 
 - **Animation** is in `entities/swing-pose.ts` (keyframed poses, unit-tested): the weapon arm, the weapon's own pitch (the trident is slid along itself so it is gripped near its butt end in the slashes), a twist of the whole body for the sideways sweep, and a lean. The slash effect on the ground sweeps the same way, and the finisher's is a long narrow chop.
 - Sasha's swing now starts when he raises the sword, so the blow lands as the slash passes the front.
 
+### Second follow-up: a normal hold, his own swings, and right-click aiming
+- **Sasha at rest** now holds the sword the way a knight does at the ready: the arm a little forward from his side and the blade pointing up and slightly ahead, in front of his arm and not through it. The tilt used before made it stick out sideways.
+- **His swings are his own**, not Rosa's: a diagonal cut from high right down across the body to low left, a rising cut back up to the high right, and an overhead chop as the finisher (`sword` chain in `swing-pose.ts`, which now also rolls the arm out to the side). Rosa keeps the level sweeps and the chop of the trident. Both go back to their rest pose after each swing.
+- **Right mouse button** attacks toward the cursor: while it is held, Rosa turns to the cursor's direction on the ground and strikes that way (aim assist is off for it), following the mouse as it moves, like the left-click movement. Closer than 0.4 m to Rosa the cursor gives no direction, and the usual aim assist applies. Touch and keyboard attacks are unchanged.
+
 ## Verification
 - 603 tests (new: `skills.test.ts`, `combat-passives.test.ts` with locks, all four passives and fainting, soft noise, deeper boss-layer balance), lint, prettier, build, `assets:check`.
 - Browser (headless): level 1 shows the locked slots and "Aura unlocks at level 3" with no cast; level 60 shows halo and wings, sea wave, Aura beams, sharks around the Surge wave and the violet blast; no errors.

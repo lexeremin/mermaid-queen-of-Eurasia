@@ -9,7 +9,7 @@ import { applyRetroMaterial } from '@/game/assets/retro-material';
 import { combat } from '@/game/combat-sim';
 import { renderStats } from '@/game/render-stats';
 import { SIM_STEP, sim } from '@/game/sim';
-import { poseTool, restPose, swingPose } from '@/game/entities/swing-pose';
+import { poseTool, restPose, swingPose, type Rest } from '@/game/entities/swing-pose';
 import { useNpcStore } from '@/store/npc-store';
 import { COMPANION_COMBO } from '@/systems/companion';
 import { turnToward } from '@/systems/movement';
@@ -18,8 +18,11 @@ const WALK_SPEED_THRESHOLD = 0.5;
 const TURN_RATE = 14;
 const IDLE_GRACE_SECONDS = 0.15;
 const CROSSFADE_SECONDS = 0.18;
-/** The sword rests pointing forward and up (0 would be straight up), clear of his arm. */
-const SWORD_REST = 1.05;
+/**
+ * How he holds the sword when not fighting: the arm a little forward from his side and the blade pointing up and
+ * slightly ahead, in front of his arm rather than through it (blade pitch 0 is straight up).
+ */
+const REST: Rest = { arm: -0.6, tool: 0.3 };
 /** Where his hand holds the sword, relative to the sword node (the centre of its mesh), in the arm's frame. */
 const SWORD_GRIP = new Vector3(0, -0.52, 0);
 
@@ -66,8 +69,11 @@ function CompanionModel({ asset }: { asset: AssetId }) {
     g.rotation.y = Math.atan2(facing.current.x, facing.current.z);
     const total = COMPANION_COMBO[c.swingKind]?.swing ?? COMPANION_COMBO[0].swing;
     const pose =
-      c.swing > 0 ? swingPose(c.swingKind, 1 - c.swing / total, SWORD_REST) : restPose(SWORD_REST);
-    if (arm.current) arm.current.rotation.x += pose.arm;
+      c.swing > 0 ? swingPose(c.swingKind, 1 - c.swing / total, REST, 'sword') : restPose(REST);
+    if (arm.current) {
+      arm.current.rotation.x += pose.arm;
+      arm.current.rotation.z += pose.roll;
+    }
     if (sword.current) poseTool(sword.current.node, sword.current.base, SWORD_GRIP, pose, 0);
     if (model.current) {
       model.current.rotation.y = pose.twist;

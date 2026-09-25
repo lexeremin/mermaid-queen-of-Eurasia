@@ -140,6 +140,17 @@ function groundPoint(camera: Camera, click: { x: number; y: number }): Vec2 | nu
 
 /** Where the blink is aimed: the mouse cursor on the ground, else the way Rosa is moving or facing. */
 let aimPoint: Vec2 | null = null;
+/** A cursor closer to Rosa than this gives no direction. */
+const MIN_AIM_DISTANCE = 0.4;
+
+/** While the right mouse button is held, the direction from Rosa to the cursor (she attacks where the mouse points). */
+function mouseAttackDirection(from: Vec2): Vec2 | null {
+  if (!input.mouseAttack || !aimPoint) return null;
+  const dx = aimPoint.x - from.x;
+  const dz = aimPoint.z - from.z;
+  const len = Math.hypot(dx, dz);
+  return len < MIN_AIM_DISTANCE ? null : { x: dx / len, z: dz / len };
+}
 
 function resolveBlink(from: Vec2, move: Vec2): Vec2 | null {
   const aim =
@@ -355,6 +366,7 @@ export function GameLoop() {
           spell: input.pressed.spell,
           blink: input.pressed.blink,
         },
+        aim: mouseAttackDirection(sim.curr.pos),
         resolveBlink: (from) => resolveBlink(from, move),
         npcs: followingId ? NPC_TARGETS.filter((n) => n.id !== followingId) : NPC_TARGETS,
         world: currentWorld,

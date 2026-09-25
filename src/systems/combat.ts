@@ -204,6 +204,8 @@ export type CombatParams = {
   companion?: { id: string } | null;
   /** The boss arena; the boss only fights while Rosa is inside. */
   arena?: Box | null;
+  /** A direction Rosa attacks in (the mouse cursor while the right button is held); it replaces the aim assist. */
+  aim?: Vec2 | null;
   /** Where a blink from here would land (null: nowhere, so it is not cast). Supplied by the game loop. */
   resolveBlink?: (from: Vec2) => Vec2 | null;
 };
@@ -502,11 +504,21 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       const targets = s.enemies
         .filter((e) => e.state !== 'dead' && !e.dormant)
         .map((e) => ({ id: e.id, pos: e.pos, radius: defOf(e).radius }));
-      const assisted = aimAssist(playerPos, facing, targets, AIM_ASSIST.range, AIM_ASSIST.maxAngle);
-      facing =
-        assisted !== facing
-          ? assisted
-          : aimAssist(playerPos, facing, targets, AIM_ASSIST.closeRange, Math.PI);
+      if (p.aim) {
+        facing = p.aim;
+      } else {
+        const assisted = aimAssist(
+          playerPos,
+          facing,
+          targets,
+          AIM_ASSIST.range,
+          AIM_ASSIST.maxAngle,
+        );
+        facing =
+          assisted !== facing
+            ? assisted
+            : aimAssist(playerPos, facing, targets, AIM_ASSIST.closeRange, Math.PI);
+      }
       spendAbility(s.cooldowns, s.mana, 'attack');
       if (s.comboIdle > COMBO_RESET) s.combo = 0;
       const kind = s.combo;

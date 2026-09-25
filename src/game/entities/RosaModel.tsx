@@ -11,7 +11,7 @@ import { sim } from '@/game/sim';
 import type { HeroForm } from '@/store/game-store';
 import { HolyCrown } from '@/game/entities/HolyCrown';
 import { useProgressStore } from '@/store/progress-store';
-import { poseTool, restPose, swingPose } from '@/game/entities/swing-pose';
+import { poseTool, restPose, swingPose, type Rest } from '@/game/entities/swing-pose';
 import { TRIDENT_COMBO } from '@/systems/abilities';
 import { hasWings } from '@/systems/skills';
 
@@ -19,6 +19,8 @@ const WALK_SPEED_THRESHOLD = 0.5;
 const CROSSFADE_SECONDS = 0.18;
 /** How far the trident slides along itself in a swing, so it is gripped near its butt end. */
 const TRIDENT_SLIDE = 0.8;
+/** She stands with the trident upright beside her. */
+const REST: Rest = { arm: 0, tool: 0 };
 /** Where her hand holds the trident, relative to the trident node (the centre of its mesh), in the arm's frame. */
 const TRIDENT_GRIP = new Vector3(0, -0.285, 0);
 
@@ -61,8 +63,12 @@ export function RosaModel({ form }: { form: HeroForm }) {
   useFrame((_, delta) => {
     const kind = combat.swingKind;
     const total = TRIDENT_COMBO[kind]?.swing ?? TRIDENT_COMBO[0].swing;
-    const pose = combat.swing > 0 ? swingPose(kind, 1 - combat.swing / total, 0) : restPose(0);
-    if (arm.current) arm.current.rotation.x += pose.arm;
+    const pose =
+      combat.swing > 0 ? swingPose(kind, 1 - combat.swing / total, REST) : restPose(REST);
+    if (arm.current) {
+      arm.current.rotation.x += pose.arm;
+      arm.current.rotation.z += pose.roll;
+    }
     if (trident.current)
       poseTool(trident.current.node, trident.current.base, TRIDENT_GRIP, pose, TRIDENT_SLIDE);
     if (root.current) {
