@@ -6,6 +6,7 @@ import { parseSave, SAVE_VERSION, type SaveData } from '@/save/save-data';
 import { isSimRunning, useGameStore } from '@/store/game-store';
 import { useNpcStore, type NpcRuntime } from '@/store/npc-store';
 import { useProgressStore, currentStats } from '@/store/progress-store';
+import { resetArchangelHints } from '@/game/archangel-actions';
 import { useArchangelStore } from '@/store/archangel-store';
 import { useGardenStore } from '@/store/garden-store';
 import { useDungeonStore } from '@/store/dungeon-store';
@@ -190,6 +191,7 @@ export function resetProgress(): void {
   useQuestStore.getState().reset();
   useGardenStore.getState().reset();
   useArchangelStore.getState().reset();
+  resetArchangelHints();
   useDungeonStore.getState().reset();
   rebuildGather();
   useNpcStore.getState().reset();

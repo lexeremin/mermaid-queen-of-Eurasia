@@ -1,7 +1,7 @@
 import { useAnimations, useGLTF } from '@react-three/drei';
 import { useFrame } from '@react-three/fiber';
 import { useEffect, useMemo, useRef } from 'react';
-import type { Group } from 'three';
+import { AdditiveBlending, CanvasTexture, DoubleSide, type Group, type Mesh } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import type { ArchangelDef } from '@/data/archangels';
 import { ASSETS } from '@/data/assets';
@@ -17,6 +17,59 @@ const TURN_RATE = 4;
 const HOVER = 0.28;
 const HAPPY_SECONDS = 4.5;
 const CROSSFADE = 0.25;
+
+let beamTexture: CanvasTexture | undefined;
+
+/** A faint golden shimmer that rises from a lost child, so a curious player can spot them from afar. */
+function getBeamTexture(): CanvasTexture {
+  if (!beamTexture) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 128;
+    const c = canvas.getContext('2d');
+    if (c) {
+      const g = c.createLinearGradient(0, 128, 0, 0);
+      g.addColorStop(0, 'rgba(255,224,138,0.85)');
+      g.addColorStop(0.5, 'rgba(255,224,138,0.28)');
+      g.addColorStop(1, 'rgba(255,224,138,0)');
+      c.fillStyle = g;
+      c.fillRect(0, 0, 32, 128);
+      const h = c.createLinearGradient(0, 0, 32, 0);
+      h.addColorStop(0, 'rgba(0,0,0,1)');
+      h.addColorStop(0.5, 'rgba(0,0,0,0)');
+      h.addColorStop(1, 'rgba(0,0,0,1)');
+      c.globalCompositeOperation = 'destination-out';
+      c.fillStyle = h;
+      c.fillRect(0, 0, 32, 128);
+    }
+    beamTexture = new CanvasTexture(canvas);
+  }
+  return beamTexture;
+}
+
+function LostGlow() {
+  const mesh = useRef<Mesh>(null);
+  useFrame(({ camera, clock }) => {
+    const m = mesh.current;
+    if (!m) return;
+    m.quaternion.copy(camera.quaternion);
+    m.scale.set(1 + 0.12 * Math.sin(clock.elapsedTime * 2.4), 1, 1);
+  });
+  return (
+    <mesh ref={mesh} position={[0, 3.6, 0]} renderOrder={5}>
+      <planeGeometry args={[1.5, 6.5]} />
+      <meshBasicMaterial
+        map={getBeamTexture()}
+        transparent
+        depthWrite={false}
+        blending={AdditiveBlending}
+        side={DoubleSide}
+        fog={false}
+        opacity={0.8}
+      />
+    </mesh>
+  );
+}
 
 /** A winged child: hovers, flaps, turns toward Rosa, and bursts into a happy flutter the moment she is saved. */
 export function ArchangelActor({ def, spot }: { def: ArchangelDef; spot: NpcSpot }) {
@@ -77,7 +130,7 @@ export function ArchangelActor({ def, spot }: { def: ArchangelDef; spot: NpcSpot
           <primitive object={scene} />
         </group>
       </group>
-      {saved && <HeartBuff y={1.9} />}
+      {saved ? <HeartBuff y={1.9} /> : <LostGlow />}
     </group>
   );
 }

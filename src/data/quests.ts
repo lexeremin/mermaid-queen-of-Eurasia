@@ -225,7 +225,7 @@ export const QUESTS: readonly QuestDef[] = [
     title: 'Save the Archangels',
     blurb:
       'Michael, Gabriel and Serafima, your three small archangels, are lost somewhere in Moscow. Michael hides where the fir trees guard the far end of Red Square, Gabriel among the kiosks at the end of the GUM gallery, and Serafima keeps a little flame on the far bank of the Moskva. Find them and answer their questions with a mother’s heart.',
-    minRank: 2,
+    minRank: 0,
     objectives: [{ kind: 'save', count: 3 }],
     reward: {
       xp: 250,

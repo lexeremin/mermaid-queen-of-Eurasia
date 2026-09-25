@@ -33,3 +33,10 @@ A quest line about three lost children: **Michael**, **Gabriel** and **Serafima*
 - All three can be found, talked to and saved; a wrong answer loops back; the state survives a reload and old saves load.
 - The quest tracks 0/3 → 3/3 and can be claimed at the notice board.
 - Models within budget, draw calls ≤ 70, typecheck, lint, prettier, tests, build, `assets:check`.
+
+## Follow-up: finding the children (after playtest)
+A playtester found only one of the three. Two things made the others easy to miss: the quest that lists where they hide needed rank 2, and a child at the south end of the GUM gallery stands off screen (south of Rosa, the camera looks north) until she is almost on top of them. Now:
+- **Save the Archangels is on the board from the start** (rank 0).
+- **A golden shimmer** rises from each unsaved child.
+- **A nudge the first time Rosa comes near one** (about 22 m, 28 m for Serafima across the river): a soft chime and a line ("A tiny trumpet toots, off-key, somewhere close by...").
+- **The map** shows a pulsing gold question mark for an unsaved child within 45 m; saved children keep their gold dot.

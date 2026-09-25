@@ -58,6 +58,9 @@ function label(ctx: CanvasRenderingContext2D, text: string, x: number, y: number
 }
 
 /** Draws the region's map, then everything that moves or matters on it, into `ctx` for the given view. */
+/** A lost child shows on the map as a question mark once Rosa is this close. */
+const LOST_CHILD_RANGE = 45;
+
 export function drawMap(
   ctx: CanvasRenderingContext2D,
   view: MapView,
@@ -142,12 +145,21 @@ export function drawMap(
       const p = toScreen(view, n.x, n.z);
       dot(ctx, p.x, p.y, m * 0.6, '#9fe8b0');
     }
-    // The hidden archangels only appear on the map once they are saved.
+    // A lost child shows as a pulsing gold question mark once Rosa is near; a saved one as a gold dot.
     const saved = useArchangelStore.getState().saved;
     for (const n of currentMap.archangels ?? []) {
-      if (!saved.includes(n.id)) continue;
       const p = toScreen(view, n.x, n.z);
-      dot(ctx, p.x, p.y, m * 0.7, '#ffe08a');
+      if (saved.includes(n.id)) {
+        dot(ctx, p.x, p.y, m * 0.7, '#ffe08a');
+      } else if (Math.hypot(n.x - position.x, n.z - position.z) <= LOST_CHILD_RANGE) {
+        ctx.fillStyle = GOLD;
+        ctx.font = `bold ${Math.max(12, m * 3)}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.globalAlpha = 0.6 + 0.4 * Math.sin(performance.now() / 300);
+        ctx.fillText('?', p.x, p.y);
+        ctx.globalAlpha = 1;
+      }
     }
   }
   const c = combat.companion;

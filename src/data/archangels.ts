@@ -127,6 +127,28 @@ export const ARCHANGEL_BY_ID: ReadonlyMap<string, ArchangelDef> = new Map(
   ARCHANGELS.map((a) => [a.id, a]),
 );
 
+/** What Rosa notices when she gets close to a child she has not saved yet (once each, so it is a nudge, not a nag). */
+export const ARCHANGEL_HINTS: Readonly<Record<string, { text: string; radius: number }>> = {
+  michael: { text: 'Somewhere among the fir trees, someone is sniffling...', radius: 22 },
+  gabriel: { text: 'A tiny trumpet toots, off-key, somewhere close by...', radius: 22 },
+  serafima: { text: 'Across the water, something glows like a small flame.', radius: 28 },
+};
+
+/** The first unsaved, not yet hinted child within his notice radius of `pos`, if any. */
+export function nearbyHint(
+  spots: readonly { id: string; x: number; z: number }[],
+  pos: { x: number; z: number },
+  saved: readonly string[],
+  hinted: ReadonlySet<string>,
+): string | null {
+  for (const s of spots) {
+    const hint = ARCHANGEL_HINTS[s.id];
+    if (!hint || saved.includes(s.id) || hinted.has(s.id)) continue;
+    if (Math.hypot(s.x - pos.x, s.z - pos.z) <= hint.radius) return s.id;
+  }
+  return null;
+}
+
 export const ARCHANGEL_COUNT = ARCHANGELS.length;
 
 /** The dialogue for one archangel: intro, the prompt with three answers, and a happy line once saved. */

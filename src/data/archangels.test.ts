@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { ARCHANGELS, ARCHANGEL_COUNT, buildArchangelTree } from '@/data/archangels';
+import {
+  ARCHANGELS,
+  ARCHANGEL_COUNT,
+  ARCHANGEL_HINTS,
+  buildArchangelTree,
+  nearbyHint,
+} from '@/data/archangels';
 import { RED_SQUARE } from '@/data/maps/red-square';
 import { NPCS } from '@/data/npcs';
 import { saveArchangel } from '@/game/archangel-actions';
@@ -181,5 +187,29 @@ describe('saving an archangel', () => {
     saveArchangel('gabriel');
     saveArchangel('serafima');
     expect(useToastStore.getState().toasts.some((t) => t.text.includes('All three'))).toBe(true);
+  });
+});
+
+describe('the nudges toward the lost children', () => {
+  const spots = [
+    { id: 'michael', x: 0, z: 0 },
+    { id: 'gabriel', x: 100, z: 0 },
+  ];
+
+  it('speak up once, when Rosa comes near a child she has not saved', () => {
+    expect(nearbyHint(spots, { x: 10, z: 0 }, [], new Set())).toBe('michael');
+    expect(nearbyHint(spots, { x: 10, z: 0 }, [], new Set(['michael']))).toBeNull();
+    expect(nearbyHint(spots, { x: 10, z: 0 }, ['michael'], new Set())).toBeNull();
+    expect(nearbyHint(spots, { x: 60, z: 0 }, [], new Set())).toBeNull();
+    expect(nearbyHint(spots, { x: 85, z: 0 }, [], new Set())).toBe('gabriel');
+  });
+
+  it('have a line and a radius for every child', () => {
+    for (const a of ARCHANGELS) {
+      expect(ARCHANGEL_HINTS[a.id]?.text.length, a.id).toBeGreaterThan(10);
+      expect(ARCHANGEL_HINTS[a.id]!.radius, a.id).toBeGreaterThan(10);
+    }
+    // Serafima is across the river, so her nudge reaches farther.
+    expect(ARCHANGEL_HINTS.serafima!.radius).toBeGreaterThan(ARCHANGEL_HINTS.michael!.radius);
   });
 });

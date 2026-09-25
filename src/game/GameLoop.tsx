@@ -24,6 +24,7 @@ import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { ITEMS } from '@/data/items';
 import { XP_REWARDS } from '@/systems/progression';
+import { stepArchangelHints } from '@/game/archangel-actions';
 import { cameraRef } from '@/game/camera-ref';
 import { shakeScreen, showDamage, stepFeedback } from '@/game/feedback';
 import { BIG_HIT } from '@/systems/floating-numbers';
@@ -392,6 +393,7 @@ export function GameLoop() {
       }
       stepGather(dt, sim.curr.pos);
       stepChests(sim.curr.pos);
+      stepArchangelHints(sim.curr.pos);
       stepGate(sim.curr.pos);
       const picked = stepPickups(loot.pickups, sim.curr.pos, dt, tryCollect, (item) =>
         canTake(useProgressStore.getState(), item),

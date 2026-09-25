@@ -249,10 +249,10 @@ describe('the archangel objective', () => {
     expect(isReady(def(), progress, view({ archangelsSaved: 3 }))).toBe(true);
   });
 
-  it('reads as a count in the tracker and needs the rank of a favorite of Moscow', () => {
+  it('reads as a count in the tracker and is on the board from the start', () => {
     expect(trackerLine(def(), progress, view({ archangelsSaved: 1 }))).toBe(
       'Save the Archangels: 1/3',
     );
-    expect(def().minRank).toBe(2);
+    expect(def().minRank).toBe(0);
   });
 });
