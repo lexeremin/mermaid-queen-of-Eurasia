@@ -73,7 +73,8 @@ const kremlinWalls: Placement[] = KREMLIN_RUNS.flatMap((run) => assembleWallRun(
 
 // Structures outside the walkable bounds or inside blocked areas need no collision.
 const skyline: Placement[] = [
-  { asset: 'basil', x: -3, z: -37, collide: false },
+  // Saint Basil's really blocks now: Rosa goes around it (the Spusk on its east side, the park on its west).
+  { asset: 'basil', x: -3, z: -37 },
   { asset: 'museum', x: -4.5, z: 36.5, rotY: Math.PI, scale: 1.15, collide: false },
   { asset: 'kazan', x: -17, z: 36, rotY: Math.PI, collide: false },
   { asset: 'resurrectionGate', x: 9, z: 33.5, rotY: Math.PI },
@@ -222,6 +223,33 @@ const alexanderGarden: Placement[] = [
   { asset: 'flowerbed', x: 58.6, z: 20, rotY: HALF_PI },
 ];
 
+// The north of Red Square: in the game Saint Basil's stands at the north end; behind it the real square drops down
+// Vasilievsky Spusk to the Moskva embankment (east spur) and Zaryadye Park lies beside it (west spur).
+const SPUSK_X = 9;
+const PROMENADE_Z = -40;
+const LANTERN_X = [15, 23, 31, 39];
+const northOfRedSquare: Placement[] = [
+  // Red Square's end: the round Lobnoye Mesto and the monument to the heroes of 1612.
+  { asset: 'lobnoe', x: 4.5, z: -24.5 },
+  { asset: 'monument', x: -5.5, z: -22.5 },
+  // The embankment: railings along the water, lanterns and lindens along the south side.
+  ...range(7.5, 46.5, 3).map((x) => ({ asset: 'rail' as const, x, z: -43.8 })),
+  ...LANTERN_X.map((x) => ({ asset: 'lamppost' as const, x, z: -38 })),
+  ...[19, 27, 35, 43].map((x) => ({ asset: 'linden' as const, x, z: -38 })),
+  ...[19, 31].map((x) => ({ asset: 'bench' as const, x, z: -38.6, rotY: Math.PI })),
+  // Zaryadye Park: the amphitheatre, the chapel, benches, lamps, trees and railings along the water.
+  { asset: 'amphitheatre', x: -15, z: -34.6, scale: 0.7 },
+  { asset: 'chapel', x: -24.5, z: -37.5 },
+  ...range(-25.5, -10.5, 3).map((x) => ({ asset: 'rail' as const, x, z: -42.6 })),
+  ...[-16.5, -22.5].map((x) => ({ asset: 'bench' as const, x, z: -30.6 })),
+  ...[-14.2, -25].map((x) => ({ asset: 'lamppost' as const, x, z: -29.8 })),
+  ...[-27, -26.5, -12.5].map((x, i) => ({
+    asset: i % 2 ? ('birch' as const) : ('linden' as const),
+    x,
+    z: [-30.5, -41.2, -41.8][i]!,
+  })),
+];
+
 const pickTree = (roll: number): 'linden' | 'birch' | 'spruce' =>
   roll < 0.45 ? 'linden' : roll < 0.7 ? 'birch' : 'spruce';
 
@@ -271,6 +299,7 @@ export const RED_SQUARE: MapData = {
     ...redSquare,
     ...manezhnaya,
     ...alexanderGarden,
+    ...northOfRedSquare,
     ...surroundingTrees(),
   ],
   waters: [
@@ -324,6 +353,21 @@ export const RED_SQUARE: MapData = {
       ],
       width: 3.6,
     },
+    // Vasilievsky Spusk, down from the end of Red Square to the embankment, and the promenade along the river.
+    {
+      points: [
+        [SPUSK_X, -34],
+        [SPUSK_X, PROMENADE_Z],
+      ],
+      width: 6,
+    },
+    {
+      points: [
+        [6, PROMENADE_Z],
+        [46, PROMENADE_Z],
+      ],
+      width: 4,
+    },
   ],
   npcs: [
     { id: 'grisha', x: 4.2, z: 11.5, rotY: Math.PI * 0.85 },
@@ -352,6 +396,17 @@ export const RED_SQUARE: MapData = {
     { id: 'speaker-garden-2', kind: 'speaker', x: 55.5, z: 24 },
     { id: 'speaker-shrine', kind: 'speaker', x: 57.6, z: -21.2 },
     { id: 'demagogue-shrine', kind: 'demagogue', x: 60.6, z: -21 },
+    // The embankment and Zaryadye Park.
+    { id: 'tycoon-emb-1', kind: 'tycoon', x: 16, z: -41.5 },
+    { id: 'speaker-emb-1', kind: 'speaker', x: 23, z: -41.6 },
+    { id: 'demagogue-emb-1', kind: 'demagogue', x: 30, z: -41.2 },
+    { id: 'tycoon-emb-2', kind: 'tycoon', x: 36, z: -41.4 },
+    { id: 'demagogue-emb-2', kind: 'demagogue', x: 41, z: -40.8 },
+    { id: 'speaker-emb-2', kind: 'speaker', x: 44.5, z: -41 },
+    { id: 'tycoon-park-1', kind: 'tycoon', x: -26, z: -33 },
+    { id: 'demagogue-park-1', kind: 'demagogue', x: -17.5, z: -32.4 },
+    { id: 'speaker-park-1', kind: 'speaker', x: -19.6, z: -31.4 },
+    { id: 'tycoon-park-2', kind: 'tycoon', x: -24.5, z: -32 },
   ],
   entrances: [
     ...PORTALS_Z.map((z) => ({
@@ -403,8 +458,39 @@ export const RED_SQUARE: MapData = {
     // At the two ends of the pond, in the water.
     { id: 'pearl-6', kind: 'pearl', x: 48, z: 22.6 },
     { id: 'pearl-7', kind: 'pearl', x: 48, z: 33.4 },
+    // Along the embankment and in Zaryadye Park.
+    { id: 'pearl-e1', kind: 'pearl', x: 11, z: -41.6 },
+    { id: 'pearl-e2', kind: 'pearl', x: 33, z: -41.4 },
+    { id: 'pearl-e3', kind: 'pearl', x: -27, z: -40.5 },
+    { id: 'pearl-e4', kind: 'pearl', x: -11, z: -33 },
+    { id: 'pearl-e5', kind: 'pearl', x: 44, z: -42 },
   ],
   zones: [
+    // The north of Red Square. The small ones come first: the first zone that contains Rosa is the one she is in.
+    ...LANTERN_X.map((x, i) => ({
+      id: `lantern-${i + 1}`,
+      label: 'Embankment Lantern',
+      box: { cx: x, cz: -39, hx: 2.2, hz: 2.5 },
+    })),
+    { id: 'lobnoe', label: 'Lobnoye Mesto', box: { cx: 4.5, cz: -24.5, hx: 3.6, hz: 3.6 } },
+    {
+      id: 'monument',
+      label: 'Monument to the Heroes of 1612',
+      box: { cx: -5.5, cz: -22.5, hx: 3.2, hz: 3.2 },
+    },
+    {
+      id: 'amphitheatre',
+      label: 'Zaryadye Amphitheatre',
+      box: { cx: -15, cz: -33.5, hx: 5, hz: 4 },
+    },
+    { id: 'chapel', label: 'Chapel on Varvarka', box: { cx: -24.5, cz: -34, hx: 3, hz: 3.4 } },
+    { id: 'zaryadye', label: 'Zaryadye Park', box: { cx: -19, cz: -37, hx: 9.5, hz: 9 } },
+    { id: 'spusk', label: 'Vasilievsky Spusk', box: { cx: 9, cz: -35.5, hx: 3.5, hz: 7.5 } },
+    {
+      id: 'embankment',
+      label: 'Moskvoretskaya Embankment',
+      box: { cx: 27, cz: -41, hx: 20, hz: 4.6 },
+    },
     { id: 'pearl-shrine', label: 'Pearl Shrine', box: { cx: 59.3, cz: -27, hx: 2.7, hz: 3.2 } },
     { id: 'gum', label: 'GUM', box: { cx: GALLERY_X, cz: 0, hx: 4.6, hz: 27 } },
     { id: 'manezh', label: 'Manezhnaya Square', box: { cx: 25, cz: 56.75, hx: 20, hz: 20 } },
@@ -427,12 +513,13 @@ export const RED_SQUARE: MapData = {
   colliders: [
     { kind: 'box', cx: GALLERY_X, cz: -28.6, hx: 4.7, hz: 1.7 },
     { kind: 'box', cx: GALLERY_X, cz: 28.6, hx: 4.7, hz: 1.7 },
-    // The Kremlin (walls, interior) between Red Square and the garden.
-    { kind: 'box', cx: 29.3, cz: 3.65, hx: 16.1, hz: 33.65 },
+    // The Kremlin (walls, interior) between Red Square and the garden, up to the end of its wall.
+    { kind: 'box', cx: 29.3, cz: 0.15, hx: 16.1, hz: 37.15 },
     // Museum, Kazan Cathedral and everything behind them.
     { kind: 'box', cx: -12, cz: 53, hx: 16.5, hz: 23 },
-    // Land north of Red Square and beyond the river: not part of the map (only the garden path leads to the water).
-    { kind: 'box', cx: 9, cz: -38, hx: 37.5, hz: 8 },
+    // Behind Saint Basil's, between the cathedral and the river: closed (the river is reached by the garden path only).
+    { kind: 'box', cx: -3.5, cz: -43.8, hx: 9.5, hz: 1.6 },
+    // Beyond the river: not part of the map.
     { kind: 'box', cx: 17, cz: -66, hx: 46, hz: 4 },
     // Solid ground between the surface and the underground region.
     { kind: 'box', cx: 17, cz: 88, hx: 46, hz: 12 },

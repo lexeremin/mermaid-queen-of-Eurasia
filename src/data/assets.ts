@@ -99,6 +99,15 @@ export const ASSETS = {
     clips: [],
     footprint: [box(3.2, 2.2)],
   },
+  monument: { url: '/assets/prop/prop_monument.glb', clips: [], footprint: [box(1.6, 1.6)] },
+  lobnoe: { url: '/assets/prop/prop_lobnoe.glb', clips: [], footprint: [circle(2.3)] },
+  rail: { url: '/assets/prop/prop_rail.glb', clips: [], footprint: [box(1.5, 0.15)] },
+  amphitheatre: {
+    url: '/assets/bld/bld_amphitheatre.glb',
+    clips: [],
+    footprint: [box(7.3, 3.3, 0, -5.5)],
+  },
+  chapel: { url: '/assets/bld/bld_chapel.glb', clips: [], footprint: [box(1.7, 3.2, 0, -0.575)] },
   bossRegistrar: { url: '/assets/boss/boss_registrar.glb', clips: ['idle'] },
 } as const satisfies Record<string, AssetDef>;
 

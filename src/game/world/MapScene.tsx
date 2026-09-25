@@ -33,6 +33,8 @@ const ICE_Y = 0.03;
 const WATER_Y = 0.04;
 const PATH_Y = 0.05;
 /** Overhead parts of the GUM gallery that hide while Rosa is inside, so they never block the camera. */
+/** The park just north of the GUM gallery: from there the gallery's roof would hang in front of the picture. */
+const ZARYADYE_ZONES: ReadonlySet<string> = new Set(['zaryadye', 'amphitheatre', 'chapel']);
 const ROOF_STRUCTURE: ReadonlySet<AssetId> = new Set(['gumRibs', 'gumBridge']);
 const GLASS_COLOR = '#c4d6dc';
 const GRAVEL_COLOR = '#8f8672';
@@ -134,7 +136,8 @@ function Floors({ floors }: { floors: NonNullable<typeof currentMap.floors> }) {
   );
 }
 
-function GlassRoofs({ map }: { map: typeof currentMap }) {
+function GlassRoofs({ map, hidden }: { map: typeof currentMap; hidden: boolean }) {
+  if (hidden) return null;
   return (
     <>
       {(map.glass ?? []).map((g, i) => (
@@ -156,7 +159,8 @@ function GlassRoofs({ map }: { map: typeof currentMap }) {
 export function MapScene() {
   const map = currentMap;
   const groups = useMemo(() => groupByAsset(map.placements), [map]);
-  const inGum = useGameStore((s) => s.zone?.id === 'gum');
+  const inZaryadye = useGameStore((s) => ZARYADYE_ZONES.has(s.zone?.id ?? ''));
+  const inGum = useGameStore((s) => s.zone?.id === 'gum') || inZaryadye;
   const inUnderground = useGameStore((s) => s.underground);
   const warming = useLoadingState((s) => s.warmUnderground);
   const underground = inUnderground || warming;
@@ -219,7 +223,7 @@ export function MapScene() {
       <ContactShadows />
       <EntranceGlow />
       <LampGlow />
-      <GlassRoofs map={map} />
+      <GlassRoofs map={map} hidden={inZaryadye} />
     </>
   );
 }

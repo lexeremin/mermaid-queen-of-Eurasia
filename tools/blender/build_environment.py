@@ -20,6 +20,7 @@ for _name in (
     "build_moscow_assets",
     "build_garden_assets",
     "build_underground_assets",
+    "build_zaryadye_assets",
 ):
     exec(open(REPO + "/tools/blender/" + _name + ".py").read(), globals())
 
@@ -27,7 +28,7 @@ for _name in (
 def build_environment():
     del EMBED_LOG[:]
     built = [build_tree()]
-    for fn in (build_all_village, build_all_redsquare, build_all_gum, build_all_moscow, build_all_garden, build_all_underground):
+    for fn in (build_all_village, build_all_redsquare, build_all_gum, build_all_moscow, build_all_garden, build_all_underground, build_all_zaryadye):
         built += fn()
     by = collections.defaultdict(list)
     for entry in EMBED_LOG:

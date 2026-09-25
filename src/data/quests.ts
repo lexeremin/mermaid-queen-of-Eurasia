@@ -236,6 +236,98 @@ export const QUESTS: readonly QuestDef[] = [
       ],
     },
   },
+  {
+    id: 'down-the-slope',
+    title: 'Down the Slope',
+    blurb:
+      'Behind Saint Basil’s the square drops down Vasilievsky Spusk to the river. Walk down it and along the Moskvoretskaya Embankment.',
+    minRank: 1,
+    objectives: [
+      {
+        kind: 'visit',
+        zones: ['spusk', 'embankment'],
+        label: 'Walk down Vasilievsky Spusk to the embankment',
+      },
+    ],
+    reward: { xp: 50, rep: 10, items: [{ id: 'healingTea', qty: 2 }] },
+  },
+  {
+    id: 'heroes-of-1612',
+    title: 'Heroes of 1612',
+    blurb:
+      'Two bronze heroes stand in front of the cathedral, and the round stone Lobnoye Mesto waits beside it. Pay your respects at both.',
+    minRank: 1,
+    objectives: [
+      {
+        kind: 'visit',
+        zones: ['monument', 'lobnoe'],
+        label: 'Visit the monument and Lobnoye Mesto',
+      },
+    ],
+    reward: { xp: 50, rep: 10, items: [{ id: 'coldKvass', qty: 2 }] },
+  },
+  {
+    id: 'zaryadye-stroll',
+    title: 'Zaryadye Stroll',
+    blurb:
+      'Past the end of GUM, beside the cathedral, a park has opened: an amphitheatre, a small green-domed chapel, benches and lamps. Take a stroll.',
+    minRank: 1,
+    objectives: [
+      {
+        kind: 'visit',
+        zones: ['zaryadye', 'amphitheatre', 'chapel'],
+        label: 'Visit Zaryadye Park, its amphitheatre and its chapel',
+      },
+    ],
+    reward: { xp: 60, rep: 12, items: [{ id: 'healingTea', qty: 3 }] },
+  },
+  {
+    id: 'light-the-embankment',
+    title: 'Light the Embankment',
+    blurb:
+      'Four lanterns line the promenade along the river, and nobody has lit them since the loud men came. Walk up to each of them.',
+    minRank: 2,
+    objectives: [
+      {
+        kind: 'visit',
+        zones: ['lantern-1', 'lantern-2', 'lantern-3', 'lantern-4'],
+        label: 'Walk up to the four embankment lanterns',
+      },
+    ],
+    reward: {
+      xp: 70,
+      rep: 14,
+      items: [
+        { id: 'healingTea', qty: 3 },
+        { id: 'coldKvass', qty: 3 },
+      ],
+    },
+  },
+  {
+    id: 'clear-the-embankment',
+    title: 'Clear the Embankment',
+    blurb:
+      'The promenade and the new park are thick with gloomy men in pressed suits. Send eight of them home.',
+    minRank: 2,
+    objectives: [{ kind: 'kill', count: 8 }],
+    reward: {
+      xp: 90,
+      rep: 14,
+      items: [
+        { id: 'healingTea', qty: 2 },
+        { id: 'coldKvass', qty: 2 },
+      ],
+    },
+  },
+  {
+    id: 'pearls-of-the-embankment',
+    title: 'Pearls of the Embankment',
+    blurb:
+      'The river leaves pearls along its bank, and Zaryadye Park hides a few of them among the benches. Bring five.',
+    minRank: 2,
+    objectives: [{ kind: 'collect', item: 'pearl', count: 5 }],
+    reward: { xp: 90, rep: 16, items: [{ id: 'roseBrooch', qty: 1 }] },
+  },
 ];
 
 export const QUEST_BY_ID: ReadonlyMap<string, QuestDef> = new Map(QUESTS.map((q) => [q.id, q]));

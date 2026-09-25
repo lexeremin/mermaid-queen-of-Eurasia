@@ -67,4 +67,7 @@ export const SURFACE_LABELS: readonly { text: string; x: number; z: number }[] =
   { text: 'Alexander Garden', x: 54, z: 4 },
   { text: 'Pearl Shrine', x: 59, z: -22 },
   { text: 'Moskva River', x: 17, z: -52 },
+  { text: 'Vasilievsky Spusk', x: 9, z: -31 },
+  { text: 'Embankment', x: 27, z: -41.5 },
+  { text: 'Zaryadye Park', x: -19, z: -38 },
 ];

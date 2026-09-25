@@ -13,7 +13,8 @@ const gridOf = (map: MapData) => createNavGrid(buildCollisionWorld(map), PLAYER_
 const grid = gridOf(RED_SQUARE);
 const world = buildCollisionWorld(RED_SQUARE);
 const shrine = RED_SQUARE.placements.find((p) => p.asset === 'shrine')!;
-const gathers = RED_SQUARE.gatherables ?? [];
+// The garden's own plants (the embankment's pearls are tested with the north of the map).
+const gathers = (RED_SQUARE.gatherables ?? []).filter((g) => !g.id.startsWith('pearl-e'));
 const GARDEN_ENTRANCE = { x: 53, z: 38 };
 
 const free = (x: number, z: number) => {
