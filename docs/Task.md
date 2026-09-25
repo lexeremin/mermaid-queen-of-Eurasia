@@ -101,7 +101,7 @@ Read these files before starting any work:
 | Phase 15c — Entrances | ✅ Complete | Arched GUM portals and gates, obstacles removed from doorway axes (tested), curved garden path, glowing entrance markers | 105b02f |
 | Phase 15d — Gate fixes, glow, hitbox rings | ✅ Complete | Floating seam plates removed from the gates, one united entrance glow, green/red hitbox rings, ground flicker fix, Trident reach 3.4 m | 85ba93c |
 | Phase 15e — Kits and generators | ✅ Complete | Wall-run assembler with a four-piece kit and a corner tower, ground autotiler (grid, variants, kerbs, connectors through both gates), see-through fade for occluding buildings | 75457cc |
-| Phase 16 — Moscow underground + boss | ✅ Complete | Generated underground level (3 rooms, corridors, boss arena) reached by a metro pavilion, dark-brick wall kit, torch-lit mood with fade transitions, chests, Chief Registrar and the stamp, boss gate, Lord Bumazhnik (three phases, telegraphed hazards, helpers), save v5 | |
+| Phase 16 — Moscow underground + boss | ✅ Complete | Generated underground level (3 rooms, corridors, boss arena) reached by a metro pavilion, dark-brick wall kit, torch-lit mood with fade transitions, chests, Chief Registrar and the stamp, boss gate, Lord Bumazhnik (three phases, telegraphed hazards, helpers), save v5 | e7cfe72 |
 | Phase 17 — Transformations | ⬜ Next | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
 | Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings (hero X-ray silhouette already done in Phase 8) | |
 | Phase 19 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
