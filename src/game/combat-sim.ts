@@ -1,7 +1,8 @@
-import { UNDERGROUND, isUnderground } from '@/data/maps/underground';
+import { isUnderground, layerLevel } from '@/data/maps/underground';
 import { resetSim, sim } from '@/game/sim';
 import { currentMap } from '@/game/world/current-map';
 import { useCombatStore } from '@/store/combat-store';
+import { useDungeonStore } from '@/store/dungeon-store';
 import { resetLoot } from '@/game/loot-sim';
 import { useGameStore } from '@/store/game-store';
 import { currentStats } from '@/store/progress-store';
@@ -23,7 +24,7 @@ export function reviveAtSpawn(): void {
   revive(combat, currentStats());
   resetSim();
   if (below) {
-    const pos = { ...UNDERGROUND.arrival };
+    const pos = { ...layerLevel(Math.max(1, useDungeonStore.getState().layer)).arrival };
     sim.prev = { ...sim.curr, pos };
     sim.curr = { ...sim.curr, pos };
   }

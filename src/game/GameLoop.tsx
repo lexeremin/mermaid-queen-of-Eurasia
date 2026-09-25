@@ -9,7 +9,15 @@ import { cancelRecall } from '@/systems/recall';
 import { loot, spawnDrops } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
 import { prayAtShrine, stepGather } from '@/game/garden-actions';
-import { goDown, goUp, onBossDefeated, stepChests, stepGate } from '@/game/dungeon-actions';
+import {
+  goDeeper,
+  goDown,
+  goUp,
+  onBossDefeated,
+  stepChests,
+  stepGate,
+} from '@/game/dungeon-actions';
+import { activeLevel } from '@/game/dungeon-sim';
 import { METRO } from '@/data/maps/red-square';
 import { onEnemyDefeatedForQuests } from '@/game/quest-actions';
 import { currentStats, useProgressStore } from '@/store/progress-store';
@@ -39,11 +47,13 @@ import {
 } from '@/input/input-state';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { useNpcStore } from '@/store/npc-store';
+import { useDungeonStore } from '@/store/dungeon-store';
+import { xpMult } from '@/systems/enemy-ai';
 import { isSimRunning, useGameStore, type PlaceId } from '@/store/game-store';
 import { currentMap, currentWorld } from '@/game/world/current-map';
 import { PLAYER_SPEED, stepPlayer } from '@/systems/movement';
 import { findPath, steerAlongPath } from '@/systems/pathfinding';
-import { UNDERGROUND, isUnderground } from '@/data/maps/underground';
+import { isUnderground } from '@/data/maps/underground';
 import { zoneAt } from '@/systems/zones';
 import {
   approachPoint,
@@ -61,7 +71,6 @@ const raycaster = new Raycaster();
 const stepper = createFixedStepper(SIM_STEP, MAX_STEPS_PER_FRAME);
 const STUCK_SECONDS = 0.5;
 const SPOTS = [...currentMap.npcs, ...(currentMap.archangels ?? [])];
-const ARENA = currentMap.zones.find((z) => z.id === 'ug-arena')?.box ?? null;
 const PLACE_OF_ASSET = new Map<string, PlaceId>([
   ['questBoard', 'board'],
   ['shrine', 'shrine'],
@@ -72,19 +81,30 @@ const PLACES: { id: PlaceId; x: number; z: number }[] = [
     const id = PLACE_OF_ASSET.get(p.asset);
     return id ? [{ id, x: p.x, z: p.z }] : [];
   }),
-  // The metro pavilion on Manezhnaya Square and the stairs up in the Ticket Hall.
+  // The metro pavilion on Manezhnaya Square.
   { id: 'metro-down', x: METRO.door.x, z: METRO.door.z },
-  { id: 'metro-up', x: UNDERGROUND.stairs.x, z: UNDERGROUND.stairs.z - 2.4 },
 ];
 
-const activePlaces = () => PLACES;
+/** Underground, the stairs of the current layer replace the surface places. */
+function activePlaces(): { id: PlaceId; x: number; z: number }[] {
+  const level = activeLevel();
+  if (!level || !isUnderground(sim.curr.pos)) return PLACES;
+  return [
+    { id: 'metro-up', x: level.stairsUp.x, z: level.stairsUp.z - 2.4 },
+    { id: 'stairs-down', x: level.stairsDown.x, z: level.stairsDown.z + 2.4 },
+  ];
+}
 
 export function visitPlace(id: string): void {
   cancelRecall(recall);
   if (id === 'board') useGameStore.getState().openQuestPanel('board');
   else if (id === 'shrine') prayAtShrine();
-  else if (id === 'metro-down') goDown();
-  else if (id === 'metro-up') goUp();
+  else if (id === 'metro-down') {
+    // Once she has been deeper than the first layer the metro door asks where to.
+    if (useDungeonStore.getState().deepest > 1) useGameStore.getState().openQuestPanel('depth');
+    else goDown();
+  } else if (id === 'metro-up') goUp();
+  else if (id === 'stairs-down') goDeeper();
 }
 const NPC_TARGETS = currentMap.npcs.map((n) => ({ id: n.id, pos: { x: n.x, z: n.z } }));
 const STUCK_SPEED_FRACTION = 0.25;
@@ -148,7 +168,10 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
   for (const event of events) {
     if (event.type === 'enemyDefeated') {
       track('enemy_defeated', { kind: event.kind });
-      grantXp(XP_REWARDS.enemy[event.kind], ENEMIES[event.kind].name);
+      grantXp(
+        Math.round(XP_REWARDS.enemy[event.kind] * xpMult(event.power)),
+        ENEMIES[event.kind].name,
+      );
       onEnemyDefeatedForQuests(event.kind);
       spawnDrops(event.kind, { x: event.x, z: event.z });
       if (event.kind === 'boss') onBossDefeated({ x: event.x, z: event.z });
@@ -290,7 +313,7 @@ export function GameLoop() {
         resolveBlink: (from) => resolveBlink(from, move),
         npcs: followingId ? NPC_TARGETS.filter((n) => n.id !== followingId) : NPC_TARGETS,
         world: currentWorld,
-        arena: ARENA,
+        arena: activeLevel()?.arena ?? null,
         form: useGameStore.getState().form,
         stats,
         companion: followingId ? { id: followingId } : null,
@@ -357,10 +380,10 @@ export function GameLoop() {
     useCombatStore.getState().set(combat.hp, combat.mana);
 
     const store = useGameStore.getState();
-    const zone = zoneAt(currentMap.zones, sim.curr.pos);
+    const below = isUnderground(sim.curr.pos);
+    const zone = zoneAt(below ? (activeLevel()?.zones ?? []) : currentMap.zones, sim.curr.pos);
     if (zone !== store.zone) store.setZone(zone);
 
-    const below = isUnderground(sim.curr.pos);
     if (below !== store.underground) store.setUnderground(below);
 
     const near = nearestTalkable(spots, sim.curr.pos);

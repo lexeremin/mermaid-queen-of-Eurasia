@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { RED_SQUARE } from '@/data/maps/red-square';
-import { UNDERGROUND } from '@/data/maps/underground';
+import { layerLevel } from '@/data/maps/underground';
 import { resolveCircle, type CollisionWorld } from '@/systems/collision';
 import { buildCollisionWorld } from '@/systems/map-collision';
 import { PLAYER_RADIUS } from '@/systems/movement';
@@ -30,9 +30,10 @@ describe('fast free-cell test', () => {
     }
   });
 
-  it('agrees on the whole real map, gate shut, on the grid the game uses', () => {
+  it('agrees on the whole real map with a boss layer installed, gate shut, on the grid the game uses', () => {
     const real = buildCollisionWorld(RED_SQUARE);
-    const colliders = [...real.colliders, UNDERGROUND.gate.box];
+    const level = layerLevel(10);
+    const colliders = [...real.colliders, ...level.colliders, level.gate!.box];
     const shut: CollisionWorld = { bounds: real.bounds, colliders };
     const test = createFreeTest(shut, PLAYER_RADIUS);
     let checked = 0;

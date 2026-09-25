@@ -1,4 +1,4 @@
-import { UNDERGROUND } from '@/data/maps/underground';
+import { layerLevel, type UndergroundLevel } from '@/data/maps/underground';
 import { combat } from '@/game/combat-sim';
 import { currentWorld } from '@/game/world/current-map';
 import { nav } from '@/game/world/nav';
@@ -6,64 +6,108 @@ import { useDungeonStore } from '@/store/dungeon-store';
 import type { Collider } from '@/systems/collision';
 import { createEnemy } from '@/systems/enemy-ai';
 
-const GATE_COLLIDER: Collider = UNDERGROUND.gate.box;
+/** The layer whose walls, gate and monsters are in the world right now (null on the surface). */
+let installed: UndergroundLevel | null = null;
+/** The combat state the installed layer's monsters were added to (`resetCombat` makes a new one). */
+let installedIn: object | null = null;
+let installedColliders = new Set<Collider>();
+
+export const activeLevel = (): UndergroundLevel | null => installed;
 
 /** Whether the boss gate currently blocks the corridor. */
-export const gateIsShut = (): boolean => currentWorld.colliders.includes(GATE_COLLIDER);
+export const gateIsShut = (): boolean =>
+  installed?.gate ? currentWorld.colliders.includes(installed.gate.box) : false;
+
+function removeColliders(): void {
+  const colliders = currentWorld.colliders as Collider[];
+  for (let i = colliders.length - 1; i >= 0; i--) {
+    if (installedColliders.has(colliders[i]!)) colliders.splice(i, 1);
+  }
+  installedColliders = new Set();
+}
+
+function removeLevel(): void {
+  removeColliders();
+  combat.enemies = combat.enemies.filter((e) => !e.instanced);
+  installed = null;
+  installedIn = null;
+}
+
+function addLevel(level: UndergroundLevel): void {
+  const colliders = currentWorld.colliders as Collider[];
+  installedColliders = new Set(level.colliders);
+  colliders.push(...level.colliders);
+  for (const s of level.enemies) {
+    combat.enemies.push(
+      createEnemy(
+        s.id,
+        s.kind,
+        { x: s.x, z: s.z },
+        { dormant: s.dormant, instanced: true, power: s.power },
+      ),
+    );
+  }
+  installed = level;
+  installedIn = combat;
+}
 
 /**
- * Makes the world match the dungeon store: the gate blocks the corridor until it is opened (which changes what
- * is walkable, so the path cache is cleared), and a beaten boss stays down along with his helpers.
- * Call after loading a save, after a reset, and when the gate opens.
+ * Makes the world match the dungeon store: the walls, monsters and gate of the layer Rosa is in are installed (and
+ * the previous layer's removed), the gate blocks its corridor until it is opened (which changes what is walkable,
+ * so the path cache is cleared). Call after loading a save, after a reset, when the layer changes and when the gate
+ * opens.
  */
 export function syncDungeonWorld(): void {
-  const { gateOpen, bossDefeated } = useDungeonStore.getState();
-  const colliders = currentWorld.colliders as Collider[];
-  const shut = colliders.includes(GATE_COLLIDER);
-  if (gateOpen && shut) {
-    colliders.splice(colliders.indexOf(GATE_COLLIDER), 1);
-    nav.reset();
-  } else if (!gateOpen && !shut) {
-    colliders.push(GATE_COLLIDER);
+  const { layer, gateOpen } = useDungeonStore.getState();
+  if (installed && installedIn !== combat) {
+    // A new combat state (new game, tests): the old layer's monsters went with the old one.
+    removeColliders();
+    installed = null;
+    installedIn = null;
+  }
+  if ((installed?.layer ?? 0) !== layer) {
+    if (installed) removeLevel();
+    if (layer > 0) addLevel(layerLevel(layer));
     nav.reset();
   }
-  if (bossDefeated) {
-    for (const e of combat.enemies) {
-      if (e.kind !== 'boss' && !e.helper) continue;
-      e.dormant = false;
-      e.hp = 0;
-      e.state = 'dead';
-      e.deadFor = 999;
-    }
+  const gate = installed?.gate?.box;
+  if (!gate) return;
+  const colliders = currentWorld.colliders as Collider[];
+  const shut = colliders.includes(gate);
+  if (gateOpen && shut) {
+    colliders.splice(colliders.indexOf(gate), 1);
+    nav.reset();
+  } else if (!gateOpen && !shut) {
+    colliders.push(gate);
+    installedColliders.add(gate);
+    nav.reset();
   }
 }
 
-/** Every monster of the three halls (not the boss or his helpers). */
+/** Every monster of the layer (not the boss or his helpers). */
 export const hallMonsters = () =>
   combat.enemies.filter((e) => e.instanced && e.kind !== 'boss' && !e.helper);
 
-export const hallsAreClear = (): boolean => hallMonsters().every((e) => e.state === 'dead');
+export const hallsAreClear = (): boolean => {
+  const monsters = hallMonsters();
+  return monsters.length > 0 && monsters.every((e) => e.state === 'dead');
+};
 
-/**
- * Rosa leaves and re-enters the underground: everything refills and the gate shuts again. (A beaten boss stays
- * beaten and his gate stays open.)
- */
-export function resetInstance(): void {
-  const { bossDefeated } = useDungeonStore.getState();
-  for (const e of combat.enemies) {
-    if (!e.instanced) continue;
-    if (e.kind === 'boss' || e.helper) {
-      if (bossDefeated) continue;
-      Object.assign(e, createEnemy(e.id, e.kind, e.spawn, { dormant: e.helper, instanced: true }));
-    } else {
-      Object.assign(e, createEnemy(e.id, e.kind, e.spawn, { instanced: true }));
-    }
+/** Rosa steps into a layer (from either side): it is made fresh, with all its monsters and a shut gate. */
+export function enterLayer(layer: number): void {
+  useDungeonStore.getState().setLayer(layer);
+  if (installed && installed.layer === layer) {
+    // The same layer again (down and up the same stairs): make it fresh.
+    removeLevel();
   }
-  combat.hazards = [];
-  combat.projectiles = [];
-  useDungeonStore.getState().closeGate();
   syncDungeonWorld();
 }
 
-// A fresh game starts with the gate shut.
+/** Back on the surface: the layer's walls and monsters leave the world. */
+export function leaveDungeon(): void {
+  useDungeonStore.getState().setLayer(0);
+  syncDungeonWorld();
+}
+
+// A fresh game starts on the surface.
 syncDungeonWorld();

@@ -35,7 +35,7 @@ Feature list with phase mapping. Status lives in `docs/Task.md`.
 | Water and performance: swimming, reachable river, graphics setting, lighter rendering | 19 |
 | Visual polish: no parts sticking out, rounder shapes, softer textures | 20 |
 | Save the archangels quest (Michael, Gabriel, Serafima) | 21 |
-| Endless dungeon: 100 generated layers | 22 |
+| Endless dungeon: 100 generated layers with fixed entrance and exit, depth-scaled monsters, boss every 10th layer, depth shortcut, save v10 | 22 |
 | Downtown Moscow areas and quests | 23 |
 | More bosses (satirical archetypes) and generic NPCs | 24 |
 | Polish: SFX, ambient/music, weather, damage numbers, shake, returning-player title | 25 |

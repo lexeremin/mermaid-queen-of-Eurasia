@@ -2,9 +2,11 @@ import { ARCHANGEL_BY_ID } from '@/data/archangels';
 import { METHODS, type Method } from '@/data/dialogue-types';
 import { NPCS } from '@/data/npcs';
 import { QUEST_BY_ID } from '@/data/quests';
-import { RED_SQUARE } from '@/data/maps/red-square';
+import { METRO, RED_SQUARE } from '@/data/maps/red-square';
 import { ITEMS, STARTER_EQUIPMENT, isItemId, type EquipSlot, type ItemId } from '@/data/items';
-import { ENEMIES } from '@/data/enemies';
+import { ENEMIES, type EnemyKind } from '@/data/enemies';
+import { chestLoot } from '@/data/chests';
+import { BOSS_EVERY, MAX_LAYER, UG_MIN_Z, isBossLayer, layerLevel } from '@/data/maps/underground';
 import { ABILITIES, type Form } from '@/systems/abilities';
 import { HERB_REGROW_SECONDS } from '@/systems/gathering';
 import { PICKUP_LIFE } from '@/systems/pickups';
@@ -12,7 +14,7 @@ import { BAG_SIZE, MAX_KEEPSAKES, isKeepsake } from '@/systems/inventory';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 export type SavedNpc = {
   relationship: number;
@@ -46,6 +48,10 @@ export type SavedDungeon = {
   hallsCleared: boolean;
   bossDefeated: boolean;
   cachesTaken: string[];
+  /** The layer Rosa is in (0: the surface), the deepest she has reached, and the boss layers already paid. */
+  layer: number;
+  deepest: number;
+  bossLayers: number[];
 };
 
 /** One enemy that is not in its spawn state (hurt, dead, woken). Alive ones come back calm at this spot. */
@@ -100,6 +106,25 @@ export const MIGRATIONS: Migrations = {
   2: (data) => ({ ...data, quests: defaultSavedQuests() }),
   3: (data) => ({ ...data, garden: defaultSavedGarden() }),
   4: (data) => ({ ...data, dungeon: defaultSavedDungeon() }),
+  // v10: the underground became 100 generated layers. A hero below ground surfaces at the metro pavilion, the old
+  // chests are gone, and the first boss counts as layer 10.
+  9: (data) => {
+    const hero = isRecord(data.hero) ? data.hero : {};
+    const dungeon = isRecord(data.dungeon) ? data.dungeon : {};
+    const below = typeof hero.z === 'number' && hero.z >= UG_MIN_Z;
+    const boss = dungeon.bossDefeated === true;
+    return {
+      ...data,
+      hero: below ? { ...hero, x: METRO.door.x, z: METRO.door.z } : hero,
+      dungeon: {
+        ...dungeon,
+        cachesTaken: [],
+        layer: 0,
+        deepest: boss ? BOSS_EVERY : dungeon.hallsCleared === true ? 1 : 0,
+        bossLayers: boss ? [BOSS_EVERY] : [],
+      },
+    };
+  },
   // v9: the archangel children saved so far.
   8: (data) => ({ ...data, archangels: defaultSavedArchangels() }),
   // v8: unlocked forms (a hero saved as a mermaid keeps the form).
@@ -150,6 +175,9 @@ export const defaultSavedDungeon = (): SavedDungeon => ({
   hallsCleared: false,
   bossDefeated: false,
   cachesTaken: [],
+  layer: 0,
+  deepest: 0,
+  bossLayers: [],
 });
 
 export const defaultSavedQuests = (): SavedQuests => ({ active: {}, completed: [] });
@@ -276,8 +304,6 @@ function parseGarden(raw: unknown): SavedGarden {
   return result;
 }
 
-const CHEST_IDS: ReadonlySet<string> = new Set((RED_SQUARE.chests ?? []).map((c) => c.id));
-
 function parseDungeon(raw: unknown): SavedDungeon {
   const result = defaultSavedDungeon();
   if (!isRecord(raw)) return result;
@@ -287,14 +313,45 @@ function parseDungeon(raw: unknown): SavedDungeon {
   if (Array.isArray(raw.cachesTaken)) {
     result.cachesTaken = [
       ...new Set(
-        raw.cachesTaken.filter((id): id is string => typeof id === 'string' && CHEST_IDS.has(id)),
+        raw.cachesTaken.filter(
+          (id): id is string => typeof id === 'string' && chestLoot(id) !== null,
+        ),
+      ),
+    ];
+  }
+  const layerOf = (value: unknown): number => Math.floor(bounded(value, 0, MAX_LAYER, 0));
+  result.layer = layerOf(raw.layer);
+  result.deepest = Math.max(result.layer, layerOf(raw.deepest));
+  if (Array.isArray(raw.bossLayers)) {
+    result.bossLayers = [
+      ...new Set(
+        raw.bossLayers.filter(
+          (n): n is number =>
+            typeof n === 'number' &&
+            Number.isInteger(n) &&
+            n >= 1 &&
+            n <= MAX_LAYER &&
+            isBossLayer(n),
+        ),
       ),
     ];
   }
   return result;
 }
 
-const ENEMY_KIND = new Map(RED_SQUARE.enemies.map((e) => [e.id, e.kind]));
+const SURFACE_ENEMY = new Map(RED_SQUARE.enemies.map((e) => [e.id, e.kind]));
+const DUNGEON_ENEMY_ID = /^L(\d{1,3})-/;
+
+/** The kind and toughness of an enemy by id: a surface one, or one of a generated layer. */
+function enemyInfo(id: string): { kind: EnemyKind; power: number } | null {
+  const kind = SURFACE_ENEMY.get(id);
+  if (kind) return { kind, power: 1 };
+  const match = DUNGEON_ENEMY_ID.exec(id);
+  const layer = match ? Number(match[1]) : 0;
+  if (layer < 1 || layer > MAX_LAYER) return null;
+  const spawn = layerLevel(layer).enemies.find((e) => e.id === id);
+  return spawn ? { kind: spawn.kind, power: spawn.power ?? 1 } : null;
+}
 const HERB_IDS: ReadonlySet<string> = new Set(
   (RED_SQUARE.gatherables ?? []).filter((g) => g.kind !== 'pearl').map((g) => g.id),
 );
@@ -319,13 +376,14 @@ function parseWorld(raw: unknown): SavedWorld | null {
   const enemies: Record<string, SavedEnemy> = {};
   if (isRecord(raw.enemies)) {
     for (const [id, entry] of Object.entries(raw.enemies)) {
-      const kind = ENEMY_KIND.get(id);
-      if (!kind || !isRecord(entry)) continue;
+      const info = enemyInfo(id);
+      if (!info || !isRecord(entry)) continue;
+      const { kind, power } = info;
       const x = finite(entry.x, NaN);
       const z = finite(entry.z, NaN);
       if (!inMap(x, z)) continue;
       enemies[id] = {
-        hp: bounded(entry.hp, 0, ENEMIES[kind].maxHp, ENEMIES[kind].maxHp),
+        hp: bounded(entry.hp, 0, ENEMIES[kind].maxHp * power, ENEMIES[kind].maxHp * power),
         dead: entry.dead === true,
         deadFor: bounded(entry.deadFor, 0, 3600, 0),
         dormant: entry.dormant === true,
@@ -426,6 +484,12 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
   }
 
   const progress = parseProgress(data.progress);
+  const dungeon = parseDungeon(data.dungeon);
+  // Where Rosa stands and which layer she is in must agree: otherwise she starts on the surface.
+  const heroZ = finite(hero.z, NaN);
+  const below = heroZ >= UG_MIN_Z;
+  if (dungeon.layer > 0 && !below) dungeon.layer = 0;
+  const strayed = below && dungeon.layer === 0;
   return {
     version: SAVE_VERSION,
     savedAt,
@@ -433,8 +497,8 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
     hero: {
       // The mermaid form only counts once it has been unlocked.
       form: hero.form === 'mermaid' && progress.forms.includes('mermaid') ? 'mermaid' : 'human',
-      x: finite(hero.x, NaN),
-      z: finite(hero.z, NaN),
+      x: strayed ? NaN : finite(hero.x, NaN),
+      z: strayed ? NaN : heroZ,
       facingX: finite(hero.facingX, 0),
       facingZ: finite(hero.facingZ, 1),
     },
@@ -443,7 +507,7 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
     quests: parseQuests(data.quests),
     garden: parseGarden(data.garden),
     archangels: parseArchangels(data.archangels),
-    dungeon: parseDungeon(data.dungeon),
+    dungeon,
     world: parseWorld(data.world),
   };
 }

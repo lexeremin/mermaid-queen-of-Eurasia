@@ -1,6 +1,5 @@
 import { ARCHANGELS } from '@/data/archangels';
 import type { MapData, Placement, Point, Ribbon } from '@/data/maps/types';
-import { UNDERGROUND } from '@/data/maps/underground';
 import { assembleWallRun, type WallRun } from '@/data/maps/wall-runs';
 import { mulberry32 } from '@/utils/random';
 
@@ -10,7 +9,8 @@ import { mulberry32 } from '@/utils/random';
 // the far side of the Kremlin (outside its west wall).
 const HALF_PI = Math.PI / 2;
 
-// The surface ends at z = 76; the Moscow underground lives in a distant region below z = 100 (see underground.ts),
+// The surface ends at z = 76; the Moscow underground lives in a distant region below z = 100 (see underground.ts; its layers are generated and
+// swapped in at run time, so none of it is part of this map),
 // with a solid block between so nothing on the surface can walk into it.
 // The river Moskva lies north of the garden's end; Rosa reaches it by the garden path and can swim in it.
 const BOUNDS = { minX: -28, maxX: 62, minZ: -64, maxZ: 200 };
@@ -271,7 +271,6 @@ export const RED_SQUARE: MapData = {
     ...redSquare,
     ...manezhnaya,
     ...alexanderGarden,
-    ...UNDERGROUND.placements,
     ...surroundingTrees(),
   ],
   waters: [
@@ -353,9 +352,7 @@ export const RED_SQUARE: MapData = {
     { id: 'speaker-garden-2', kind: 'speaker', x: 55.5, z: 24 },
     { id: 'speaker-shrine', kind: 'speaker', x: 57.6, z: -21.2 },
     { id: 'demagogue-shrine', kind: 'demagogue', x: 60.6, z: -21 },
-    ...UNDERGROUND.enemies,
   ],
-  chests: UNDERGROUND.chests,
   entrances: [
     ...PORTALS_Z.map((z) => ({
       id: `gum-portal-${z}`,
@@ -417,19 +414,16 @@ export const RED_SQUARE: MapData = {
       box: { cx: 53.8, cz: 3, hx: 8.2, hz: 47 },
     },
     { id: 'moskva', label: 'Moskva River', box: { cx: 17, cz: -52, hx: 46, hz: 8.5 } },
-    ...UNDERGROUND.zones,
   ],
   floors: [
     { cx: GALLERY_X, cz: 0, w: 9, d: 55, color: GALLERY_FLOOR, y: 0.04 },
     ...PORTALS_Z.map((z) => ({ cx: FACADE_X, cz: z, w: 5, d: 4.6, color: GALLERY_FLOOR, y: 0.04 })),
-    ...UNDERGROUND.floors,
   ],
   glass: [{ cx: GALLERY_X, cz: 0, w: 9.4, d: 55, y: 10.9 }],
   lights: [
     { x: GALLERY_X, y: 6.5, z: -12, color: '#ffd9a8', intensity: 60, distance: 24 },
     { x: GALLERY_X, y: 6.5, z: 12, color: '#ffd9a8', intensity: 60, distance: 24 },
   ],
-  undergroundLights: UNDERGROUND.lights,
   colliders: [
     { kind: 'box', cx: GALLERY_X, cz: -28.6, hx: 4.7, hz: 1.7 },
     { kind: 'box', cx: GALLERY_X, cz: 28.6, hx: 4.7, hz: 1.7 },
@@ -442,6 +436,5 @@ export const RED_SQUARE: MapData = {
     { kind: 'box', cx: 17, cz: -66, hx: 46, hz: 4 },
     // Solid ground between the surface and the underground region.
     { kind: 'box', cx: 17, cz: 88, hx: 46, hz: 12 },
-    ...UNDERGROUND.colliders,
   ],
 };

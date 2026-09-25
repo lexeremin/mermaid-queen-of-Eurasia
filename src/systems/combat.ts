@@ -56,7 +56,7 @@ export type Effect = {
 };
 
 export type CombatEvent =
-  | { type: 'enemyDefeated'; kind: EnemyKind; x: number; z: number }
+  | { type: 'enemyDefeated'; kind: EnemyKind; power: number; x: number; z: number }
   | { type: 'playerHurt'; damage: number }
   | { type: 'playerDowned' }
   | { type: 'npcCharmed'; id: string }
@@ -107,6 +107,7 @@ export type SpawnPoint = {
   z: number;
   dormant?: boolean;
   instanced?: boolean;
+  power?: number;
 };
 
 export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatState {
@@ -122,7 +123,12 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     attackLock: 0,
     aura: { active: false, t: 0, hit: new Set(), song: AURA },
     enemies: spawns.map((s) =>
-      createEnemy(s.id, s.kind, { x: s.x, z: s.z }, { dormant: s.dormant, instanced: s.instanced }),
+      createEnemy(
+        s.id,
+        s.kind,
+        { x: s.x, z: s.z },
+        { dormant: s.dormant, instanced: s.instanced, power: s.power },
+      ),
     ),
     projectiles: [],
     hazards: [],
@@ -232,7 +238,13 @@ function hitEnemy(
   events.push({ type: 'enemyHit' });
   if (damageEnemy(e, damage, dir, knockback, s.time)) {
     s.kills += 1;
-    events.push({ type: 'enemyDefeated', kind: e.kind, x: e.pos.x, z: e.pos.z });
+    events.push({
+      type: 'enemyDefeated',
+      kind: e.kind,
+      power: e.power,
+      x: e.pos.x,
+      z: e.pos.z,
+    });
     pushEffect(s, 'puff', e.pos.x, e.pos.z, dir, 0.5, defOf(e).radius * 2.2);
     if (e.kind === 'boss') collapseHelpers(s);
   }

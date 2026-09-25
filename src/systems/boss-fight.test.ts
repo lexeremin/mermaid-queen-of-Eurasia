@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMIES } from '@/data/enemies';
-import { UNDERGROUND } from '@/data/maps/underground';
+import { generateLayer, layerPower } from '@/data/maps/underground';
 import { canUse } from '@/systems/abilities';
 import { directionTo } from '@/systems/combat-math';
 import { createCombatState, stepCombat, type CombatState } from '@/systems/combat';
@@ -12,7 +12,8 @@ import type { CollisionWorld } from '@/systems/collision';
 import type { Vec2 } from '@/utils/vec2';
 
 const DT = 1 / 60;
-const arena = UNDERGROUND.zones.find((z) => z.id === 'ug-arena')!.box;
+const layer = generateLayer(10);
+const arena = layer.arena!;
 const world: CollisionWorld = {
   bounds: { minX: 0, maxX: 60, minZ: 90, maxZ: 130 },
   // The four columns and the arena walls.
@@ -49,9 +50,12 @@ function escapePoint(from: Vec2, danger: Hazard | undefined): Vec2 | null {
 function fight(
   level: number,
   seconds: number,
+  power = 1,
 ): { won: boolean; hp: number; time: number; state: CombatState } {
   const stats = computeStats(level, STARTER_EQUIPMENT);
-  const spawns = UNDERGROUND.enemies.filter((e) => e.id === 'ug-boss' || e.dormant);
+  const spawns = layer.enemies
+    .filter((e) => e.kind === 'boss' || e.dormant)
+    .map((e) => ({ ...e, power }));
   const s = createCombatState(spawns);
   s.hp = stats.maxHp;
   s.mana = stats.maxMana;
@@ -111,11 +115,13 @@ function fight(
 
 describe('the fight is beatable', () => {
   it.skipIf(!process.env.BOSS_REPORT)('report', () => {
-    for (const level of [1, 3, 5, 7, 10]) {
-      const r = fight(level, 300);
-      console.log(
-        `level ${level}: ${r.won ? 'WON' : 'lost'} in ${r.time.toFixed(0)} s, hp left ${Math.round(r.hp)}`,
-      );
+    for (const power of [1, layerPower(10), layerPower(30)]) {
+      for (const level of [3, 5, 7, 10]) {
+        const r = fight(level, 300, power);
+        console.log(
+          `power ${power.toFixed(2)} level ${level}: ${r.won ? 'WON' : 'lost'} in ${r.time.toFixed(0)} s, hp left ${Math.round(r.hp)}`,
+        );
+      }
     }
   });
 
@@ -128,6 +134,16 @@ describe('the fight is beatable', () => {
     const result = fight(5, 300);
     expect(result.time).toBeGreaterThan(25);
     expect(result.hp).toBeLessThan(computeStats(5, STARTER_EQUIPMENT).maxHp);
+  });
+
+  it('gets harder with depth: the layer-10 boss beats a level-7 Rosa in starter gear, a level-10 one wins', () => {
+    const power = layerPower(10);
+    expect(fight(7, 300, power).won).toBe(false);
+    expect(fight(10, 300, power).won).toBe(true);
+    const boss = createCombatState(layer.enemies.map((e) => ({ ...e, power }))).enemies.find(
+      (e) => e.kind === 'boss',
+    )!;
+    expect(boss.hp).toBeCloseTo(ENEMIES.boss.maxHp * power, 0);
   });
 
   it('the boss has the health the design promises', () => {

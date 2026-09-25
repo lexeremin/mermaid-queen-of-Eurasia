@@ -1,9 +1,9 @@
-import { ENEMIES } from '@/data/enemies';
 import { combat } from '@/game/combat-sim';
 import { gather } from '@/game/gather-sim';
 import { loot } from '@/game/loot-sim';
 import { syncDungeonWorld } from '@/game/dungeon-sim';
 import type { SavedEnemy, SavedWorld } from '@/save/save-data';
+import { maxHpOf } from '@/systems/enemy-ai';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { useGameStore } from '@/store/game-store';
 import { currentStats } from '@/store/progress-store';
@@ -17,7 +17,7 @@ export function collectWorld(): SavedWorld {
   for (const e of combat.enemies) {
     const dead = e.state === 'dead';
     const woken = e.helper && !e.dormant;
-    const hurt = e.hp < ENEMIES[e.kind].maxHp - 0.01;
+    const hurt = e.hp < maxHpOf(e) - 0.01;
     const moved = Math.hypot(e.pos.x - e.spawn.x, e.pos.z - e.spawn.z) > MOVED;
     if (!dead && !woken && !hurt && !moved) continue;
     enemies[e.id] = {
@@ -89,7 +89,6 @@ export function applyWorld(world: SavedWorld): void {
     if (left && node.kind !== 'pearl') node.readyAt = gather.time + left;
   }
 
-  const dungeon = useDungeonStore.getState();
-  useDungeonStore.setState({ gateOpen: world.gateOpen || dungeon.bossDefeated });
+  useDungeonStore.setState({ gateOpen: world.gateOpen });
   syncDungeonWorld();
 }

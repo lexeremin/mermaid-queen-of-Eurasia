@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { UNDERGROUND } from '@/data/maps/underground';
+import { MAX_LAYER, layerLevel } from '@/data/maps/underground';
 import { RED_SQUARE } from '@/data/maps/red-square';
 import {
   SURFACE_REGION,
@@ -29,7 +29,7 @@ describe('map view', () => {
 
   it('picks the surface or the underground by where Rosa stands', () => {
     expect(regionFor(24).id).toBe('surface');
-    expect(regionFor(UNDERGROUND.arrival.z).id).toBe('underground');
+    expect(regionFor(layerLevel(1).arrival.z).id).toBe('underground');
   });
 
   it('the regions cover everything that matters', () => {
@@ -39,7 +39,8 @@ describe('map view', () => {
       expect(e.z).toBeGreaterThan(SURFACE_REGION.minZ);
       expect(e.z).toBeLessThan(SURFACE_REGION.maxZ);
     }
-    for (const f of UNDERGROUND.floors.filter((floor) => floor.w < 60)) {
+    const floors = [1, 10, 57, MAX_LAYER].flatMap((n) => layerLevel(n).floors);
+    for (const f of floors.filter((floor) => floor.w < 60)) {
       expect(f.cx - f.w / 2).toBeGreaterThanOrEqual(UNDERGROUND_REGION.minX);
       expect(f.cx + f.w / 2).toBeLessThanOrEqual(UNDERGROUND_REGION.maxX);
       expect(f.cz - f.d / 2).toBeGreaterThanOrEqual(UNDERGROUND_REGION.minZ);

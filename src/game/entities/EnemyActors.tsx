@@ -12,20 +12,20 @@ import {
 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
-import { ENEMIES } from '@/data/enemies';
+import { ENEMIES, type EnemyKind } from '@/data/enemies';
+import { layerLevel } from '@/data/maps/underground';
+import { useDungeonStore } from '@/store/dungeon-store';
 import { combat } from '@/game/combat-sim';
 import { getRetroMaterial } from '@/game/assets/retro-material';
 import { BlindMark } from '@/game/entities/BlindMark';
 import { BossActor } from '@/game/entities/BossActor';
-import { defOf, type Enemy } from '@/systems/enemy-ai';
+import { defOf, maxHpOf, type Enemy } from '@/systems/enemy-ai';
 import { currentMap } from '@/game/world/current-map';
 
 const FLASH = new Color('#ffffff');
 const BAR_WIDTH = 1.7;
 
-function EnemyActor({ index }: { index: number }) {
-  const spawn = currentMap.enemies[index];
-  const kind = spawn?.kind ?? 'tycoon';
+function EnemyActor({ index, kind }: { index: number; kind: EnemyKind }) {
   const def = ENEMIES[kind];
   const root = useRef<Group>(null);
   const yaw = useRef<Group>(null);
@@ -91,7 +91,7 @@ function EnemyActor({ index }: { index: number }) {
       bar.current.visible = showBar;
       if (showBar) {
         bar.current.quaternion.copy(camera.quaternion);
-        const f = Math.max(0.02, enemy.hp / def.maxHp);
+        const f = Math.max(0.02, enemy.hp / maxHpOf(enemy));
         fill.current.scale.x = f;
         fill.current.position.x = -(BAR_WIDTH * (1 - f)) / 2;
       }
@@ -149,15 +149,31 @@ function EnemyActor({ index }: { index: number }) {
   );
 }
 
+/** The monsters of the map (their index in `combat.enemies` is their index in the map), then those of the current layer. */
 export function EnemyActors() {
+  const layer = useDungeonStore((s) => s.layer);
+  const level = layer > 0 ? layerLevel(layer) : null;
+  const surface = currentMap.enemies.length;
   return (
     <>
       {currentMap.enemies.map((spawn, index) =>
         spawn.kind === 'boss' ? (
           <BossActor key={spawn.id} index={index} />
         ) : (
-          <EnemyActor key={spawn.id} index={index} />
+          <EnemyActor key={spawn.id} index={index} kind={spawn.kind} />
         ),
+      )}
+      {level && (
+        // The layer's monsters are added after the map's, in order, when the layer is installed (see dungeon-sim).
+        <group key={level.layer}>
+          {level.enemies.map((spawn, i) =>
+            spawn.kind === 'boss' ? (
+              <BossActor key={spawn.id} index={surface + i} />
+            ) : (
+              <EnemyActor key={spawn.id} index={surface + i} kind={spawn.kind} />
+            ),
+          )}
+        </group>
       )}
     </>
   );

@@ -63,6 +63,9 @@ export function collectSave(): SaveData {
       hallsCleared: useDungeonStore.getState().hallsCleared,
       bossDefeated: useDungeonStore.getState().bossDefeated,
       cachesTaken: [...useDungeonStore.getState().cachesTaken],
+      layer: useDungeonStore.getState().layer,
+      deepest: useDungeonStore.getState().deepest,
+      bossLayers: [...useDungeonStore.getState().bossLayers],
     },
   };
 }
@@ -121,7 +124,13 @@ export function applySave(save: SaveData, options: { keepPosition?: boolean } = 
     shrineGift: save.garden.shrineGift,
   });
   useArchangelStore.getState().hydrate(save.archangels);
-  useDungeonStore.getState().hydrate(save.dungeon);
+  useDungeonStore.getState().hydrate({
+    ...save.dungeon,
+    // A cloud copy must not move Rosa to another layer while she stands in this one.
+    layer: options.keepPosition ? useDungeonStore.getState().layer : save.dungeon.layer,
+    cachesTaken: [...save.dungeon.cachesTaken],
+    bossLayers: [...save.dungeon.bossLayers],
+  });
   syncDungeonWorld();
   rebuildGather();
   useNpcStore.getState().hydrate(npcs);

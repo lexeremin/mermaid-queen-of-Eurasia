@@ -344,7 +344,14 @@ describe('save v5 and v6: the underground', () => {
     const save = parseSave(v4())!;
     expect(save.version).toBe(SAVE_VERSION);
     expect(save.garden.shrineGift).toBe(true);
-    expect(save.dungeon).toEqual({ hallsCleared: false, bossDefeated: false, cachesTaken: [] });
+    expect(save.dungeon).toEqual({
+      hallsCleared: false,
+      bossDefeated: false,
+      cachesTaken: [],
+      layer: 0,
+      deepest: 0,
+      bossLayers: [],
+    });
   });
 
   it('migrates a v5 save: the stamp era becomes cleared halls, quests are renamed', () => {
@@ -362,10 +369,14 @@ describe('save v5 and v6: the underground', () => {
         completed: ['the-registrars-stamp'],
       },
     })!;
+    // The old chests are gone in v10; having cleared the halls counts as having reached layer 1.
     expect(save.dungeon).toEqual({
       hallsCleared: true,
       bossDefeated: false,
-      cachesTaken: ['chest-hall'],
+      cachesTaken: [],
+      layer: 0,
+      deepest: 1,
+      bossLayers: [],
     });
     expect(save.quests.completed).toEqual(['clear-the-halls']);
     expect(Object.keys(save.quests.active)).toEqual(['end-the-corruption']);
@@ -377,12 +388,12 @@ describe('save v5 and v6: the underground', () => {
         dungeon: {
           hallsCleared: true,
           bossDefeated: false,
-          cachesTaken: ['chest-hall', 'chest-hall', 'chest-nowhere', 7],
+          cachesTaken: ['L3-c1', 'L3-c1', 'chest-hall', 'L101-c1', 'L7-c2', 7],
         },
       }),
     )!;
     expect(save.dungeon.hallsCleared).toBe(true);
-    expect(save.dungeon.cachesTaken).toEqual(['chest-hall']);
+    expect(save.dungeon.cachesTaken).toEqual(['L3-c1', 'L7-c2']);
   });
 
   it('never contradicts itself: a beaten boss means cleared halls', () => {
@@ -525,5 +536,78 @@ describe('save v9: archangels', () => {
     for (const bad of [null, 4, 'x', [], { saved: 'all' }]) {
       expect(parseSave(good({ archangels: bad }))!.archangels).toEqual({ saved: [] });
     }
+  });
+});
+
+describe('save v10: the endless dungeon', () => {
+  it('migrates a hero below ground to the metro pavilion, with the boss as layer 10', () => {
+    const save = parseSave(
+      good({
+        version: 9,
+        hero: { form: 'human', x: 13, z: 150, facingX: 0, facingZ: -1 },
+        dungeon: { hallsCleared: true, bossDefeated: true, cachesTaken: ['chest-hall'] },
+      }),
+    )!;
+    expect(save.hero).toMatchObject({ x: 25, z: 69.4 });
+    expect(save.dungeon).toEqual({
+      hallsCleared: true,
+      bossDefeated: true,
+      cachesTaken: [],
+      layer: 0,
+      deepest: 10,
+      bossLayers: [10],
+    });
+  });
+
+  it('keeps a hero on the surface where she was', () => {
+    const save = parseSave(good({ version: 9 }))!;
+    expect(save.hero).toMatchObject({ x: 3.5, z: -8 });
+    expect(save.dungeon).toMatchObject({ layer: 0, deepest: 0 });
+  });
+
+  it('keeps the layer, the deepest layer and the paid bosses, and clamps the rest', () => {
+    const save = parseSave(
+      good({
+        hero: { form: 'human', x: 13, z: 150, facingX: 0, facingZ: -1 },
+        dungeon: { layer: 42, deepest: 30, bossLayers: [10, 10, 20, 15, 0, 110, 'x'] },
+      }),
+    )!;
+    expect(save.dungeon.layer).toBe(42);
+    // The deepest layer is never above the current one being wrong: it is at least the current layer.
+    expect(save.dungeon.deepest).toBe(42);
+    expect(save.dungeon.bossLayers).toEqual([10, 20]);
+    expect(parseSave(good({ dungeon: { deepest: 900 } }))!.dungeon.deepest).toBe(100);
+  });
+
+  it('makes the layer and the hero position agree', () => {
+    // A layer but a hero on the surface: back to the surface.
+    expect(parseSave(good({ dungeon: { layer: 5 } }))!.dungeon.layer).toBe(0);
+    // A hero below ground with no layer: the position is dropped (the hero starts at the spawn).
+    const stray = parseSave(
+      good({ hero: { form: 'human', x: 13, z: 150 }, dungeon: { layer: 0 } }),
+    )!;
+    expect(Number.isNaN(stray.hero.x)).toBe(true);
+  });
+
+  it('accepts a saved layer enemy by id and drops impossible ones', () => {
+    const id = 'L12-r1-1';
+    const save = parseSave(
+      good({
+        hero: { form: 'human', x: 13, z: 150 },
+        dungeon: { layer: 12 },
+        world: {
+          hp: 50,
+          mana: 10,
+          downed: false,
+          enemies: {
+            [id]: { hp: 1e9, dead: false, x: 13, z: 150 },
+            'L12-nope': { hp: 5, dead: false, x: 13, z: 150 },
+            'L500-r1-1': { hp: 5, dead: false, x: 13, z: 150 },
+          },
+        },
+      }),
+    )!;
+    expect(Object.keys(save.world!.enemies)).toEqual([id]);
+    expect(save.world!.enemies[id]!.hp).toBeLessThan(200);
   });
 });

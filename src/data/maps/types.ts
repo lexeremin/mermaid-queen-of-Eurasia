@@ -61,10 +61,9 @@ export type EnemySpawn = {
   dormant?: boolean;
   /** Part of an instance (the underground): never refills on its own, only when Rosa leaves and re-enters. */
   instanced?: boolean;
+  /** Toughness multiplier (the underground gets stronger with depth). */
+  power?: number;
 };
-
-/** A treasure chest that is opened by walking up to it, once ever. */
-export type ChestSpawn = { id: string; x: number; z: number };
 
 export type MapData = {
   id: string;
@@ -84,13 +83,10 @@ export type MapData = {
   enemies: readonly EnemySpawn[];
   gatherables?: readonly Gatherable[];
   entrances?: readonly Entrance[];
-  chests?: readonly ChestSpawn[];
   /** Colored ground rectangles (e.g. interior floors). */
   floors?: readonly { cx: number; cz: number; w: number; d: number; color: string; y?: number }[];
   /** Translucent glass roofs. */
   glass?: readonly { cx: number; cz: number; w: number; d: number; y: number }[];
-  /** Lights that only exist while Rosa is underground (the surface has its own sky). */
-  undergroundLights?: MapData['lights'];
   lights?: readonly {
     x: number;
     y: number;

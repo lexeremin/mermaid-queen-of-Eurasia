@@ -22,7 +22,7 @@ export const SURFACE_REGION: Region = {
 export const UNDERGROUND_REGION: Region = {
   id: 'underground',
   label: 'Moscow underground',
-  minX: 9,
+  minX: -15,
   maxX: 41,
   minZ: 98,
   maxZ: 196,

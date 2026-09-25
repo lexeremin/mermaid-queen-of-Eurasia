@@ -16,6 +16,7 @@ import { QuickUse } from '@/ui/QuickUse';
 import { UiIcon } from '@/ui/icons';
 import { FollowerButton } from '@/ui/FollowerButton';
 import { InventoryPanel } from '@/ui/InventoryPanel';
+import { DepthPanel } from '@/ui/DepthPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
 import { MenuMermaid } from '@/ui/MenuMermaid';
 import { SettingsPanel } from '@/ui/SettingsPanel';
@@ -29,6 +30,7 @@ const PLACE_LABEL: Record<PlaceId, { touch: string; key: string }> = {
   shrine: { touch: 'PEARL SHRINE', key: 'Pearl Shrine' },
   'metro-down': { touch: 'GO DOWN', key: 'Descend to the metro' },
   'metro-up': { touch: 'GO UP', key: 'Climb the stairs' },
+  'stairs-down': { touch: 'GO DEEPER', key: 'Take the stairs down' },
 };
 
 const GITHUB_URL = 'https://github.com/lexeremin/mermaid-queen-of-Eurasia';
@@ -143,7 +145,8 @@ export function Hud() {
       <LoadingScreen />
 
       {inventoryOpen && <InventoryPanel />}
-      {questPanel && <QuestPanel />}
+      {questPanel && questPanel !== 'depth' && <QuestPanel />}
+      {questPanel === 'depth' && <DepthPanel />}
 
       {paused && !welcomeOpen && (
         <div className="overlay">

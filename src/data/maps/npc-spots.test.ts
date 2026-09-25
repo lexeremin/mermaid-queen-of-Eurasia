@@ -60,11 +60,11 @@ describe('NPC placement', () => {
 describe('enemy placement', () => {
   const bare = buildCollisionWorld({ ...RED_SQUARE, npcs: [] });
 
-  it('has unique ids and every enemy kind', () => {
+  it('has unique ids and the three street kinds (the elites and the boss live underground)', () => {
     const ids = RED_SQUARE.enemies.map((e) => e.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(new Set(RED_SQUARE.enemies.map((e) => e.kind))).toEqual(
-      new Set(['tycoon', 'speaker', 'demagogue', 'registrar', 'boss']),
+      new Set(['tycoon', 'speaker', 'demagogue']),
     );
   });
 

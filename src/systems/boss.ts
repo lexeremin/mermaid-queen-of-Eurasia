@@ -1,4 +1,12 @@
-import { defOf, slide, type BossAction, type BossActionKind, type Enemy } from '@/systems/enemy-ai';
+import {
+  damageMult,
+  defOf,
+  maxHpOf,
+  slide,
+  type BossAction,
+  type BossActionKind,
+  type Enemy,
+} from '@/systems/enemy-ai';
 import { directionTo } from '@/systems/combat-math';
 import { resolveCircle, type CollisionWorld } from '@/systems/collision';
 import type { HazardSpec } from '@/systems/hazards';
@@ -109,7 +117,7 @@ function emit(enemy: Enemy, action: BossAction, out: BossOutput): void {
         out.hazards.push({
           shape: { kind: 'circle', x: enemy.pos.x, z: enemy.pos.z, r: BOSS.stomp.radius },
           delay: BOSS.stomp.windup,
-          damage: BOSS.stomp.damage,
+          damage: Math.round(BOSS.stomp.damage * damageMult(enemy.power)),
         });
       }
       break;
@@ -119,7 +127,7 @@ function emit(enemy: Enemy, action: BossAction, out: BossOutput): void {
         out.hazards.push({
           shape: { kind: 'circle', x: action.target.x, z: action.target.z, r: BOSS.stamp.radius },
           delay: BOSS.stamp.windup,
-          damage: BOSS.stamp.damage,
+          damage: Math.round(BOSS.stamp.damage * damageMult(enemy.power)),
         });
       }
       break;
@@ -138,7 +146,7 @@ function emit(enemy: Enemy, action: BossAction, out: BossOutput): void {
               rot,
             },
             delay: BOSS.form.windup,
-            damage: BOSS.form.damage,
+            damage: Math.round(BOSS.form.damage * damageMult(enemy.power)),
           });
         }
       }
@@ -152,7 +160,7 @@ function emit(enemy: Enemy, action: BossAction, out: BossOutput): void {
           out.darts.push({
             from: { ...enemy.pos },
             dir: rotate(dir, angle),
-            damage: BOSS.darts.damage,
+            damage: Math.round(BOSS.darts.damage * damageMult(enemy.power)),
             speed: BOSS.darts.speed,
           });
         }
@@ -175,7 +183,7 @@ function emit(enemy: Enemy, action: BossAction, out: BossOutput): void {
           out.darts.push({
             from: { ...enemy.pos },
             dir: { x: Math.cos(a), z: Math.sin(a) },
-            damage: BOSS.storm.damage,
+            damage: Math.round(BOSS.storm.damage * damageMult(enemy.power)),
             speed: BOSS.storm.speed,
           });
         }
@@ -203,7 +211,7 @@ export function stepBoss(enemy: Enemy, ctx: BossContext, dt: number): BossOutput
     return out;
   }
 
-  const fraction = enemy.hp / def.maxHp;
+  const fraction = enemy.hp / maxHpOf(enemy);
   const engaged = ctx.playerAlive && ctx.arena !== null && inside(ctx.arena, ctx.player);
 
   if (!engaged) {
@@ -216,7 +224,7 @@ export function stepBoss(enemy: Enemy, ctx: BossContext, dt: number): BossOutput
     if (enemy.state === 'blinded') enemy.state = 'returning';
     const home = directionTo(enemy.pos, enemy.spawn);
     const away = Math.hypot(enemy.spawn.x - enemy.pos.x, enemy.spawn.z - enemy.pos.z);
-    enemy.hp = Math.min(def.maxHp, enemy.hp + def.maxHp * BOSS.returnHealPerSecond * dt);
+    enemy.hp = Math.min(maxHpOf(enemy), enemy.hp + maxHpOf(enemy) * BOSS.returnHealPerSecond * dt);
     if (away > 0.4) {
       enemy.state = 'returning';
       enemy.facing = home;

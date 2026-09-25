@@ -192,11 +192,9 @@ export const QUESTS: readonly QuestDef[] = [
     id: 'clear-the-halls',
     title: 'Silence the Halls',
     blurb:
-      'The Records Cellar and its halls are crawling with gloomy clerks. Defeat every monster of the three halls and the way to the Vault opens by itself.',
+      'Every layer of the underground is crawling with gloomy clerks. Defeat every monster of one layer, and the way onward opens by itself.',
     minRank: 2,
-    objectives: [
-      { kind: 'flag', flag: 'hallsCleared', label: 'Defeat every monster in the three halls' },
-    ],
+    objectives: [{ kind: 'flag', flag: 'hallsCleared', label: 'Defeat every monster of a layer' }],
     reward: {
       xp: 120,
       rep: 18,
@@ -210,7 +208,7 @@ export const QUESTS: readonly QuestDef[] = [
     id: 'end-the-corruption',
     title: 'End the Corruption',
     blurb:
-      'Behind the Vault gate waits the Father of Corruption, who has filed the whole square under "denied". Put an end to him.',
+      'Every tenth layer ends in the Vault of the Father of Corruption, who has filed the whole square under "denied". Reach layer 10 and put an end to him.',
     minRank: 3,
     objectives: [{ kind: 'flag', flag: 'bossDefeated', label: 'Defeat the Father of Corruption' }],
     reward: {

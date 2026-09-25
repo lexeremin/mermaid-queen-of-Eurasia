@@ -4,6 +4,8 @@ import { gather, rebuildGather } from '@/game/gather-sim';
 import { loot } from '@/game/loot-sim';
 import { currentMap } from '@/game/world/current-map';
 import { useArchangelStore } from '@/store/archangel-store';
+import { layerLevel } from '@/data/maps/underground';
+import { enterLayer, leaveDungeon } from '@/game/dungeon-sim';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { useGardenStore } from '@/store/garden-store';
 import { resetSim, sim } from '@/game/sim';
@@ -163,17 +165,29 @@ describe('game save', () => {
       expect(useGameStore.getState().downed).toBe(true);
     });
 
-    it('keeps the boss hurt, his woken helpers and the open gate', () => {
-      const boss = enemy('ug-boss');
+    it('keeps the layer, the boss hurt, his woken helpers and the open gate', () => {
+      // Rosa is in layer 10, at the foot of its stairs.
+      enterLayer(10);
+      const level = layerLevel(10);
+      sim.curr = { ...sim.curr, pos: { ...level.arrival } };
+      const boss = enemy('L10-boss');
       boss.hp = 300;
-      const helper = enemy('ug-helper-1');
-      helper.dormant = false;
+      enemy('L10-helper-1').dormant = false;
       useDungeonStore.getState().openGate();
       reload();
-      expect(enemy('ug-boss').hp).toBe(300);
-      expect(enemy('ug-helper-1').dormant).toBe(false);
-      expect(enemy('ug-helper-2').dormant).toBe(true);
+      expect(useDungeonStore.getState().layer).toBe(10);
+      expect(enemy('L10-boss').hp).toBe(300);
+      expect(enemy('L10-helper-1').dormant).toBe(false);
+      expect(enemy('L10-helper-2').dormant).toBe(true);
       expect(useDungeonStore.getState().gateOpen).toBe(true);
+    });
+
+    it('brings a hero on the surface back to the surface, however deep she has been', () => {
+      enterLayer(4);
+      leaveDungeon();
+      reload();
+      expect(useDungeonStore.getState()).toMatchObject({ layer: 0, deepest: 4 });
+      expect(combat.enemies.some((e) => e.instanced)).toBe(false);
     });
 
     it('keeps ground loot and herb timers', () => {

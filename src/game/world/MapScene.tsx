@@ -21,7 +21,8 @@ import { GroundPaving } from '@/game/world/GroundPaving';
 import { EntranceGlow } from '@/game/world/EntranceGlow';
 import { LampGlow } from '@/game/world/LampGlow';
 import { ContactShadows } from '@/game/world/ContactShadows';
-import { UG_MIN_Z } from '@/data/maps/underground';
+import { layerLevel } from '@/data/maps/underground';
+import { useDungeonStore } from '@/store/dungeon-store';
 import { currentMap } from '@/game/world/current-map';
 import { buildRibbon, mergeRibbons, type RibbonMesh } from '@/game/world/ribbon';
 
@@ -159,11 +160,13 @@ export function MapScene() {
   const inUnderground = useGameStore((s) => s.underground);
   const warming = useLoadingState((s) => s.warmUnderground);
   const underground = inUnderground || warming;
-  const surfaceFloors = useMemo(() => (map.floors ?? []).filter((f) => f.cz < UG_MIN_Z), [map]);
-  const undergroundFloors = useMemo(
-    () => (map.floors ?? []).filter((f) => f.cz >= UG_MIN_Z),
-    [map],
+  const layer = useDungeonStore((s) => s.layer);
+  // While the loading screen is up the first layer is drawn once, so its shaders are compiled before Rosa descends.
+  const level = useMemo(
+    () => (layer > 0 ? layerLevel(layer) : warming ? layerLevel(1) : null),
+    [layer, warming],
   );
+  const undergroundGroups = useMemo(() => (level ? groupByAsset(level.placements) : []), [level]);
   const ice = useMemo(
     () => mergeRibbons(map.waters.map((w) => buildRibbon(w.ribbon.points, w.edgeWidth, ICE_Y))),
     [map],
@@ -193,24 +196,26 @@ export function MapScene() {
       {map.paths.length > 0 && <RibbonMeshView data={paths} color={GRAVEL_COLOR} />}
       <RibbonMeshView data={ice} color={PALETTE.slate_light} />
       <RibbonMeshView data={water} color={PALETTE.slate} />
-      <Floors floors={surfaceFloors} />
-      {underground && <Floors floors={undergroundFloors} />}
-      {[...(map.lights ?? []), ...(underground ? (map.undergroundLights ?? []) : [])].map(
-        (l, i) => (
-          <pointLight
-            key={i}
-            position={[l.x, l.y, l.z]}
-            color={l.color}
-            intensity={l.intensity}
-            distance={l.distance}
-          />
-        ),
-      )}
+      <Floors floors={map.floors ?? []} />
+      {underground && level && <Floors key={`floors-${layer}`} floors={level.floors} />}
+      {[...(map.lights ?? []), ...(underground && level ? level.lights : [])].map((l, i) => (
+        <pointLight
+          key={i}
+          position={[l.x, l.y, l.z]}
+          color={l.color}
+          intensity={l.intensity}
+          distance={l.distance}
+        />
+      ))}
       {groups.map(([id, transforms]) => (
         <group key={id} visible={!(inGum && ROOF_STRUCTURE.has(id))}>
           <InstancedModel id={id} transforms={transforms} />
         </group>
       ))}
+      {underground &&
+        undergroundGroups.map(([id, transforms]) => (
+          <InstancedModel key={`${layer}-${id}`} id={id} transforms={transforms} />
+        ))}
       <ContactShadows />
       <EntranceGlow />
       <LampGlow />

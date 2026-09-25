@@ -35,6 +35,8 @@ export type Enemy = {
   instanced: boolean;
   /** One of the boss's four helpers (they collapse when the boss falls). */
   helper: boolean;
+  /** How much tougher than the base kind (the underground gets stronger with depth): health and damage scale with it. */
+  power: number;
   /** The boss's state machine; null for everyone else. */
   brain: BossBrain | null;
 };
@@ -116,19 +118,34 @@ function randomDirection(enemy: Enemy): Vec2 {
 
 export const defOf = (enemy: Pick<Enemy, 'kind'>): EnemyDef => ENEMIES[enemy.kind];
 
+/** Full health of this enemy (the base health times its power). */
+export const maxHpOf = (enemy: Pick<Enemy, 'kind' | 'power'>): number =>
+  ENEMIES[enemy.kind].maxHp * enemy.power;
+
+/** Damage grows more slowly than health: 42% of the extra power. */
+export const damageMult = (power: number): number => 1 + (power - 1) * 0.42;
+
+/** XP grows by a third of the extra power. */
+export const xpMult = (power: number): number => 1 + (power - 1) / 3;
+
+/** What one of this enemy's hits does. */
+export const damageOf = (enemy: Pick<Enemy, 'kind' | 'power'>): number =>
+  Math.round(ENEMIES[enemy.kind].damage * damageMult(enemy.power));
+
 export function createEnemy(
   id: string,
   kind: EnemyKind,
   spawn: Vec2,
-  options: { dormant?: boolean; instanced?: boolean } = {},
+  options: { dormant?: boolean; instanced?: boolean; power?: number } = {},
 ): Enemy {
+  const power = options.power ?? 1;
   return {
     id,
     kind,
     pos: { x: spawn.x, z: spawn.z },
     facing: { x: 0, z: 1 },
     spawn: { x: spawn.x, z: spawn.z },
-    hp: ENEMIES[kind].maxHp,
+    hp: ENEMIES[kind].maxHp * power,
     state: 'idle',
     timer: 0,
     attackDir: { x: 0, z: 1 },
@@ -145,13 +162,14 @@ export function createEnemy(
     dormant: options.dormant ?? false,
     instanced: options.instanced ?? false,
     helper: options.dormant ?? false,
+    power,
     brain: kind === 'boss' ? createBrain() : null,
   };
 }
 
 /** Back to full health at the spawn point (respawn). */
 export function respawnEnemy(enemy: Enemy): void {
-  Object.assign(enemy, createEnemy(enemy.id, enemy.kind, enemy.spawn), {
+  Object.assign(enemy, createEnemy(enemy.id, enemy.kind, enemy.spawn, { power: enemy.power }), {
     helper: enemy.helper,
     instanced: enemy.instanced,
   });
@@ -266,14 +284,14 @@ export function stepEnemy(enemy: Enemy, ctx: EnemyContext, dt: number): EnemyAct
         kind: 'projectile',
         from: { ...enemy.pos },
         dir,
-        damage: def.damage,
+        damage: damageOf(enemy),
         speed: def.projectileSpeed,
         blind: true,
       };
     }
     return {
       kind: 'melee',
-      damage: def.damage,
+      damage: damageOf(enemy),
       origin: { ...enemy.pos },
       range: def.attackRange,
       blind: true,
@@ -291,7 +309,7 @@ export function stepEnemy(enemy: Enemy, ctx: EnemyContext, dt: number): EnemyAct
     case 'returning': {
       const home = directionTo(enemy.pos, enemy.spawn);
       const dHome = distance(enemy.pos, enemy.spawn);
-      enemy.hp = Math.min(def.maxHp, enemy.hp + def.maxHp * RETURN_HEAL_PER_SECOND * dt);
+      enemy.hp = Math.min(maxHpOf(enemy), enemy.hp + maxHpOf(enemy) * RETURN_HEAL_PER_SECOND * dt);
       if (dHome < 0.4) {
         enemy.state = 'idle';
         return null;
@@ -355,14 +373,14 @@ export function stepEnemy(enemy: Enemy, ctx: EnemyContext, dt: number): EnemyAct
           kind: 'projectile',
           from: { ...enemy.pos },
           dir,
-          damage: def.damage,
+          damage: damageOf(enemy),
           speed: def.projectileSpeed,
           blind: false,
         };
       }
       return {
         kind: 'melee',
-        damage: def.damage,
+        damage: damageOf(enemy),
         origin: { ...enemy.pos },
         range: def.attackRange,
         blind: false,

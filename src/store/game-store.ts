@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import type { Zone } from '@/systems/zones';
 
 export type HeroForm = 'human' | 'mermaid';
-export type PlaceId = 'board' | 'shrine' | 'metro-down' | 'metro-up';
-export type QuestPanel = 'log' | 'board' | null;
+export type PlaceId = 'board' | 'shrine' | 'metro-down' | 'metro-up' | 'stairs-down';
+/** The panels that share the quest slot: the read-only log, the notice board and the metro's depth chooser. */
+export type QuestPanel = 'log' | 'board' | 'depth' | null;
 
 export type GameState = {
   paused: boolean;
@@ -45,7 +46,7 @@ export type GameState = {
   setDowned: (downed: boolean) => void;
   setNearbyNpc: (id: string | null) => void;
   setNearPlace: (place: PlaceId | null) => void;
-  openQuestPanel: (panel: 'log' | 'board') => void;
+  openQuestPanel: (panel: 'log' | 'board' | 'depth') => void;
   closeQuestPanel: () => void;
   toggleQuestLog: () => void;
   setPaused: (paused: boolean) => void;

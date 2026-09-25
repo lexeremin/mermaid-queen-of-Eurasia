@@ -12,9 +12,8 @@ import {
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
-import { UNDERGROUND } from '@/data/maps/underground';
+import { layerLevel } from '@/data/maps/underground';
 import { applyRetroMaterial } from '@/game/assets/retro-material';
-import { currentMap } from '@/game/world/current-map';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { useLoadingState } from '@/game/loading-state';
 import { useGameStore } from '@/store/game-store';
@@ -25,7 +24,7 @@ const GATE_RISE = 3.9;
 const GATE_RATE = 2.4;
 
 /** The boss gate: a shut door across the corridor that sinks into the floor once it is opened. */
-function BossGate() {
+function BossGate({ x, z }: { x: number; z: number }) {
   const root = useRef<Group>(null);
   const rise = useRef(0);
   const gltf = useGLTF(ASSETS.ugGate.url);
@@ -51,7 +50,7 @@ function BossGate() {
   });
 
   return (
-    <group ref={root} position={[UNDERGROUND.gate.x, 0, UNDERGROUND.gate.z]}>
+    <group ref={root} position={[x, 0, z]}>
       <primitive object={scene} />
     </group>
   );
@@ -106,19 +105,24 @@ function Chest({ id, x, z, facing }: { id: string; x: number; z: number; facing:
   );
 }
 
-/** Underground extras that are not plain placements: the treasure chests and the boss gate. */
+/** Underground extras that are not plain placements: the treasure chests and the boss gate of the current layer. */
 export function DungeonProps() {
   const inUnderground = useGameStore((s) => s.underground);
   const warming = useLoadingState((s) => s.warmUnderground);
+  const layer = useDungeonStore((s) => s.layer);
   const underground = inUnderground || warming;
+  const level = useMemo(
+    () => (layer > 0 ? layerLevel(layer) : warming ? layerLevel(1) : null),
+    [layer, warming],
+  );
   // Nothing here is worth drawing, or even keeping alive, while Rosa is on the surface.
-  if (!underground) return null;
+  if (!underground || !level) return null;
   return (
-    <>
-      <BossGate />
-      {(currentMap.chests ?? []).map((c) => (
+    <group key={level.layer}>
+      {level.gate && <BossGate x={level.gate.x} z={level.gate.z} />}
+      {level.chests.map((c) => (
         <Chest key={c.id} id={c.id} x={c.x} z={c.z} facing={0} />
       ))}
-    </>
+    </group>
   );
 }

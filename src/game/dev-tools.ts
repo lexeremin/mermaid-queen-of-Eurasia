@@ -7,7 +7,7 @@ import { useGardenStore } from '@/store/garden-store';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { recall } from '@/game/recall-sim';
 import { useLoadingState } from '@/game/loading-state';
-import { goDown, goUp } from '@/game/dungeon-actions';
+import { goDeeper, goDown, goUp } from '@/game/dungeon-actions';
 import { syncDungeonWorld } from '@/game/dungeon-sim';
 import { renderStats } from '@/game/render-stats';
 import { audioLog } from '@/audio/engine';
@@ -53,6 +53,7 @@ declare global {
       loadingState: typeof useLoadingState;
       goDown: typeof goDown;
       goUp: typeof goUp;
+      goDeeper: typeof goDeeper;
       syncDungeonWorld: typeof syncDungeonWorld;
     };
   }
@@ -80,6 +81,7 @@ export function installDevTools(): void {
     loadingState: useLoadingState,
     goDown,
     goUp,
+    goDeeper,
     syncDungeonWorld,
     project(x, y, z) {
       const camera = (window as { __mqCamera?: Camera }).__mqCamera;

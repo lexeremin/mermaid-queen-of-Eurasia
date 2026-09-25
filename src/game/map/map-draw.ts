@@ -1,4 +1,4 @@
-import { UNDERGROUND, isUnderground } from '@/data/maps/underground';
+import { isUnderground, layerLevel } from '@/data/maps/underground';
 import { METRO } from '@/data/maps/red-square';
 import { combat } from '@/game/combat-sim';
 import { PAINT_SCALE, regionImage } from '@/game/map/map-paint';
@@ -79,10 +79,12 @@ export function drawMap(
 
   const m = opts.marker;
   const underground = region.id === 'underground';
+  const layer = useDungeonStore.getState().layer;
+  const level = underground ? layerLevel(Math.max(1, layer)) : null;
 
   if (opts.labels) {
     if (underground) {
-      for (const zone of UNDERGROUND.zones) {
+      for (const zone of level?.zones ?? []) {
         if (zone.id === 'underground') continue;
         const p = toScreen(view, zone.box.cx, zone.box.cz);
         label(ctx, zone.label, p.x, p.y, Math.max(11, m * 1.5));
@@ -97,14 +99,18 @@ export function drawMap(
 
   // Ways in and out.
   if (underground) {
-    const s = toScreen(view, UNDERGROUND.stairs.x, UNDERGROUND.stairs.z - 1.5);
-    diamond(ctx, s.x, s.y, m, '#8fc0f0');
+    const up = toScreen(view, level!.stairsUp.x, level!.stairsUp.z - 1.5);
+    diamond(ctx, up.x, up.y, m, '#8fc0f0');
+    const down = toScreen(view, level!.stairsDown.x, level!.stairsDown.z + 1.5);
+    diamond(ctx, down.x, down.y, m, '#f0c08f');
     const dungeon = useDungeonStore.getState();
-    const g = toScreen(view, UNDERGROUND.gate.x, UNDERGROUND.gate.z);
-    ctx.fillStyle = dungeon.gateOpen ? '#6bbf6b' : '#d94a4a';
-    ctx.fillRect(g.x - m * 1.4, g.y - m * 0.35, m * 2.8, m * 0.7);
+    if (level!.gate) {
+      const g = toScreen(view, level!.gate.x, level!.gate.z);
+      ctx.fillStyle = dungeon.gateOpen ? '#6bbf6b' : '#d94a4a';
+      ctx.fillRect(g.x - m * 1.4, g.y - m * 0.35, m * 2.8, m * 0.7);
+    }
     const taken = dungeon.cachesTaken;
-    for (const chest of currentMap.chests ?? []) {
+    for (const chest of level!.chests) {
       if (taken.includes(chest.id)) continue;
       const p = toScreen(view, chest.x, chest.z);
       ctx.fillStyle = GOLD;
@@ -176,4 +182,17 @@ export function drawMap(
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
+  // Underground: which layer this is, in the top-left corner.
+  if (underground && layer > 0) {
+    const text = `Depth ${layer}`;
+    const size = Math.max(11, m * 2.4);
+    ctx.font = `bold ${size}px serif`;
+    const w = ctx.measureText(text).width;
+    ctx.fillStyle = 'rgba(18, 13, 9, 0.78)';
+    ctx.fillRect(4, 4, w + 10, size + 6);
+    ctx.fillStyle = GOLD;
+    ctx.textBaseline = 'top';
+    ctx.textAlign = 'left';
+    ctx.fillText(text, 9, 7);
+  }
 }

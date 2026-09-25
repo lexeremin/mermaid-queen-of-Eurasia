@@ -1,5 +1,6 @@
 import { footprintOf } from '@/data/assets';
-import { UNDERGROUND } from '@/data/maps/underground';
+import { layerLevel } from '@/data/maps/underground';
+import { useDungeonStore } from '@/store/dungeon-store';
 import { currentMap } from '@/game/world/current-map';
 import { footprintToColliders, type Collider } from '@/systems/collision';
 import { SURFACE_REGION, UNDERGROUND_REGION, regionSize, type Region } from '@/game/map/map-view';
@@ -21,7 +22,7 @@ const COLORS = {
 
 const TREES = new Set(['linden', 'birch', 'spruce', 'firTub']);
 
-const cache = new Map<Region['id'], HTMLCanvasElement>();
+const cache = new Map<string, HTMLCanvasElement>();
 
 function polyline(
   ctx: CanvasRenderingContext2D,
@@ -116,16 +117,18 @@ function paintSurface(
 function paintUnderground(
   ctx: CanvasRenderingContext2D,
   at: (x: number, z: number) => [number, number],
+  layer: number,
 ): void {
-  for (const f of UNDERGROUND.floors) {
+  const level = layerLevel(Math.max(1, layer));
+  for (const f of level.floors) {
     if (f.w > 60) continue;
     const [x, y] = at(f.cx - f.w / 2, f.cz - f.d / 2);
     ctx.fillStyle = f.color;
     ctx.fillRect(x, y, f.w * PAINT_SCALE, f.d * PAINT_SCALE);
   }
-  for (const c of UNDERGROUND.colliders) fillCollider(ctx, c, at, COLORS.wall, COLORS.solidEdge);
+  for (const c of level.colliders) fillCollider(ctx, c, at, COLORS.wall, COLORS.solidEdge);
   ctx.fillStyle = '#c9b48a';
-  for (const p of UNDERGROUND.placements) {
+  for (const p of level.placements) {
     if (p.asset !== 'ugColumn') continue;
     const [x, y] = at(p.x, p.z);
     ctx.beginPath();
@@ -136,7 +139,10 @@ function paintUnderground(
 
 /** The static picture of a region (terrain, buildings, water), painted once at PAINT_SCALE pixels per metre. */
 export function regionImage(region: Region): HTMLCanvasElement {
-  const cached = cache.get(region.id);
+  // The underground has one picture per layer (only the current one is kept).
+  const layer = region.id === 'underground' ? useDungeonStore.getState().layer : 0;
+  const key = region.id === 'underground' ? `underground-${layer}` : region.id;
+  const cached = cache.get(key);
   if (cached) return cached;
   const { w, d } = regionSize(region);
   const canvas = document.createElement('canvas');
@@ -151,8 +157,11 @@ export function regionImage(region: Region): HTMLCanvasElement {
       (z - region.minZ) * PAINT_SCALE,
     ];
     if (region.id === 'surface') paintSurface(ctx, at);
-    else paintUnderground(ctx, at);
+    else paintUnderground(ctx, at, layer);
   }
-  cache.set(region.id, canvas);
+  if (region.id === 'underground') {
+    for (const k of [...cache.keys()]) if (k.startsWith('underground-')) cache.delete(k);
+  }
+  cache.set(key, canvas);
   return canvas;
 }
