@@ -5,6 +5,7 @@ import { useSettingsStore } from '@/store/settings-store';
 /** Sound and anonymous stats, in one small popup. */
 export function SettingsPanel() {
   const close = useGameStore((s) => s.setSettingsOpen);
+  const openControls = useGameStore((s) => s.setControlsOpen);
   const optOut = useSettingsStore((s) => s.statsOptOut);
   const setOptOut = useSettingsStore((s) => s.setStatsOptOut);
   const soundOn = useSettingsStore((s) => s.soundOn);
@@ -33,6 +34,9 @@ export function SettingsPanel() {
             onClick={() => setOptOut(!optOut)}
           >
             Anonymous stats: {optOut ? 'off' : 'on'}
+          </button>
+          <button type="button" className="hud-btn" onClick={() => openControls(true)}>
+            Controls
           </button>
           <button type="button" className="hud-btn primary" onClick={() => close(false)}>
             Back

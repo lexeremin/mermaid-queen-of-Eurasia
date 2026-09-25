@@ -108,6 +108,10 @@ describe('menu popups', () => {
   it('ESC closes the newest popup first: new game, then settings, then the menu', () => {
     state().setPaused(true);
     state().setSettingsOpen(true);
+    state().setControlsOpen(true);
+    state().handleEscape();
+    expect(state().controlsOpen).toBe(false);
+    expect(state().settingsOpen).toBe(true);
     state().setNewGameOpen(true);
     state().handleEscape();
     expect(state().newGameOpen).toBe(false);

@@ -94,9 +94,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     ),
   handleEscape: () => {
     if (get().downed) return;
-    if (get().newGameOpen) set({ newGameOpen: false });
+    if (get().controlsOpen) set({ controlsOpen: false });
+    else if (get().newGameOpen) set({ newGameOpen: false });
     else if (get().settingsOpen) set({ settingsOpen: false });
-    else if (get().controlsOpen) set({ controlsOpen: false });
     else if (get().welcomeOpen) return;
     else if (get().questPanel) set({ questPanel: null });
     else if (get().inventoryOpen) set({ inventoryOpen: false });

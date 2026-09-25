@@ -158,9 +158,9 @@ export function Hud() {
       )}
 
       {welcomeOpen && <Welcome />}
-      {controlsOpen && <ControlsPanel touch={touch} />}
       {settingsOpen && <SettingsPanel />}
       {newGameOpen && <NewGamePanel />}
+      {controlsOpen && <ControlsPanel touch={touch} />}
     </div>
   );
 }
