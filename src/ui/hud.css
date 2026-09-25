@@ -1911,3 +1911,79 @@
   text-transform: uppercase;
   color: var(--ui-dim);
 }
+
+/* Bag: the content scrolls, the Close button stays put underneath it, and nothing gets squashed. */
+.panel.inventory {
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100dvh - var(--safe-top) - var(--safe-bottom) - 32px);
+  overflow: hidden;
+  gap: 8px;
+}
+
+.inv-scroll {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.inv-scroll > * {
+  flex: none;
+}
+
+.hud-btn.inv-close {
+  flex: none;
+  height: 46px;
+  min-width: 0;
+}
+
+.detail {
+  min-height: 0;
+  gap: 6px;
+}
+
+.detail-head strong {
+  font-size: 15px;
+}
+
+.detail-actions .hud-btn {
+  height: 44px;
+  font-size: 14px;
+}
+
+@media (max-width: 480px) {
+  .panel.inventory {
+    padding: 12px;
+  }
+
+  .tile {
+    min-height: 46px;
+  }
+
+  .equip-tile {
+    min-height: 60px;
+  }
+
+  .bag-grid {
+    gap: 5px;
+  }
+
+  .detail p {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .detail-actions {
+    gap: 6px;
+  }
+
+  .detail-actions .hud-btn {
+    height: 40px;
+    padding: 0 6px;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+}
