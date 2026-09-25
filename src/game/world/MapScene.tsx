@@ -3,6 +3,7 @@ import {
   BufferGeometry,
   DoubleSide,
   Float32BufferAttribute,
+  LinearMipmapLinearFilter,
   MeshLambertMaterial,
   NearestFilter,
   RepeatWrapping,
@@ -13,15 +14,24 @@ import { COBBLE_URL, GRASS_URL, type AssetId } from '@/data/assets';
 import type { Placement } from '@/data/maps/types';
 import { PALETTE } from '@/data/palette';
 import { InstancedModel, type Transform } from '@/game/assets/InstancedModel';
+import { useGameStore } from '@/store/game-store';
+import { ContactShadows } from '@/game/world/ContactShadows';
 import { currentMap } from '@/game/world/current-map';
 import { buildRibbon, mergeRibbons, type RibbonMesh } from '@/game/world/ribbon';
 
-const COBBLE_TILE_METERS = 2;
-const GRASS_TILE_METERS = 3;
+/** 64 px tiles at 16 px per metre (cobble) and about 11 px per metre (grass). */
+const COBBLE_TILE_METERS = 4;
+const GRASS_TILE_METERS = 6;
+const KERB_COLOR = '#8f97a3';
+const KERB_WIDTH = 0.35;
+const KERB_Y = 0.012;
+const GROUND_ANISOTROPY = 8;
 const PLAZA_Y = 0.02;
 const ICE_Y = 0.03;
 const WATER_Y = 0.04;
 const PATH_Y = 0.05;
+/** Overhead parts of the GUM gallery that hide while Rosa is inside, so they never block the camera. */
+const ROOF_STRUCTURE: ReadonlySet<AssetId> = new Set(['gumRibs', 'gumBridge']);
 const GLASS_COLOR = '#c4d6dc';
 const GRAVEL_COLOR = '#8f8672';
 const GLASS_OPACITY = 0.22;
@@ -51,9 +61,11 @@ function RibbonMeshView({ data, color }: { data: RibbonMesh; color: string }) {
 function tiledMaterial(url: string, w: number, d: number, tileMeters: number): MeshLambertMaterial {
   const texture = new TextureLoader().load(url);
   texture.colorSpace = SRGBColorSpace;
+  // Pixel-crisp up close, mipmapped and anisotropic at a distance so the fine tiles do not shimmer.
   texture.magFilter = NearestFilter;
-  texture.minFilter = NearestFilter;
-  texture.generateMipmaps = false;
+  texture.minFilter = LinearMipmapLinearFilter;
+  texture.generateMipmaps = true;
+  texture.anisotropy = GROUND_ANISOTROPY;
   texture.wrapS = RepeatWrapping;
   texture.wrapT = RepeatWrapping;
   texture.repeat.set(w / tileMeters, d / tileMeters);
@@ -120,6 +132,7 @@ function GlassRoofs({ map }: { map: typeof currentMap }) {
 export function MapScene() {
   const map = currentMap;
   const groups = useMemo(() => groupByAsset(map.placements), [map]);
+  const inGum = useGameStore((s) => s.zone?.id === 'gum');
   const ice = useMemo(
     () => mergeRibbons(map.waters.map((w) => buildRibbon(w.ribbon.points, w.edgeWidth, ICE_Y))),
     [map],
@@ -146,6 +159,12 @@ export function MapScene() {
         y={0}
       />
       {map.plazas.map((plaza, i) => (
+        <mesh key={`kerb${i}`} rotation-x={-Math.PI / 2} position={[plaza.cx, KERB_Y, plaza.cz]}>
+          <planeGeometry args={[plaza.w + KERB_WIDTH * 2, plaza.d + KERB_WIDTH * 2]} />
+          <meshLambertMaterial color={KERB_COLOR} />
+        </mesh>
+      ))}
+      {map.plazas.map((plaza, i) => (
         <TiledGround
           key={i}
           url={COBBLE_URL}
@@ -168,8 +187,11 @@ export function MapScene() {
         />
       ))}
       {groups.map(([id, transforms]) => (
-        <InstancedModel key={id} id={id} transforms={transforms} />
+        <group key={id} visible={!(inGum && ROOF_STRUCTURE.has(id))}>
+          <InstancedModel id={id} transforms={transforms} />
+        </group>
       ))}
+      <ContactShadows />
       <GlassRoofs map={map} />
     </>
   );

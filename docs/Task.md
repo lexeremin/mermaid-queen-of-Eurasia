@@ -97,6 +97,7 @@ Read these files before starting any work:
 | Phase 14b — Renames, Prince Sasha, spell looks, icons | ✅ Complete | Prince Sasha (handsome prince, next to the start), enemy renames, trident swing, mermaid form during Aura and Surge, sea-wave Surge, bubble-teleport Dash, cute ability and item icons | 59a0f83 |
 | Phase 14c — Companion, voice, menu | ✅ Complete | Prince Sasha likeness and companion (follow option, sword, fights beside Rosa), moved Sergey and Maksim, Rosa's voice (attacks, special attacks, sung Aura) from the songs folder, menu with animated mermaid, title and GitHub link | dcfb5fe |
 | Phase 15 — Alexander Garden content | ✅ Complete | 12 herbs that regrow, 5 hidden pearls, 7 more monsters, the hidden Pearl Shrine (one-time gift, then heals), quests 10–12, save v4 | 02bf61a |
+| Phase 15b — Environment polish | ✅ Complete | GUM flicker fixed at the source (coplanar faces), richer ground tiles with mipmapped filtering, plaza kerbs, contact shadows, GUM roof hides indoors | HASH15B |
 | Phase 16 — Moscow underground + boss | ⬜ Next | 3 rooms, loot, boss arena + fight | |
 | Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
 | Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings (hero X-ray silhouette already done in Phase 8) | |

@@ -91,6 +91,44 @@ def atlas_uv(color):
     return (u, v)
 
 
+
+def _polys_overlap(a, b, min_area=1e-5):
+    """True when two coplanar convex faces overlap by more than `min_area` (square metres)."""
+    n = a.normal
+    u = Vector((1, 0, 0)) if abs(n.x) < 0.9 else Vector((0, 1, 0))
+    u = (u - n * u.dot(n)).normalized()
+    v = n.cross(u)
+    pa = [(p.co.dot(u), p.co.dot(v)) for p in a.verts]
+    pb = [(p.co.dot(u), p.co.dot(v)) for p in b.verts]
+    if max(x for x, _ in pa) <= min(x for x, _ in pb) or max(x for x, _ in pb) <= min(x for x, _ in pa):
+        return False
+    if max(y for _, y in pa) <= min(y for _, y in pb) or max(y for _, y in pb) <= min(y for _, y in pa):
+        return False
+
+    def ccw(poly):
+        area = sum(poly[i][0] * poly[(i + 1) % len(poly)][1] - poly[(i + 1) % len(poly)][0] * poly[i][1] for i in range(len(poly)))
+        return poly if area >= 0 else poly[::-1]
+
+    subject, clip = ccw(pa), ccw(pb)
+    for i in range(len(clip)):
+        A, B = clip[i], clip[(i + 1) % len(clip)]
+        side = lambda p: (B[0] - A[0]) * (p[1] - A[1]) - (B[1] - A[1]) * (p[0] - A[0])
+        out = []
+        for j in range(len(subject)):
+            P, Q = subject[j], subject[(j + 1) % len(subject)]
+            sp, sq = side(P), side(Q)
+            if sp >= 0:
+                out.append(P)
+            if (sp >= 0) != (sq >= 0):
+                t = sp / (sp - sq)
+                out.append((P[0] + t * (Q[0] - P[0]), P[1] + t * (Q[1] - P[1])))
+        subject = out
+        if not subject:
+            return False
+    area = abs(sum(subject[i][0] * subject[(i + 1) % len(subject)][1] - subject[(i + 1) % len(subject)][0] * subject[i][1] for i in range(len(subject)))) / 2
+    return area > min_area
+
+
 class Part:
     """One mesh object built from primitives given in WORLD coordinates.
 
@@ -170,7 +208,43 @@ class Part:
         self._paint(faces, color)
         return self
 
+    def separate_coplanar(self, lift=0.006):
+        """Removes z-fighting: a face lying exactly on an earlier face of a different colour (a window drawn flush with
+        its wall, trim on trim) is pushed out along its normal by `lift` metres per layer, in creation order. Boxes and
+        prisms share vertices, so the lifted face stretches its solid instead of opening a crack. Returns lifted count."""
+        bm = self.bm
+        bm.normal_update()
+        bm.faces.ensure_lookup_table()
+        color_of = lambda f: (round(f.loops[0][self.uv].uv.x, 4), round(f.loops[0][self.uv].uv.y, 4))
+        faces = [(f, f.normal.dot(f.verts[0].co)) for f in bm.faces if f.calc_area() >= 1e-8]
+        by_plane = {}
+        for f, d in faces:
+            by_plane.setdefault(int(round(d / 0.002)), []).append((f, d))
+        levels = {}
+        for f, d in sorted(faces, key=lambda it: it[0].index):
+            level = 0
+            k = int(round(d / 0.002))
+            for kk in (k - 1, k, k + 1):
+                for g, dg in by_plane.get(kk, []):
+                    if g.index >= f.index or abs(d - dg) > 0.0015 or f.normal.dot(g.normal) < 0.9995:
+                        continue
+                    if color_of(g) == color_of(f) or not _polys_overlap(f, g):
+                        continue
+                    level = max(level, levels.get(g.index, 0) + 1)
+            if level:
+                levels[f.index] = level
+        moves = {}
+        for index, level in levels.items():
+            f = bm.faces[index]
+            for v in f.verts:
+                moves[v.index] = moves.get(v.index, Vector((0, 0, 0))) + f.normal * (lift * level)
+        bm.verts.ensure_lookup_table()
+        for vi, offset in moves.items():
+            bm.verts[vi].co += offset
+        return len(levels)
+
     def finish(self):
+        self.separate_coplanar()
         mesh = bpy.data.meshes.new(self.name)
         self.bm.to_mesh(mesh)
         self.bm.free()

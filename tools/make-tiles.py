@@ -1,7 +1,10 @@
-"""Generates tiling ground textures in palette colors: public/assets/atlas/{cobble,grass}_tile.png (32x32).
+"""Generates tiling ground textures in palette colors: public/assets/atlas/{cobble,grass}_tile.png (64x64).
 
 Usage: python3 tools/make-tiles.py   (standard library only)
-Cobble: 8 px stones, alternate rows offset by 4 px, 1 px grout. Grass: seeded speckle of leaf tones.
+Cobble: irregular stones in 8 px rows (10-14 px wide), each with its own tone, a lit top-left edge, a dark
+bottom-right edge, 1 px grout with the odd fleck of moss. Grass: soft clumps of three greens with short blades
+and a few flowers. Both wrap seamlessly. The game samples them with mipmaps and anisotropic filtering so they
+do not shimmer at a distance (see MapScene.tsx).
 """
 
 import json
@@ -11,10 +14,12 @@ import zlib
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SIZE = 32
-STONE_W, STONE_H = 8, 8
-STONE_COLORS = ["wet_stone", "cobble_dark", "wet_stone", "slate", "wet_stone", "cobble_dark", "slate", "wet_stone"]
+SIZE = 64
+ROW_H = 8
 GROUT = "wet_dark"
+STONE_TONES = ["wet_stone", "cobble_dark", "wet_stone", "slate", "wet_stone", "cobble_dark", "slate", "wet_stone", "cobble_dark", "slate"]
+LIGHT_EDGE = {"wet_stone": "cobble_dark", "cobble_dark": "wet_stone", "slate": "wet_stone"}
+DARK_EDGE = {"wet_stone": "slate", "cobble_dark": "wet_dark", "slate": "wet_dark"}
 
 
 def rgb(hex_value):
@@ -22,39 +27,73 @@ def rgb(hex_value):
     return tuple(int(h[i : i + 2], 16) for i in (0, 2, 4))
 
 
+def stone_widths(rng):
+    widths, total = [], 0
+    while total < SIZE:
+        w = rng.randint(10, 14)
+        if SIZE - (total + w) < 10:
+            w = SIZE - total
+        widths.append(w)
+        total += w
+    return widths
+
+
 def cobble(colors):
-    pixels = []
-    for y in range(SIZE):
-        row = y // STONE_H
-        offset = 4 if row % 2 else 0
-        line = []
-        for x in range(SIZE):
-            sx = (x + offset) % SIZE
-            col = sx // STONE_W
-            in_grout = (y % STONE_H == 0) or (sx % STONE_W == 0)
-            name = GROUT if in_grout else STONE_COLORS[(row * 5 + col * 3) % len(STONE_COLORS)]
-            line.append(rgb(colors[name]) + (255,))
-        pixels.append(line)
-    return pixels
+    rng = random.Random(21)
+    names = [[GROUT] * SIZE for _ in range(SIZE)]
+    for row in range(SIZE // ROW_H):
+        y0 = row * ROW_H
+        x = rng.randint(0, 9)
+        for w in stone_widths(rng):
+            tone = rng.choice(STONE_TONES)
+            for dy in range(1, ROW_H):
+                for dx in range(1, w):
+                    name = tone
+                    if dy == 1:
+                        name = LIGHT_EDGE[tone]
+                    elif dy == ROW_H - 1 or dx == w - 1:
+                        name = DARK_EDGE[tone]
+                    names[(y0 + dy) % SIZE][(x + dx) % SIZE] = name
+            for _ in range(rng.randint(0, 3)):
+                names[(y0 + rng.randint(2, ROW_H - 2)) % SIZE][(x + rng.randint(2, max(2, w - 2))) % SIZE] = rng.choice(["wet_dark", "slate", "cobble_dark"])
+            x += w
+    for _ in range(26):
+        gx, gy = rng.randrange(SIZE), rng.randrange(SIZE)
+        if names[gy][gx] == GROUT:
+            names[gy][gx] = "moss"
+    return [[rgb(colors[names[y][x]]) + (255,) for x in range(SIZE)] for y in range(SIZE)]
 
 
 def grass(colors):
     rng = random.Random(7)
-    pixels = []
-    for _ in range(SIZE):
-        line = []
-        for _ in range(SIZE):
-            roll = rng.random()
-            name = "grass"
-            if roll < 0.22:
-                name = "grass_dark"
-            elif roll < 0.34:
-                name = "leaf"
-            elif roll < 0.345:
-                name = "flower_yellow"
-            line.append(rgb(colors[name]) + (255,))
-        pixels.append(line)
-    return pixels
+    cell = 8
+    grid = [[rng.random() for _ in range(SIZE // cell)] for _ in range(SIZE // cell)]
+
+    def clump(x, y):
+        gx, gy = x / cell, y / cell
+        x0, y0 = int(gx) % (SIZE // cell), int(gy) % (SIZE // cell)
+        x1, y1 = (x0 + 1) % (SIZE // cell), (y0 + 1) % (SIZE // cell)
+        fx, fy = gx - int(gx), gy - int(gy)
+        top = grid[y0][x0] * (1 - fx) + grid[y0][x1] * fx
+        bottom = grid[y1][x0] * (1 - fx) + grid[y1][x1] * fx
+        return top * (1 - fy) + bottom * fy
+
+    names = [["grass"] * SIZE for _ in range(SIZE)]
+    for y in range(SIZE):
+        for x in range(SIZE):
+            v = clump(x, y) + rng.uniform(-0.18, 0.18)
+            names[y][x] = "grass_dark" if v < 0.32 else "leaf" if v > 0.68 else "grass"
+    for _ in range(70):
+        x, y = rng.randrange(SIZE), rng.randrange(SIZE)
+        names[y][x] = "leaf"
+        names[(y - 1) % SIZE][x] = "leaf"
+    for _ in range(40):
+        x, y = rng.randrange(SIZE), rng.randrange(SIZE)
+        names[y][x] = "leaf_dark"
+    for _ in range(9):
+        x, y = rng.randrange(SIZE), rng.randrange(SIZE)
+        names[y][x] = rng.choice(["flower_yellow", "flower_yellow", "flower_red", "snow"])
+    return [[rgb(colors[names[y][x]]) + (255,) for x in range(SIZE)] for y in range(SIZE)]
 
 
 def write_png(path, pixels):
