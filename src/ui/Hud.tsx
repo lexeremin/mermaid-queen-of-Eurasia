@@ -46,7 +46,6 @@ export function Hud() {
   const setSettingsOpen = useGameStore((s) => s.setSettingsOpen);
   const newGameOpen = useGameStore((s) => s.newGameOpen);
   const setNewGameOpen = useGameStore((s) => s.setNewGameOpen);
-  const transitioning = useGameStore((s) => s.transitioning);
   const toggleQuestLog = useGameStore((s) => s.toggleQuestLog);
   const zone = useGameStore((s) => s.zone);
   const dialogueOpen = useGameStore((s) => s.dialogueOpen);
@@ -62,8 +61,6 @@ export function Hud() {
       {import.meta.env.DEV && <DebugOverlay />}
 
       <CombatHud touch={touch} />
-
-      <div className={`fade-overlay${transitioning ? ' on' : ''}`} aria-hidden="true" />
 
       <div className="hud-top">
         <button

@@ -32,12 +32,10 @@ export type GameState = {
   /** Rosa is in the Moscow underground region (drives the mood, the lights and what is drawn). */
   underground: boolean;
   /** A fade between the surface and the underground is running; the world waits. */
-  transitioning: boolean;
   form: HeroForm;
   setForm: (form: HeroForm) => void;
   setZone: (zone: Zone | null) => void;
   setUnderground: (underground: boolean) => void;
-  setTransitioning: (transitioning: boolean) => void;
   setDialogueOpen: (open: boolean) => void;
   setWelcomeOpen: (open: boolean) => void;
   setControlsOpen: (open: boolean) => void;
@@ -74,9 +72,7 @@ export const useGameStore = create<GameState>((set, get) => ({
   nearPlace: null,
   zone: null,
   underground: false,
-  transitioning: false,
   setUnderground: (underground) => set({ underground }),
-  setTransitioning: (transitioning) => set({ transitioning }),
   setDialogueOpen: (dialogueOpen) => set({ dialogueOpen }),
   setWelcomeOpen: (welcomeOpen) => set({ welcomeOpen, controlsOpen: false }),
   setControlsOpen: (controlsOpen) => set({ controlsOpen }),
@@ -145,7 +141,6 @@ export function isSimRunning(
     | 'questPanel'
     | 'dialogueOpen'
     | 'downed'
-    | 'transitioning'
     | 'welcomeOpen'
     | 'mapBlocking'
     | 'loading'
@@ -157,7 +152,6 @@ export function isSimRunning(
     !state.questPanel &&
     !state.dialogueOpen &&
     !state.downed &&
-    !state.transitioning &&
     !state.welcomeOpen &&
     !state.mapBlocking &&
     !state.loading

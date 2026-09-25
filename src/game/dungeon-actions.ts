@@ -14,6 +14,7 @@ import { useDungeonStore } from '@/store/dungeon-store';
 import { useGameStore } from '@/store/game-store';
 import { useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
+import { pushEffect } from '@/systems/combat';
 import { resolveCircle } from '@/systems/collision';
 import { addAllToStash } from '@/systems/inventory';
 import { PLAYER_RADIUS } from '@/systems/movement';
@@ -23,31 +24,25 @@ import type { Vec2 } from '@/utils/vec2';
 const toast = (text: string, kind: 'xp' | 'item' | 'warn' | 'info' = 'info') =>
   useToastStore.getState().push(text, kind);
 
-const FADE_MS = 320;
-const HOLD_MS = 140;
 /** Rosa opens a chest by walking this close to it. */
 export const CHEST_REACH = 1.3;
 
-/** Fades to black, moves Rosa, fades back. The world waits (the sim is paused) while it runs. */
+/** Moves Rosa straight to `dest` (metro, stairs, Recall): no loading screen and no fade, just a burst of bubbles. */
 export function travelTo(dest: Vec2, arrivalToast?: string): void {
-  const game = useGameStore.getState();
-  if (game.transitioning) return;
-  game.setTransitioning(true);
-  window.setTimeout(() => {
-    const pos = resolveCircle(dest, PLAYER_RADIUS, currentWorld);
-    sim.prev = { ...sim.curr, pos };
-    sim.curr = { ...sim.curr, pos };
-    sim.path = [];
-    sim.talkTo = null;
-    combat.projectiles = [];
-    useGameStore.getState().setUnderground(isUnderground(pos));
-    if (arrivalToast) toast(arrivalToast, 'info');
-    window.setTimeout(() => useGameStore.getState().setTransitioning(false), HOLD_MS);
-  }, FADE_MS);
+  const from = { ...sim.curr.pos };
+  const pos = resolveCircle(dest, PLAYER_RADIUS, currentWorld);
+  sim.prev = { ...sim.curr, pos };
+  sim.curr = { ...sim.curr, pos };
+  sim.path = [];
+  sim.talkTo = null;
+  combat.projectiles = [];
+  pushEffect(combat, 'bubbles', from.x, from.z, { x: 0, z: 1 }, 0.8, 1.2);
+  pushEffect(combat, 'bubbles', pos.x, pos.z, { x: 0, z: 1 }, 0.8, 1.2);
+  useGameStore.getState().setUnderground(isUnderground(pos));
+  if (arrivalToast) toast(arrivalToast, 'info');
 }
 
 export function goDown(): void {
-  if (useGameStore.getState().transitioning) return;
   resetInstance();
   track('underground_entered');
   travelTo(UNDERGROUND.arrival);

@@ -8,13 +8,7 @@ export function FormButton({ touch }: { touch: boolean }) {
   const unlocked = useProgressStore((s) => s.forms.includes('mermaid'));
   const mermaid = useGameStore((s) => s.form === 'mermaid');
   const blocked = useGameStore(
-    (s) =>
-      s.paused ||
-      s.inventoryOpen ||
-      !!s.questPanel ||
-      s.dialogueOpen ||
-      s.downed ||
-      s.transitioning,
+    (s) => s.paused || s.inventoryOpen || !!s.questPanel || s.dialogueOpen || s.downed,
   );
   if (!unlocked) return null;
   return (

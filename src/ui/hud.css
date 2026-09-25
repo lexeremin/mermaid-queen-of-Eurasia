@@ -1017,21 +1017,6 @@
   font-weight: 700;
 }
 
-.fade-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 50;
-  background: #050302;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.32s ease-in;
-}
-
-.fade-overlay.on {
-  opacity: 1;
-  pointer-events: auto;
-}
-
 .boss-bar {
   position: absolute;
   top: calc(var(--safe-top, 0px) + 96px);

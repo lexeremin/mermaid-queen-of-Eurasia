@@ -14,13 +14,7 @@ export function RecallButton({ touch }: { touch: boolean }) {
   const ring = useRef<SVGCircleElement>(null);
   const button = useRef<HTMLButtonElement>(null);
   const blocked = useGameStore(
-    (s) =>
-      s.paused ||
-      s.inventoryOpen ||
-      !!s.questPanel ||
-      s.dialogueOpen ||
-      s.downed ||
-      s.transitioning,
+    (s) => s.paused || s.inventoryOpen || !!s.questPanel || s.dialogueOpen || s.downed,
   );
 
   useEffect(() => {

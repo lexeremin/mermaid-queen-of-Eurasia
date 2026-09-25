@@ -66,8 +66,7 @@ export type SwitchResult = 'switched' | 'locked' | 'busy';
 export function toggleForm(now: number = performance.now()): SwitchResult {
   if (!mermaidUnlocked()) return 'locked';
   const game = useGameStore.getState();
-  if (combat.downed || game.transitioning || swim.active || now - lastSwitch < FORM_COOLDOWN_MS)
-    return 'busy';
+  if (combat.downed || swim.active || now - lastSwitch < FORM_COOLDOWN_MS) return 'busy';
   lastSwitch = now;
   byWater = false;
   const next = game.form === 'human' ? 'mermaid' : 'human';

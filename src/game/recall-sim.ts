@@ -2,7 +2,6 @@ import { playSfx } from '@/audio/sfx';
 import { currentMap } from '@/game/world/current-map';
 import { travelTo } from '@/game/dungeon-actions';
 import { track } from '@/net/stats';
-import { useGameStore } from '@/store/game-store';
 import { useToastStore } from '@/store/toast-store';
 import {
   cancelRecall,
@@ -21,7 +20,7 @@ export function toggleRecall(canStart: boolean): void {
   if (recall.active) {
     cancelRecall(recall);
     useToastStore.getState().push('Recall cancelled', 'info');
-  } else if (canStart && !useGameStore.getState().transitioning) {
+  } else if (canStart) {
     startRecall(recall);
     playSfx('wave');
   }
