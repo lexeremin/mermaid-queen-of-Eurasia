@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 21 complete (archangels).** Next: **Phase 22 — Endless dungeon** (`docs/phases/phase-22.md` — write it first, it does not exist yet).
+**Phase 22 complete (endless dungeon).** Next: **Phase 23 — Downtown Moscow** (`docs/phases/phase-23.md` — write it first, it does not exist yet).
 
 ---
 
@@ -65,7 +65,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-22.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-23.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -108,8 +108,8 @@ Read these files before starting any work:
 | Phase 19 — Water and performance | ✅ Complete | Swimming (stepping into water turns Rosa into a mermaid; pond ends and the reachable Moskva River), graphics quality setting (Auto/High/Medium/Low), fade-free plain material, nearby-only lantern glow, loading screen only on page load | aa502f8 |
 | Phase 20 — Visual polish | ✅ Complete | Plate audit in the Blender pipeline (windows, doors and panels sit on their walls, no floating or poking plates), chamfered large boxes, smooth-shaded rounder domes/drums/crowns, 128 px rounded-stone cobble and smooth grass tiles; draw calls unchanged, triangles +8–11% | 807838e |
 | Phase 21 — Archangels | ✅ Complete | Michael, Gabriel and Serafima, three hidden winged children (animated models, unique intro and prompt each, wrong answers loop back), joy sound and hearts when saved, quest Save the Archangels with the Archangel's Feather charm, save v9 | e792afd |
-| Phase 22 — Endless dungeon | ⬜ Next | Rework the underground into 100 automatically generated layers (random paths and monsters), with fixed entrance and exit rooms between layers | |
-| Phase 23 — Downtown Moscow | ⬜ Todo | More detailed areas around Red Square based on the real map, more quests | |
+| Phase 22 — Endless dungeon | ✅ Complete | 100 generated layers (random rooms, corridors, monsters, chests) with a fixed landing and stairs hall on every layer, the Father of Corruption on every 10th layer, monsters tougher with depth, Depth panel at the metro, per-layer chests and boss rewards, save v10 | 9a59a6d |
+| Phase 23 — Downtown Moscow | ⬜ Next | More detailed areas around Red Square based on the real map, more quests | |
 | Phase 24 — Bosses and people | ⬜ Todo | More bosses (original satirical evil-politician and foreign-lobbyist archetypes, no real people), generic NPCs such as "Russian guy" | |
 | Phase 25 — Polish | ⬜ Todo | SFX (UI, level-up, quest, loot, blink, recall, boss, hits), ambient loop/music, volume slider, mist/drizzle particles, damage numbers, screen shake, title screen for returning players | |
 | Phase 26 — Real-device QA | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
