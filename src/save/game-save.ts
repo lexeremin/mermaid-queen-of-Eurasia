@@ -194,6 +194,7 @@ export function resetProgress(): void {
   rebuildGather();
   useNpcStore.getState().reset();
   useGameStore.getState().setForm('human');
+  useGameStore.getState().setReturning(null);
   useGameStore.getState().setWelcomeOpen(true);
   resetSim();
   resetCombat();
@@ -209,7 +210,17 @@ export function startPersistence(): void {
   // A brand new game opens with the welcome screen (dev: ?welcome=0 skips it for scripted runs).
   const skip =
     import.meta.env.DEV && new URLSearchParams(window.location.search).get('welcome') === '0';
-  useGameStore.getState().setWelcomeOpen(!save && !skip);
+  // A saved game opens on a "welcome back" title screen; a brand new one on the welcome screen.
+  useGameStore.getState().setReturning(
+    save
+      ? {
+          level: save.progress.level,
+          layer: save.dungeon.layer,
+          playSeconds: save.playSeconds,
+        }
+      : null,
+  );
+  useGameStore.getState().setWelcomeOpen(!skip);
 
   let timer: number | undefined;
   const scheduleSave = () => {

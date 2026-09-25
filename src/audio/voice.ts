@@ -1,6 +1,7 @@
 import { warmSfx } from '@/audio/sfx';
 import { AURA_FILE, AURA_GAIN } from '@/audio/recipes';
-import { getContext, log, soundEnabled } from '@/audio/engine';
+import { startAmbience } from '@/audio/ambience';
+import { getContext, log, masterBus, soundEnabled } from '@/audio/engine';
 
 let buffer: Promise<AudioBuffer | null> | null = null;
 let singing: { source: AudioBufferSourceNode; gain: GainNode } | null = null;
@@ -19,6 +20,7 @@ export function unlockAudio(): void {
   if (ctx) {
     void loadAura(ctx);
     warmSfx();
+    startAmbience();
   }
 }
 
@@ -34,7 +36,7 @@ export function playAuraSong(): void {
     source.buffer = data;
     const gain = ctx.createGain();
     gain.gain.value = AURA_GAIN;
-    source.connect(gain).connect(ctx.destination);
+    source.connect(gain).connect(masterBus(ctx));
     source.start();
     log('aura-song');
     const played = { source, gain };

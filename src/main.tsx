@@ -10,6 +10,7 @@ import { startPersistence } from '@/save/game-save';
 import { useGameStore } from '@/store/game-store';
 import { startSync } from '@/net/sync';
 import { unlockAudio } from '@/audio/voice';
+import { startUiSounds } from '@/ui/ui-sounds';
 
 const root = document.getElementById('root');
 if (!root) throw new Error('Root element not found');
@@ -25,6 +26,7 @@ startQuestHooks();
 startGardenHooks();
 startDungeonHooks();
 startSync();
+startUiSounds();
 
 for (const type of ['pointerdown', 'keydown'] as const) {
   window.addEventListener(type, unlockAudio, { once: true, capture: true });

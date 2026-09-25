@@ -1,3 +1,4 @@
+import { playSfx } from '@/audio/sfx';
 import type { EnemyKind } from '@/data/enemies';
 import { ITEMS } from '@/data/items';
 import { QUEST_BY_ID } from '@/data/quests';
@@ -55,6 +56,7 @@ export function acceptQuestAction(id: string): boolean {
   if (!next) return false;
   setLog(next);
   toast(`Quest accepted: ${QUEST_BY_ID.get(id)?.title ?? id}`, 'info');
+  playSfx('questAccept');
   track('quest_accepted', { id });
   return true;
 }
@@ -71,6 +73,7 @@ export function claimQuestAction(id: string): boolean {
   useProgressStore.getState().setStash(result.bag, result.keepsakes);
   setLog(result.log);
   toast(`Quest complete: ${def.title}`, 'info');
+  playSfx('questDone');
   for (const item of def.reward.items ?? []) toast(`Received ${ITEMS[item.id].name}`, 'item');
   grantXp(def.reward.xp);
   if (def.reward.unlocks?.includes('mermaid')) unlockMermaid();

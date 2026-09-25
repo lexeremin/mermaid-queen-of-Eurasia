@@ -38,7 +38,7 @@ Feature list with phase mapping. Status lives in `docs/Task.md`.
 | Endless dungeon: 100 generated layers with fixed entrance and exit, depth-scaled monsters, boss every 10th layer, depth shortcut, save v10 | 22 |
 | Downtown Moscow: the north of Red Square (Vasilievsky Spusk, embankment, Zaryadye Park, Lobnoye Mesto, monument) and six new quests | 23 |
 | Five underground bosses (Father of Corruption, Lobbyist, Senator Endless, Yacht Baron, Spin Doctor) with new moves, and seven ordinary people to talk to | 24 |
-| Polish: SFX, ambient/music, weather, damage numbers, shake, returning-player title | 25 |
+| Sound effects, generative ambience, volume sliders, drizzle and mist, damage numbers, screen shake, "Welcome back" title screen | 25 |
 | iPhone Safari QA | 26 |
 | Hosting, env config, release | 27 |
 

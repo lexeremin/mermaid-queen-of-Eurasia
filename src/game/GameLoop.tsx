@@ -24,6 +24,11 @@ import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { ITEMS } from '@/data/items';
 import { XP_REWARDS } from '@/systems/progression';
+import { cameraRef } from '@/game/camera-ref';
+import { shakeScreen, showDamage, stepFeedback } from '@/game/feedback';
+import { BIG_HIT } from '@/systems/floating-numbers';
+import { traumaForHurt } from '@/systems/shake';
+import { useSettingsStore } from '@/store/settings-store';
 import { canTake } from '@/systems/inventory';
 import { stepPickups } from '@/systems/pickups';
 import { MAX_STEPS_PER_FRAME, SIM_STEP, sim } from '@/game/sim';
@@ -151,6 +156,7 @@ function tryCollect(item: (typeof ITEMS)[keyof typeof ITEMS]['id']): boolean {
   const result = useProgressStore.getState().addItem(item);
   if (result.added === 0) return false;
   useToastStore.getState().push(`Picked up ${ITEMS[item].name}`, 'item');
+  playSfx('loot');
   requestSave();
   return true;
 }
@@ -174,8 +180,15 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       );
       onEnemyDefeatedForQuests(event.kind);
       spawnDrops(event.kind, { x: event.x, z: event.z });
-      if (isBossKind(event.kind)) onBossDefeated({ x: event.x, z: event.z }, event.kind);
+      shakeScreen(0.06);
+      if (isBossKind(event.kind)) {
+        playSfx('bossDown');
+        shakeScreen(0.8);
+        onBossDefeated({ x: event.x, z: event.z }, event.kind);
+      }
     } else if (event.type === 'bossPhase') {
+      playSfx('bossRoar');
+      shakeScreen(0.6);
       useToastStore
         .getState()
         .push(
@@ -190,11 +203,19 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       if (event.ability === 'attack') playSfx('swing');
       else if (event.ability === 'spell') playSfx('wave');
       else if (event.ability === 'aura') playAuraSong();
-      else if (event.ability === 'blink') playSfx('bubbles');
+      else if (event.ability === 'blink') playSfx('blink');
     } else if (event.type === 'enemyHit') {
       playSfx('hit');
+      showDamage(event.x, event.z, event.amount, 'enemy');
+      if (event.amount >= BIG_HIT) playSfx('crit');
+    } else if (event.type === 'playerHurt') {
+      playSfx('hurt');
+      showDamage(sim.curr.pos.x, sim.curr.pos.z, event.damage, 'player');
+      shakeScreen(traumaForHurt(event.damage));
     } else if (event.type === 'playerDowned') {
       stopVoice();
+      playSfx('downed');
+      shakeScreen(0.4);
       useGameStore.getState().setDowned(true);
       track('player_downed');
     }
@@ -203,6 +224,7 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
 
 export function GameLoop() {
   useFrame((state, delta) => {
+    cameraRef.camera = state.camera;
     if (import.meta.env.DEV) (window as { __mqCamera?: Camera }).__mqCamera = state.camera;
     const stale = staleInput(input, performance.now());
     if (stale.stick) input.stickMove = { x: 0, z: 0 };
@@ -213,6 +235,8 @@ export function GameLoop() {
       stepper.reset();
       return;
     }
+
+    stepFeedback(delta, useSettingsStore.getState().weather && !isUnderground(sim.curr.pos));
 
     const followingId =
       Object.entries(useNpcStore.getState().npcs).find(([, n]) => n.following)?.[0] ?? null;

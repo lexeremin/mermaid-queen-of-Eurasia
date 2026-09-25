@@ -1,3 +1,4 @@
+import { playSfx } from '@/audio/sfx';
 import { NPC_BY_ID } from '@/data/npcs';
 import { ITEMS, type ItemDef, type ItemId } from '@/data/items';
 import { combat } from '@/game/combat-sim';
@@ -23,6 +24,7 @@ function onLevelUp(levelsGained: number): void {
   combat.mana = stats.maxMana;
   const level = useProgressStore.getState().level;
   useToastStore.getState().announceLevelUp(level);
+  playSfx('levelUp');
   track('level_up', { level });
 }
 

@@ -2039,3 +2039,72 @@
   font-size: 12px;
   opacity: 0.75;
 }
+
+.damage-numbers {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.damage-numbers span {
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--ui-font);
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff3c0;
+  text-shadow:
+    0 1px 0 #120d09,
+    0 0 4px rgba(18, 13, 9, 0.9),
+    1px 0 0 #120d09,
+    -1px 0 0 #120d09;
+  will-change: transform, opacity;
+}
+
+.damage-numbers span[data-kind='big'] {
+  font-size: 26px;
+  color: #ffd35c;
+}
+
+.damage-numbers span[data-kind='player'] {
+  color: #ff8a8a;
+  font-size: 20px;
+}
+
+/* The settings popup is taller now: it scrolls on small screens instead of running off them. */
+.panel.dialog:has(.slider) {
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+}
+
+.slider {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: var(--ui-text);
+}
+
+.slider input[type='range'] {
+  width: 100%;
+  height: 28px;
+  margin: 0;
+  accent-color: var(--ui-gold-bright);
+  cursor: pointer;
+}
+
+.title-summary {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 16px;
+  margin: 0 0 4px;
+  padding: 0;
+  list-style: none;
+  font-size: 15px;
+  color: var(--ui-gold-bright);
+  letter-spacing: 0.04em;
+}

@@ -1,6 +1,6 @@
 /** Parameters for the synthesized sounds. Pure data and math so it can be tested; `sfx.ts` plays them. */
 
-export type SfxKind = 'swing' | 'hit' | 'bubbles' | 'wave' | 'gather' | 'joy';
+export type SfxKind = 'swing' | 'hit' | 'bubbles' | 'wave' | 'gather' | 'joy' | SpecKind;
 
 /** A soft two-note chime for picking up a herb or pearl. */
 export const GATHER = {
@@ -96,3 +96,122 @@ export function giggleChirps(random: () => number = Math.random): Chirp[] {
   }
   return chirps;
 }
+
+// --- Sounds described as data: a few tones and bursts of noise, played by one generic player ---
+
+export type ToneSpec = {
+  /** Seconds after the start. */
+  at: number;
+  freq: number;
+  /** The pitch the tone glides to over its length. */
+  to?: number;
+  dur: number;
+  gain: number;
+  type?: OscillatorType;
+};
+
+export type NoiseSpec = {
+  at: number;
+  dur: number;
+  gain: number;
+  filter: 'lowpass' | 'bandpass' | 'highpass';
+  from: number;
+  to?: number;
+  q?: number;
+};
+
+export type SfxSpec = { tones: readonly ToneSpec[]; noise?: readonly NoiseSpec[] };
+
+const arpeggio = (
+  notes: readonly number[],
+  gap: number,
+  dur: number,
+  gain: number,
+  type: OscillatorType = 'triangle',
+): ToneSpec[] => notes.map((freq, i) => ({ at: i * gap, freq, dur, gain, type }));
+
+export type SpecKind =
+  | 'ui'
+  | 'levelUp'
+  | 'questAccept'
+  | 'questDone'
+  | 'loot'
+  | 'hurt'
+  | 'downed'
+  | 'blink'
+  | 'splash'
+  | 'bossRoar'
+  | 'bossDown'
+  | 'crit';
+
+/** UI clicks, level-up, quests, loot, blink, hurt, splash and the boss: every one short and quiet. */
+export const SPECS: Readonly<Record<SpecKind, SfxSpec>> = {
+  ui: { tones: [{ at: 0, freq: 1320, to: 1760, dur: 0.05, gain: 0.05, type: 'sine' }] },
+  levelUp: {
+    tones: [
+      ...arpeggio([523.25, 659.25, 783.99, 1046.5], 0.11, 0.55, 0.1),
+      { at: 0.44, freq: 1568, dur: 0.9, gain: 0.05, type: 'sine' },
+      { at: 0.44, freq: 2093, dur: 0.9, gain: 0.03, type: 'sine' },
+    ],
+  },
+  questAccept: { tones: arpeggio([392, 587.33], 0.12, 0.3, 0.09, 'sine') },
+  questDone: {
+    tones: [
+      ...arpeggio([392, 493.88, 587.33, 783.99], 0.09, 0.4, 0.09),
+      { at: 0.36, freq: 987.77, dur: 0.8, gain: 0.05, type: 'sine' },
+    ],
+  },
+  loot: {
+    tones: [
+      { at: 0, freq: 1046.5, dur: 0.08, gain: 0.07, type: 'sine' },
+      { at: 0.06, freq: 1567.98, dur: 0.14, gain: 0.06, type: 'sine' },
+    ],
+  },
+  hurt: {
+    tones: [{ at: 0, freq: 170, to: 60, dur: 0.16, gain: 0.3, type: 'sine' }],
+    noise: [{ at: 0, dur: 0.09, gain: 0.16, filter: 'lowpass', from: 1400 }],
+  },
+  downed: { tones: arpeggio([392, 329.63, 261.63, 196], 0.22, 0.6, 0.1, 'sine') },
+  blink: {
+    tones: [{ at: 0, freq: 320, to: 1500, dur: 0.14, gain: 0.09, type: 'sine' }],
+    noise: [{ at: 0, dur: 0.12, gain: 0.05, filter: 'bandpass', from: 1800, to: 3800, q: 1.4 }],
+  },
+  splash: {
+    tones: [],
+    noise: [
+      { at: 0, dur: 0.35, gain: 0.16, filter: 'bandpass', from: 900, to: 400, q: 0.8 },
+      { at: 0.05, dur: 0.2, gain: 0.08, filter: 'highpass', from: 3000 },
+    ],
+  },
+  bossRoar: {
+    tones: [
+      { at: 0, freq: 110, to: 52, dur: 1.1, gain: 0.22, type: 'sawtooth' },
+      { at: 0, freq: 55, to: 40, dur: 1.2, gain: 0.25, type: 'sine' },
+    ],
+    noise: [{ at: 0, dur: 0.9, gain: 0.12, filter: 'lowpass', from: 700, to: 200 }],
+  },
+  bossDown: {
+    tones: [
+      { at: 0, freq: 130, to: 45, dur: 1.4, gain: 0.25, type: 'sawtooth' },
+      ...arpeggio([523.25, 392, 293.66, 196], 0.28, 0.7, 0.07, 'sine').map((t) => ({
+        ...t,
+        at: t.at + 0.5,
+      })),
+    ],
+    noise: [{ at: 0, dur: 1.1, gain: 0.14, filter: 'lowpass', from: 900, to: 150 }],
+  },
+  crit: {
+    tones: [
+      { at: 0, freq: 880, to: 1760, dur: 0.09, gain: 0.08, type: 'triangle' },
+      { at: 0.05, freq: 1318.5, dur: 0.16, gain: 0.05, type: 'sine' },
+    ],
+  },
+};
+
+/** The length of a spec in seconds. */
+export const specLength = (spec: SfxSpec): number =>
+  Math.max(
+    0,
+    ...spec.tones.map((t) => t.at + t.dur),
+    ...(spec.noise ?? []).map((n) => n.at + n.dur),
+  );

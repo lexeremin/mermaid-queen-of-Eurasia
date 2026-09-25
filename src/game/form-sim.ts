@@ -54,7 +54,7 @@ export function stepWater(inWater: boolean, dt: number): void {
 
 function splash(): void {
   pushEffect(combat, 'bubbles', sim.curr.pos.x, sim.curr.pos.z, { x: 0, z: 1 }, 0.9, 1.5);
-  playSfx('bubbles');
+  playSfx('splash');
 }
 
 /** True while Rosa's form came from the water (she cannot leave it by pressing F while swimming). */

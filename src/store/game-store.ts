@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import type { ReturningSummary } from '@/systems/title';
 import type { Zone } from '@/systems/zones';
 
 export type HeroForm = 'human' | 'mermaid';
@@ -15,8 +16,11 @@ export type GameState = {
   /** The loading screen: assets, the first scene commit, shader compile and the walk grid are not ready yet. */
   loading: boolean;
   setLoading: (loading: boolean) => void;
-  /** The welcome screen of a brand new game. */
+  /** The title screen: a welcome for a brand new game, or "welcome back" with a summary for a saved one. */
   welcomeOpen: boolean;
+  /** Set when the game starts from a save: what the title screen shows. Null for a new game. */
+  returning: ReturningSummary | null;
+  setReturning: (summary: ReturningSummary | null) => void;
   /** The keybindings popup (opened from the menu or the welcome screen). */
   controlsOpen: boolean;
   /** Menu popups: settings, and the "start a new game?" confirmation. */
@@ -63,6 +67,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   loading: false,
   setLoading: (loading) => set({ loading }),
   welcomeOpen: false,
+  returning: null,
+  setReturning: (returning) => set({ returning }),
   controlsOpen: false,
   settingsOpen: false,
   newGameOpen: false,

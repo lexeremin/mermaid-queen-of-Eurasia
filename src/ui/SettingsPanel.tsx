@@ -3,7 +3,7 @@ import { useGameStore } from '@/store/game-store';
 import { useSettingsStore } from '@/store/settings-store';
 import { nextQuality, qualityLabel } from '@/systems/quality';
 
-/** Sound and anonymous stats, in one small popup. */
+/** Sound, effects, graphics and anonymous stats, in one popup. */
 export function SettingsPanel() {
   const close = useGameStore((s) => s.setSettingsOpen);
   const openControls = useGameStore((s) => s.setControlsOpen);
@@ -13,6 +13,16 @@ export function SettingsPanel() {
   const setSoundOn = useSettingsStore((s) => s.setSoundOn);
   const quality = useSettingsStore((s) => s.quality);
   const setQuality = useSettingsStore((s) => s.setQuality);
+  const volume = useSettingsStore((s) => s.volume);
+  const setVolume = useSettingsStore((s) => s.setVolume);
+  const ambience = useSettingsStore((s) => s.ambience);
+  const setAmbience = useSettingsStore((s) => s.setAmbience);
+  const shake = useSettingsStore((s) => s.shake);
+  const setShake = useSettingsStore((s) => s.setShake);
+  const weather = useSettingsStore((s) => s.weather);
+  const setWeather = useSettingsStore((s) => s.setWeather);
+  const numbers = useSettingsStore((s) => s.damageNumbers);
+  const setNumbers = useSettingsStore((s) => s.setDamageNumbers);
 
   return (
     <div className="overlay overlay-top">
@@ -29,6 +39,52 @@ export function SettingsPanel() {
             }}
           >
             Sound: {soundOn ? 'on' : 'off'}
+          </button>
+          <label className="slider">
+            <span>Volume {Math.round(volume * 100)}%</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(volume * 100)}
+              onChange={(e) => setVolume(Number(e.target.value) / 100)}
+              aria-label="Volume"
+            />
+          </label>
+          <label className="slider">
+            <span>Ambience {Math.round(ambience * 100)}%</span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={Math.round(ambience * 100)}
+              onChange={(e) => setAmbience(Number(e.target.value) / 100)}
+              aria-label="Ambience"
+            />
+          </label>
+          <button
+            type="button"
+            className="hud-btn"
+            aria-pressed={shake}
+            onClick={() => setShake(!shake)}
+          >
+            Screen shake: {shake ? 'on' : 'off'}
+          </button>
+          <button
+            type="button"
+            className="hud-btn"
+            aria-pressed={weather}
+            onClick={() => setWeather(!weather)}
+          >
+            Weather: {weather ? 'on' : 'off'}
+          </button>
+          <button
+            type="button"
+            className="hud-btn"
+            aria-pressed={numbers}
+            onClick={() => setNumbers(!numbers)}
+          >
+            Damage numbers: {numbers ? 'on' : 'off'}
           </button>
           <button
             type="button"

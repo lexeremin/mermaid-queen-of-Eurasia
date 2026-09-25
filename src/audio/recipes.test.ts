@@ -1,5 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { AURA_GAIN, JOY_ARPEGGIO, WAVE, bubbleBlips, giggleChirps, swell } from '@/audio/recipes';
+import {
+  AURA_GAIN,
+  JOY_ARPEGGIO,
+  SPECS,
+  WAVE,
+  bubbleBlips,
+  giggleChirps,
+  specLength,
+  swell,
+  type SpecKind,
+} from '@/audio/recipes';
 
 describe('bubble blips', () => {
   it('are a short, rising, gently fading run of pops', () => {
@@ -67,5 +77,63 @@ describe('joy sound', () => {
       const last = chirps[chirps.length - 1]!;
       expect(last.at + last.dur).toBeLessThan(1.5);
     }
+  });
+});
+
+describe('sounds described as data', () => {
+  const kinds = Object.keys(SPECS) as SpecKind[];
+
+  it('has the sounds the game asks for', () => {
+    for (const kind of [
+      'ui',
+      'levelUp',
+      'questAccept',
+      'questDone',
+      'loot',
+      'hurt',
+      'downed',
+      'blink',
+      'splash',
+      'bossRoar',
+      'bossDown',
+      'crit',
+    ] as const) {
+      expect(kinds).toContain(kind);
+    }
+  });
+
+  it('keeps every sound short, quiet and inside the range of hearing', () => {
+    for (const kind of kinds) {
+      const spec = SPECS[kind];
+      expect(spec.tones.length + (spec.noise?.length ?? 0), kind).toBeGreaterThan(0);
+      expect(specLength(spec), kind).toBeLessThan(2.5);
+      for (const t of spec.tones) {
+        expect(t.freq, kind).toBeGreaterThan(30);
+        expect(t.freq, kind).toBeLessThan(4000);
+        if (t.to) {
+          expect(t.to, kind).toBeGreaterThan(30);
+          expect(t.to, kind).toBeLessThan(4000);
+        }
+        expect(t.gain, kind).toBeGreaterThan(0);
+        expect(t.gain, kind).toBeLessThanOrEqual(0.3);
+        expect(t.dur, kind).toBeGreaterThan(0.03);
+      }
+      for (const n of spec.noise ?? []) {
+        expect(n.gain, kind).toBeLessThanOrEqual(0.2);
+        expect(n.from, kind).toBeGreaterThan(50);
+      }
+    }
+  });
+
+  it('makes level-up and the quest jingles rise, the fall of Rosa fall, and the UI tick tiny', () => {
+    const notes = (k: SpecKind) => SPECS[k].tones.filter((t) => t.dur >= 0.3).map((t) => t.freq);
+    const up = SPECS.levelUp.tones.slice(0, 4).map((t) => t.freq);
+    expect([...up].sort((a, b) => a - b)).toEqual(up);
+    const done = SPECS.questDone.tones.slice(0, 4).map((t) => t.freq);
+    expect([...done].sort((a, b) => a - b)).toEqual(done);
+    const down = SPECS.downed.tones.map((t) => t.freq);
+    expect([...down].sort((a, b) => b - a)).toEqual(down);
+    expect(specLength(SPECS.ui)).toBeLessThan(0.1);
+    expect(notes('bossRoar').every((f) => f < 200)).toBe(true);
   });
 });

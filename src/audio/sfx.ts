@@ -2,14 +2,17 @@ import {
   GATHER,
   HIT,
   JOY_ARPEGGIO,
+  SPECS,
   SWING,
   WAVE,
   bubbleBlips,
   giggleChirps,
   swell,
   type SfxKind,
+  type SfxSpec,
+  type SpecKind,
 } from '@/audio/recipes';
-import { getContext, log, soundEnabled } from '@/audio/engine';
+import { getContext, log, masterBus, soundEnabled } from '@/audio/engine';
 
 let noise: AudioBuffer | null = null;
 
@@ -46,7 +49,7 @@ function swing(ctx: AudioContext, t: number): void {
   gain.gain.setValueAtTime(0.0001, t);
   gain.gain.linearRampToValueAtTime(SWING.gain, t + SWING.dur * 0.35);
   gain.gain.linearRampToValueAtTime(0.0001, t + SWING.dur);
-  source.connect(filter).connect(gain).connect(ctx.destination);
+  source.connect(filter).connect(gain).connect(masterBus(ctx));
   source.start(t);
   source.stop(t + SWING.dur + 0.02);
 }
@@ -59,7 +62,7 @@ function hit(ctx: AudioContext, t: number): void {
   const noiseGain = ctx.createGain();
   noiseGain.gain.setValueAtTime(HIT.noiseGain, t);
   noiseGain.gain.exponentialRampToValueAtTime(0.0001, t + HIT.noiseDur);
-  source.connect(filter).connect(noiseGain).connect(ctx.destination);
+  source.connect(filter).connect(noiseGain).connect(masterBus(ctx));
   source.start(t);
   source.stop(t + HIT.noiseDur + 0.02);
 
@@ -70,7 +73,7 @@ function hit(ctx: AudioContext, t: number): void {
   const thumpGain = ctx.createGain();
   thumpGain.gain.setValueAtTime(HIT.thumpGain, t);
   thumpGain.gain.exponentialRampToValueAtTime(0.0001, t + HIT.thumpDur);
-  thump.connect(thumpGain).connect(ctx.destination);
+  thump.connect(thumpGain).connect(masterBus(ctx));
   thump.start(t);
   thump.stop(t + HIT.thumpDur + 0.02);
 }
@@ -86,7 +89,7 @@ function bubbles(ctx: AudioContext, t: number): void {
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.linearRampToValueAtTime(blip.gain, start + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + blip.dur);
-    osc.connect(gain).connect(ctx.destination);
+    osc.connect(gain).connect(masterBus(ctx));
     osc.start(start);
     osc.stop(start + blip.dur + 0.02);
   }
@@ -110,7 +113,7 @@ function wave(ctx: AudioContext, t: number): void {
       t + at,
     );
   }
-  source.connect(filter).connect(gain).connect(ctx.destination);
+  source.connect(filter).connect(gain).connect(masterBus(ctx));
   source.start(t);
   source.stop(t + WAVE.dur + 0.05);
 
@@ -127,7 +130,7 @@ function wave(ctx: AudioContext, t: number): void {
         t + at,
       );
     }
-    osc.connect(padGain).connect(ctx.destination);
+    osc.connect(padGain).connect(masterBus(ctx));
     osc.start(t);
     osc.stop(t + WAVE.dur + 0.05);
   }
@@ -143,7 +146,7 @@ function gatherChime(ctx: AudioContext, t: number): void {
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.linearRampToValueAtTime(GATHER.gain, start + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, start + GATHER.dur);
-    osc.connect(gain).connect(ctx.destination);
+    osc.connect(gain).connect(masterBus(ctx));
     osc.start(start);
     osc.stop(start + GATHER.dur + 0.02);
   });
@@ -172,7 +175,7 @@ function joy(ctx: AudioContext, t: number): void {
       shimmerGain.gain.value = 0.3;
       osc.connect(g);
       shimmer.connect(shimmerGain).connect(g);
-      g.connect(ctx.destination);
+      g.connect(masterBus(ctx));
       osc.start(start);
       shimmer.start(start);
       osc.stop(start + dur + 0.02);
@@ -189,13 +192,46 @@ function joy(ctx: AudioContext, t: number): void {
     g.gain.setValueAtTime(0.0001, start);
     g.gain.linearRampToValueAtTime(chirp.gain, start + 0.01);
     g.gain.exponentialRampToValueAtTime(0.0001, start + chirp.dur);
-    osc.connect(g).connect(ctx.destination);
+    osc.connect(g).connect(masterBus(ctx));
     osc.start(start);
     osc.stop(start + chirp.dur + 0.02);
   }
 }
 
-const PLAYERS: Record<SfxKind, (ctx: AudioContext, t: number) => void> = {
+/** Plays a sound described as data (see `SPECS`): tones with an optional glide, and filtered noise bursts. */
+function playSpec(ctx: AudioContext, t: number, spec: SfxSpec): void {
+  for (const tone of spec.tones) {
+    const start = t + tone.at;
+    const osc = ctx.createOscillator();
+    osc.type = tone.type ?? 'sine';
+    osc.frequency.setValueAtTime(tone.freq, start);
+    if (tone.to) osc.frequency.exponentialRampToValueAtTime(tone.to, start + tone.dur);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.linearRampToValueAtTime(tone.gain, start + Math.min(0.012, tone.dur / 3));
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + tone.dur);
+    osc.connect(gain).connect(masterBus(ctx));
+    osc.start(start);
+    osc.stop(start + tone.dur + 0.03);
+  }
+  for (const burst of spec.noise ?? []) {
+    const start = t + burst.at;
+    const source = noiseSource(ctx);
+    const filter = ctx.createBiquadFilter();
+    filter.type = burst.filter;
+    filter.Q.value = burst.q ?? 0.8;
+    filter.frequency.setValueAtTime(burst.from, start);
+    if (burst.to) filter.frequency.exponentialRampToValueAtTime(burst.to, start + burst.dur);
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(burst.gain, start);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + burst.dur);
+    source.connect(filter).connect(gain).connect(masterBus(ctx));
+    source.start(start);
+    source.stop(start + burst.dur + 0.03);
+  }
+}
+
+const HAND_MADE: Partial<Record<SfxKind, (ctx: AudioContext, t: number) => void>> = {
   swing,
   hit,
   bubbles,
@@ -209,6 +245,9 @@ export function playSfx(kind: SfxKind): void {
   if (!soundEnabled()) return;
   const ctx = getContext();
   if (!ctx) return;
-  PLAYERS[kind](ctx, ctx.currentTime + 0.005);
+  const t = ctx.currentTime + 0.005;
+  const handMade = HAND_MADE[kind];
+  if (handMade) handMade(ctx, t);
+  else playSpec(ctx, t, SPECS[kind as SpecKind]);
   log(kind);
 }

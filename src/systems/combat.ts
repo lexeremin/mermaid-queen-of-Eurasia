@@ -61,7 +61,7 @@ export type CombatEvent =
   | { type: 'playerDowned' }
   | { type: 'npcCharmed'; id: string }
   /** A hit landed on an enemy (from Rosa or a companion). */
-  | { type: 'enemyHit' }
+  | { type: 'enemyHit'; x: number; z: number; amount: number }
   /** Rosa used an ability (drives voice and sound). */
   | { type: 'cast'; ability: AbilityId }
   /** The boss entered his second or third phase. */
@@ -235,7 +235,7 @@ function hitEnemy(
   events: CombatEvent[],
 ): void {
   const dir = directionTo(from, e.pos);
-  events.push({ type: 'enemyHit' });
+  events.push({ type: 'enemyHit', x: e.pos.x, z: e.pos.z, amount: damage });
   if (damageEnemy(e, damage, dir, knockback, s.time)) {
     s.kills += 1;
     events.push({

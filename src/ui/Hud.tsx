@@ -5,6 +5,7 @@ import type { PlaceId } from '@/store/game-store';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
+import { DamageNumbers } from '@/ui/DamageNumbers';
 import { DialogueBox } from '@/ui/DialogueBox';
 import { ControlsPanel } from '@/ui/ControlsPanel';
 import { LoadingScreen } from '@/ui/LoadingScreen';
@@ -62,6 +63,7 @@ export function Hud() {
     <div className={touch ? 'hud hud-touch' : 'hud'}>
       {import.meta.env.DEV && <DebugOverlay />}
 
+      <DamageNumbers />
       <CombatHud touch={touch} />
 
       <div className="hud-top">
