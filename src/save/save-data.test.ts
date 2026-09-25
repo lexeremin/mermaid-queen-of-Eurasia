@@ -506,3 +506,24 @@ describe('save v8: forms', () => {
     expect(save.progress.forms).toEqual(['mermaid']);
   });
 });
+
+describe('save v9: archangels', () => {
+  it('migrates a v8 save to no archangels saved', () => {
+    const save = parseSave(good({ version: 8 }))!;
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.archangels).toEqual({ saved: [] });
+  });
+
+  it('keeps known children once, drops everything else', () => {
+    const save = parseSave(
+      good({ archangels: { saved: ['michael', 'michael', 'serafima', 'nope', 3] } }),
+    )!;
+    expect(save.archangels.saved).toEqual(['michael', 'serafima']);
+  });
+
+  it('survives hostile archangel data', () => {
+    for (const bad of [null, 4, 'x', [], { saved: 'all' }]) {
+      expect(parseSave(good({ archangels: bad }))!.archangels).toEqual({ saved: [] });
+    }
+  });
+});

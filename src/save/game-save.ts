@@ -6,6 +6,7 @@ import { parseSave, SAVE_VERSION, type SaveData } from '@/save/save-data';
 import { isSimRunning, useGameStore } from '@/store/game-store';
 import { useNpcStore, type NpcRuntime } from '@/store/npc-store';
 import { useProgressStore, currentStats } from '@/store/progress-store';
+import { useArchangelStore } from '@/store/archangel-store';
 import { useGardenStore } from '@/store/garden-store';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { syncDungeonWorld } from '@/game/dungeon-sim';
@@ -56,6 +57,7 @@ export function collectSave(): SaveData {
       pearlsTaken: [...useGardenStore.getState().pearlsTaken],
       shrineGift: useGardenStore.getState().shrineGift,
     },
+    archangels: { saved: [...useArchangelStore.getState().saved] },
     world: collectWorld(),
     dungeon: {
       hallsCleared: useDungeonStore.getState().hallsCleared,
@@ -118,6 +120,7 @@ export function applySave(save: SaveData, options: { keepPosition?: boolean } = 
     pearlsTaken: [...save.garden.pearlsTaken],
     shrineGift: save.garden.shrineGift,
   });
+  useArchangelStore.getState().hydrate(save.archangels);
   useDungeonStore.getState().hydrate(save.dungeon);
   syncDungeonWorld();
   rebuildGather();
@@ -177,6 +180,7 @@ export function resetProgress(): void {
   useProgressStore.getState().reset();
   useQuestStore.getState().reset();
   useGardenStore.getState().reset();
+  useArchangelStore.getState().reset();
   useDungeonStore.getState().reset();
   rebuildGather();
   useNpcStore.getState().reset();
@@ -210,6 +214,7 @@ export function startPersistence(): void {
   useProgressStore.subscribe(scheduleSave);
   useQuestStore.subscribe(scheduleSave);
   useGardenStore.subscribe(scheduleSave);
+  useArchangelStore.subscribe(scheduleSave);
   useDungeonStore.subscribe(scheduleSave);
   onSaveRequest(scheduleSave);
 

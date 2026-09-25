@@ -79,6 +79,8 @@ export type MapData = {
   lanes?: readonly Ribbon[];
   zones: readonly Zone[];
   npcs: readonly NpcSpot[];
+  /** The hidden archangel children (see data/archangels.ts). They talk like NPCs but are not persuadable. */
+  archangels?: readonly NpcSpot[];
   enemies: readonly EnemySpawn[];
   gatherables?: readonly Gatherable[];
   entrances?: readonly Entrance[];

@@ -6,6 +6,7 @@ import {
   currentReputation,
   onEnemyDefeatedForQuests,
 } from '@/game/quest-actions';
+import { useArchangelStore } from '@/store/archangel-store';
 import { useNpcStore } from '@/store/npc-store';
 import { useProgressStore } from '@/store/progress-store';
 import { useQuestStore } from '@/store/quest-store';
@@ -15,6 +16,7 @@ beforeEach(() => {
   useProgressStore.getState().reset();
   useQuestStore.getState().reset();
   useNpcStore.getState().reset();
+  useArchangelStore.getState().reset();
 });
 
 const log = () => useQuestStore.getState().log;
@@ -60,5 +62,30 @@ describe('quest actions', () => {
     acceptQuestAction('pearls-for-the-board');
     expect(claimQuestAction('pearls-for-the-board')).toBe(true);
     expect(useProgressStore.getState().keepsakes.pearl).toBe(1);
+  });
+});
+
+describe('Save the Archangels', () => {
+  it('is ready once all three are saved and pays the feather', () => {
+    useQuestStore.getState().setLog({
+      active: {},
+      completed: [
+        'first-notes',
+        'clear-the-gloom',
+        'pearls-for-the-board',
+        'a-court-forms',
+        'gavel-down',
+        'the-grand-tour',
+        'a-necklace-for-the-queen',
+      ],
+    });
+    expect(currentRank()).toBeGreaterThanOrEqual(2);
+    expect(acceptQuestAction('save-the-archangels')).toBe(true);
+    useArchangelStore.getState().save('michael');
+    useArchangelStore.getState().save('gabriel');
+    expect(claimQuestAction('save-the-archangels')).toBe(false);
+    useArchangelStore.getState().save('serafima');
+    expect(claimQuestAction('save-the-archangels')).toBe(true);
+    expect(countOf(useProgressStore.getState().bag, 'archangelFeather')).toBe(1);
   });
 });

@@ -1,4 +1,14 @@
-import { GATHER, HIT, SWING, WAVE, bubbleBlips, swell, type SfxKind } from '@/audio/recipes';
+import {
+  GATHER,
+  HIT,
+  JOY_ARPEGGIO,
+  SWING,
+  WAVE,
+  bubbleBlips,
+  giggleChirps,
+  swell,
+  type SfxKind,
+} from '@/audio/recipes';
 import { getContext, log, soundEnabled } from '@/audio/engine';
 
 let noise: AudioBuffer | null = null;
@@ -139,12 +149,59 @@ function gatherChime(ctx: AudioContext, t: number): void {
   });
 }
 
+/** Happy sounds for a saved archangel: a bright bell arpeggio with an echo, then a giggle of rising chirps. */
+function joy(ctx: AudioContext, t: number): void {
+  const { notes, gap, dur, gain, echoDelay, echoGain } = JOY_ARPEGGIO;
+  notes.forEach((freq, i) => {
+    for (const [delay, level] of [
+      [0, 1],
+      [echoDelay, echoGain],
+    ] as const) {
+      const start = t + i * gap + delay;
+      const osc = ctx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      const shimmer = ctx.createOscillator();
+      shimmer.type = 'sine';
+      shimmer.frequency.value = freq * 2;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.linearRampToValueAtTime(gain * level, start + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      const shimmerGain = ctx.createGain();
+      shimmerGain.gain.value = 0.3;
+      osc.connect(g);
+      shimmer.connect(shimmerGain).connect(g);
+      g.connect(ctx.destination);
+      osc.start(start);
+      shimmer.start(start);
+      osc.stop(start + dur + 0.02);
+      shimmer.stop(start + dur + 0.02);
+    }
+  });
+  for (const chirp of giggleChirps()) {
+    const start = t + chirp.at;
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(chirp.from, start);
+    osc.frequency.exponentialRampToValueAtTime(chirp.to, start + chirp.dur);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, start);
+    g.gain.linearRampToValueAtTime(chirp.gain, start + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, start + chirp.dur);
+    osc.connect(g).connect(ctx.destination);
+    osc.start(start);
+    osc.stop(start + chirp.dur + 0.02);
+  }
+}
+
 const PLAYERS: Record<SfxKind, (ctx: AudioContext, t: number) => void> = {
   swing,
   hit,
   bubbles,
   wave,
   gather: gatherChime,
+  joy,
 };
 
 /** Plays one of the synthesized sounds (no sample files needed). */

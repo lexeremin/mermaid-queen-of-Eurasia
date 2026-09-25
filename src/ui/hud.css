@@ -310,6 +310,11 @@
   line-height: 1.5;
 }
 
+.dialogue-narration {
+  font-style: italic;
+  color: var(--ui-gold-bright);
+}
+
 .dialogue-speaker {
   color: var(--ui-gold-bright);
   font-weight: 700;

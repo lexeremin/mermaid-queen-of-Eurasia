@@ -202,6 +202,18 @@ export const ITEMS = {
     slot: 'charm',
     bonuses: { maxHp: 40, manaRegen: 2, damagePct: 10 },
   }),
+  archangelFeather: item({
+    id: 'archangelFeather',
+    name: "Archangel's Feather",
+    description: '+30 health, +15 mana, +1.5 mana per second. Still warm from three small hugs.',
+    glyph: '*',
+    color: '#fff4d6',
+    rarity: 'rare',
+    stack: 1,
+    kind: 'equipment',
+    slot: 'charm',
+    bonuses: { maxHp: 30, maxMana: 15, manaRegen: 1.5 },
+  }),
 } as const satisfies Record<string, ItemDef>;
 
 export type ItemId = keyof typeof ITEMS;

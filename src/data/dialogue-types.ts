@@ -6,13 +6,20 @@ export type Condition =
   | { kind: 'relationshipBelow'; npc: string; value: number }
   | { kind: 'methodUnused'; npc: string; method: Method }
   | { kind: 'joined'; npc: string; value: boolean }
-  | { kind: 'following'; npc: string; value: boolean };
+  | { kind: 'following'; npc: string; value: boolean }
+  /** An archangel child has been saved. */
+  | { kind: 'saved'; child: string; value: boolean };
 
 export type Effect =
   | { type: 'relationship'; npc: string; delta: number }
   | { type: 'use'; npc: string; method: Method }
   | { type: 'join'; npc: string }
-  | { type: 'follow'; npc: string; value: boolean };
+  | { type: 'follow'; npc: string; value: boolean }
+  /** Saves an archangel child (see the archangel store). */
+  | { type: 'save'; child: string };
+
+/** The effects that change a person's relationship state. */
+export type NpcEffect = Exclude<Effect, { type: 'save' }>;
 
 export type Choice = {
   text: string;

@@ -7,6 +7,7 @@ import {
   claimQuest,
   emptyLog,
   isReady,
+  objectiveStates,
   rankIndex,
   recordKill,
   recordVisit,
@@ -24,6 +25,7 @@ const view = (over: Partial<WorldView> = {}): WorldView => ({
   joinedCount: 0,
   relationship: () => 0,
   dungeon: { hallsCleared: false, bossDefeated: false },
+  archangelsSaved: 0,
   ...over,
 });
 
@@ -230,5 +232,27 @@ describe('dungeon flag objectives', () => {
   it('puts the underground quests at ranks the earlier quests can reach', () => {
     expect(quest('into-the-depths').minRank).toBeLessThanOrEqual(2);
     expect(quest('end-the-corruption').minRank).toBeLessThanOrEqual(3);
+  });
+});
+
+describe('the archangel objective', () => {
+  const def = () => quest('save-the-archangels');
+  const progress = { counts: [0], visited: [] };
+
+  it('counts the children saved, so saving them before accepting still counts', () => {
+    expect(objectiveStates(def(), progress, view({ archangelsSaved: 2 }))[0]).toMatchObject({
+      have: 2,
+      need: 3,
+      done: false,
+      countable: true,
+    });
+    expect(isReady(def(), progress, view({ archangelsSaved: 3 }))).toBe(true);
+  });
+
+  it('reads as a count in the tracker and needs the rank of a favorite of Moscow', () => {
+    expect(trackerLine(def(), progress, view({ archangelsSaved: 1 }))).toBe(
+      'Save the Archangels: 1/3',
+    );
+    expect(def().minRank).toBe(2);
   });
 });

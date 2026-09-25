@@ -1,3 +1,4 @@
+import { ARCHANGELS } from '@/data/archangels';
 import type { MapData, Placement, Point, Ribbon } from '@/data/maps/types';
 import { UNDERGROUND } from '@/data/maps/underground';
 import { assembleWallRun, type WallRun } from '@/data/maps/wall-runs';
@@ -335,6 +336,7 @@ export const RED_SQUARE: MapData = {
     { id: 'arkady', x: -20.8, z: 10.5, rotY: -HALF_PI },
     { id: 'kolya', x: 52.2, z: 6.5, rotY: HALF_PI },
   ],
+  archangels: ARCHANGELS.map((a) => ({ id: a.id, ...a.spot })),
   enemies: [
     { id: 'tycoon-basil', kind: 'tycoon', x: -3, z: -26 },
     { id: 'speaker-basil', kind: 'speaker', x: 4, z: -21 },

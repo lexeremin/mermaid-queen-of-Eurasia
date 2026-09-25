@@ -1,6 +1,6 @@
 /** Parameters for the synthesized sounds. Pure data and math so it can be tested; `sfx.ts` plays them. */
 
-export type SfxKind = 'swing' | 'hit' | 'bubbles' | 'wave' | 'gather';
+export type SfxKind = 'swing' | 'hit' | 'bubbles' | 'wave' | 'gather' | 'joy';
 
 /** A soft two-note chime for picking up a herb or pearl. */
 export const GATHER = {
@@ -64,4 +64,35 @@ export function swell(t: number, attack: number, dur: number): number {
   if (t < attack) return t / attack;
   const k = (t - attack) / (dur - attack);
   return 0.5 * (1 + Math.cos(Math.PI * k));
+}
+
+export type Chirp = { at: number; from: number; to: number; dur: number; gain: number };
+
+/** A bright rising arpeggio (C major pentatonic, two octaves) with a quieter echo, the sound of a saved child. */
+export const JOY_ARPEGGIO = {
+  notes: [523.25, 659.25, 783.99, 1046.5, 1318.5, 1567.98] as readonly number[],
+  gap: 0.09,
+  dur: 0.5,
+  gain: 0.1,
+  echoDelay: 0.16,
+  echoGain: 0.4,
+} as const;
+
+/** A child's giggle: a run of quick chirps that rise and fall in pitch, each a little quieter. */
+export function giggleChirps(random: () => number = Math.random): Chirp[] {
+  const count = 6;
+  const chirps: Chirp[] = [];
+  let at = 0.45;
+  for (let i = 0; i < count; i++) {
+    const base = 880 + random() * 220 + (i % 2 === 0 ? 0 : 140);
+    chirps.push({
+      at,
+      from: base,
+      to: base * (i % 2 === 0 ? 1.35 : 0.85),
+      dur: 0.07 + random() * 0.02,
+      gain: 0.12 * (1 - i * 0.1),
+    });
+    at += 0.085 + random() * 0.03;
+  }
+  return chirps;
 }

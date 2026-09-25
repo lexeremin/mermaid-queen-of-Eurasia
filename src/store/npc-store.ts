@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import type { Effect, Method } from '@/data/dialogue-types';
+import type { Method, NpcEffect } from '@/data/dialogue-types';
+import { useArchangelStore } from '@/store/archangel-store';
 import { NPCS } from '@/data/npcs';
 import type { DialogueContext } from '@/systems/dialogue';
 import { clampRelationship } from '@/systems/relationship';
@@ -14,7 +15,7 @@ export type NpcRuntime = {
 
 type NpcState = {
   npcs: Readonly<Record<string, NpcRuntime>>;
-  apply: (effect: Effect) => void;
+  apply: (effect: NpcEffect) => void;
   hydrate: (saved: Readonly<Record<string, NpcRuntime>>) => void;
   reset: () => void;
 };
@@ -55,5 +56,6 @@ export function npcContext(): DialogueContext {
     methodUsed: (id, method) => npcs()[id]?.used.includes(method) ?? false,
     joined: (id) => npcs()[id]?.joined ?? false,
     following: (id) => npcs()[id]?.following ?? false,
+    saved: (id) => useArchangelStore.getState().saved.includes(id),
   };
 }

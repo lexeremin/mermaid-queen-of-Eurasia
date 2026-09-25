@@ -11,7 +11,7 @@ function heartGeometry(): ExtrudeGeometry {
 }
 
 /** Floating heart above a mesmerized man's head. */
-export function HeartBuff() {
+export function HeartBuff({ y = 2.75 }: { y?: number }) {
   const ref = useRef<Group>(null);
   const geometry = useMemo(() => heartGeometry(), []);
 
@@ -19,13 +19,13 @@ export function HeartBuff() {
     const g = ref.current;
     if (!g) return;
     const t = clock.elapsedTime;
-    g.position.y = 2.75 + Math.sin(t * 2.2) * 0.1;
+    g.position.y = y + Math.sin(t * 2.2) * 0.1;
     g.rotation.y = t * 1.6;
     g.scale.setScalar(0.42 + Math.sin(t * 5) * 0.03);
   });
 
   return (
-    <group ref={ref} position={[0, 2.75, 0]}>
+    <group ref={ref} position={[0, y, 0]}>
       <mesh geometry={geometry}>
         <meshBasicMaterial color="#ff5c8a" />
       </mesh>

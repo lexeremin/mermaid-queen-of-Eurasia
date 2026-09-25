@@ -55,7 +55,7 @@ export function ActorRings() {
 
     let ng = 0;
     const npcs = useNpcStore.getState().npcs;
-    for (const spot of currentMap.npcs) {
+    for (const spot of [...currentMap.npcs, ...(currentMap.archangels ?? [])]) {
       if (npcs[spot.id]?.following || !near(spot.x, spot.z) || ng >= MAX_NPC) continue;
       place(g, ng++, spot.x, spot.z, NPC_RADIUS);
     }

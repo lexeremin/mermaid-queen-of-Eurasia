@@ -6,6 +6,7 @@ import { SURFACE_LABELS, toScreen, type MapView, type Region } from '@/game/map/
 import { getRenderPosition, sim } from '@/game/sim';
 import { currentMap } from '@/game/world/current-map';
 import { useDungeonStore } from '@/store/dungeon-store';
+import { useArchangelStore } from '@/store/archangel-store';
 import { useNpcStore } from '@/store/npc-store';
 import { defOf } from '@/systems/enemy-ai';
 
@@ -129,6 +130,13 @@ export function drawMap(
       if (following[n.id]?.following) continue;
       const p = toScreen(view, n.x, n.z);
       dot(ctx, p.x, p.y, m * 0.7, '#5dff8f');
+    }
+    // The hidden archangels only appear on the map once they are saved.
+    const saved = useArchangelStore.getState().saved;
+    for (const n of currentMap.archangels ?? []) {
+      if (!saved.includes(n.id)) continue;
+      const p = toScreen(view, n.x, n.z);
+      dot(ctx, p.x, p.y, m * 0.7, '#ffe08a');
     }
   }
   const c = combat.companion;

@@ -33,7 +33,7 @@ export function buildCollisionWorld(map: MapData): CollisionWorld {
     for (const run of water.swimRuns) waterColliders.push(...polylineToCapsules(run, radius));
   }
   colliders.push(...map.colliders);
-  for (const npc of map.npcs)
+  for (const npc of [...map.npcs, ...(map.archangels ?? [])])
     colliders.push({ kind: 'circle', x: npc.x, z: npc.z, r: NPC_COLLIDER_RADIUS });
   return { bounds: map.bounds, colliders, water: waterColliders };
 }

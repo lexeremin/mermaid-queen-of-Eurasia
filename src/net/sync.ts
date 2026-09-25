@@ -21,6 +21,7 @@ const progressKey = (save: SaveData): string =>
     save.progress,
     save.quests,
     save.garden,
+    save.archangels,
     save.dungeon,
   ]);
 

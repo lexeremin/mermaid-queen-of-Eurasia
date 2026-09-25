@@ -35,6 +35,8 @@ export type WorldView = {
   relationship: (npc: string) => number;
   /** Which dungeon milestones have been reached. */
   dungeon: Readonly<Record<DungeonFlag, boolean>>;
+  /** How many archangel children have been saved. */
+  archangelsSaved: number;
 };
 
 export const emptyLog = (): QuestLog => ({ active: {}, completed: [] });
@@ -121,6 +123,11 @@ export function objectiveState(
     case 'flag':
       have = view.dungeon[objective.flag] ? 1 : 0;
       text = objective.label;
+      break;
+    case 'save':
+      need = objective.count;
+      have = view.archangelsSaved;
+      text = 'Save the archangels';
       break;
   }
   return {

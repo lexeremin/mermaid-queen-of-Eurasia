@@ -4,6 +4,7 @@ import { QUEST_BY_ID } from '@/data/quests';
 import { unlockMermaid } from '@/game/form-sim';
 import { grantXp } from '@/game/progress-actions';
 import { track } from '@/net/stats';
+import { useArchangelStore } from '@/store/archangel-store';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { useGameStore } from '@/store/game-store';
 import { useNpcStore } from '@/store/npc-store';
@@ -39,6 +40,7 @@ export function worldView(): WorldView {
       hallsCleared: dungeon.hallsCleared,
       bossDefeated: dungeon.bossDefeated,
     },
+    archangelsSaved: useArchangelStore.getState().saved.length,
   };
 }
 
@@ -120,4 +122,5 @@ export function startQuestHooks(): void {
   useProgressStore.subscribe(refresh);
   useNpcStore.subscribe(refresh);
   useDungeonStore.subscribe(refresh);
+  useArchangelStore.subscribe(refresh);
 }

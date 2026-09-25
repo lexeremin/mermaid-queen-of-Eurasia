@@ -1,7 +1,7 @@
 import { clearPressed, input } from '@/input/input-state';
 import { useEffect } from 'react';
 import { AVATARS } from '@/data/avatars';
-import { NPC_BY_ID } from '@/data/npcs';
+import { speakerOf } from '@/data/speakers';
 import { methodLabel } from '@/data/persuasion';
 import { treeFor, useDialogueStore } from '@/store/dialogue-store';
 import { npcContext, useNpcStore } from '@/store/npc-store';
@@ -14,7 +14,7 @@ export function DialogueBox() {
   const close = useDialogueStore((s) => s.close);
   const npcState = useNpcStore((s) => (active ? s.npcs[active.npcId] : undefined));
 
-  const npc = active ? NPC_BY_ID.get(active.npcId) : undefined;
+  const npc = active ? speakerOf(active.npcId) : undefined;
   const node = active ? treeFor(active.npcId)?.nodes[active.nodeId] : undefined;
   const ctx = npcContext();
   const choices = node ? visibleChoices(node, ctx) : [];
@@ -44,8 +44,9 @@ export function DialogueBox() {
     return () => window.removeEventListener('keydown', onKey);
   });
 
-  if (!active || !npc || !node || !npcState) return null;
-  const tier = tierOf(npcState.relationship);
+  if (!active || !npc || !node) return null;
+  const tier = npcState ? tierOf(npcState.relationship) : null;
+  const narration = node.speaker === 'narrator';
   const speaker = node.speaker === 'rosa' ? 'Rosa' : npc.name;
 
   return (
@@ -63,20 +64,22 @@ export function DialogueBox() {
             <strong>{npc.name}</strong>
             <span>{npc.title}</span>
           </div>
-          <div
-            className="affection"
-            aria-label={`Affection ${npcState.relationship} of 100, ${tier}`}
-          >
-            <div className="affection-bar">
-              <div className="affection-fill" style={{ width: `${npcState.relationship}%` }} />
-              <i style={{ left: `${WARMING_AT}%` }} />
-              <i style={{ left: `${MESMERIZED_AT}%` }} />
+          {npcState && tier && (
+            <div
+              className="affection"
+              aria-label={`Affection ${npcState.relationship} of 100, ${tier}`}
+            >
+              <div className="affection-bar">
+                <div className="affection-fill" style={{ width: `${npcState.relationship}%` }} />
+                <i style={{ left: `${WARMING_AT}%` }} />
+                <i style={{ left: `${MESMERIZED_AT}%` }} />
+              </div>
+              <span className={`tier tier-${tier}`}>
+                {tier === 'mesmerized' || npcState.joined ? '♥ ' : ''}
+                {npcState.joined ? 'joined' : tier}
+              </span>
             </div>
-            <span className={`tier tier-${tier}`}>
-              {tier === 'mesmerized' || npcState.joined ? '♥ ' : ''}
-              {npcState.joined ? 'joined' : tier}
-            </span>
-          </div>
+          )}
           <button
             type="button"
             className="dialogue-close"
@@ -87,8 +90,8 @@ export function DialogueBox() {
           </button>
         </div>
 
-        <p className="dialogue-text">
-          <span className="dialogue-speaker">{speaker}:</span> {node.text}
+        <p className={narration ? 'dialogue-text dialogue-narration' : 'dialogue-text'}>
+          {!narration && <span className="dialogue-speaker">{speaker}:</span>} {node.text}
         </p>
 
         {isMenu ? (

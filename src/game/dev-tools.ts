@@ -2,6 +2,7 @@ import { Vector3, type Camera } from 'three';
 import { loot, spawnDrops, spawnPickup } from '@/game/loot-sim';
 import { grantXp } from '@/game/progress-actions';
 import { gather } from '@/game/gather-sim';
+import { useArchangelStore } from '@/store/archangel-store';
 import { useGardenStore } from '@/store/garden-store';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { recall } from '@/game/recall-sim';
@@ -38,6 +39,7 @@ declare global {
       audioLog: typeof audioLog;
       renderStats: typeof renderStats;
       garden: typeof useGardenStore;
+      archangels: typeof useArchangelStore;
       gather: typeof gather;
       progress: typeof useProgressStore;
       quests: typeof useQuestStore;
@@ -64,6 +66,7 @@ export function installDevTools(): void {
     audioLog,
     renderStats,
     garden: useGardenStore,
+    archangels: useArchangelStore,
     gather,
     progress: useProgressStore,
     quests: useQuestStore,

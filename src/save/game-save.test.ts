@@ -3,6 +3,7 @@ import { combat, resetCombat } from '@/game/combat-sim';
 import { gather, rebuildGather } from '@/game/gather-sim';
 import { loot } from '@/game/loot-sim';
 import { currentMap } from '@/game/world/current-map';
+import { useArchangelStore } from '@/store/archangel-store';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { useGardenStore } from '@/store/garden-store';
 import { resetSim, sim } from '@/game/sim';
@@ -32,6 +33,7 @@ describe('game save', () => {
     useGameStore.getState().setForm('human');
     useGardenStore.getState().reset();
     useDungeonStore.getState().reset();
+    useArchangelStore.getState().reset();
     resetCombat();
     rebuildGather();
   });
@@ -95,6 +97,15 @@ describe('game save', () => {
     expect(restored.equipment.weapon).toBe('silverTrident');
     expect(restored.bag.filter((s) => s?.id === 'healingTea')[0]?.qty).toBe(3);
     expect(restored.awarded).toEqual(['mes:grisha']);
+  });
+
+  it('round-trips the archangels saved', () => {
+    useArchangelStore.getState().save('gabriel');
+    const out = collectSave();
+    expect(out.archangels.saved).toEqual(['gabriel']);
+    useArchangelStore.getState().reset();
+    applySave(parseSave(JSON.parse(JSON.stringify(out)))!);
+    expect(useArchangelStore.getState().saved).toEqual(['gabriel']);
   });
 
   it('round-trips the quest log', () => {

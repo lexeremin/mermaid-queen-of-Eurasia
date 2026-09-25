@@ -1,5 +1,5 @@
 import { useGameStore } from '@/store/game-store';
-import { NPC_BY_ID } from '@/data/npcs';
+import { speakerOf } from '@/data/speakers';
 import { visitPlace } from '@/game/GameLoop';
 import type { PlaceId } from '@/store/game-store';
 import { useDialogueStore } from '@/store/dialogue-store';
@@ -113,7 +113,7 @@ export function Hud() {
 
       {nearbyNpc && !paused && !inventoryOpen && !questPanel && !dialogueOpen && (
         <button type="button" className="talk-prompt" onClick={() => openDialogue(nearbyNpc)}>
-          {touch ? 'TALK' : 'E'} · {NPC_BY_ID.get(nearbyNpc)?.name}
+          {touch ? 'TALK' : 'E'} · {speakerOf(nearbyNpc)?.name}
         </button>
       )}
 

@@ -1,3 +1,4 @@
+import { ARCHANGEL_BY_ID } from '@/data/archangels';
 import { METHODS, type Method } from '@/data/dialogue-types';
 import { NPCS } from '@/data/npcs';
 import { QUEST_BY_ID } from '@/data/quests';
@@ -11,7 +12,7 @@ import { BAG_SIZE, MAX_KEEPSAKES, isKeepsake } from '@/systems/inventory';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 export type SavedNpc = {
   relationship: number;
@@ -36,6 +37,8 @@ export type SavedQuests = {
   active: Record<string, { counts: number[]; visited: string[] }>;
   completed: string[];
 };
+
+export type SavedArchangels = { saved: string[] };
 
 export type SavedGarden = { pearlsTaken: string[]; shrineGift: boolean };
 
@@ -82,6 +85,7 @@ export type SaveData = {
   progress: SavedProgress;
   quests: SavedQuests;
   garden: SavedGarden;
+  archangels: SavedArchangels;
   dungeon: SavedDungeon;
   /** Null in older saves and in cloud copies. */
   world: SavedWorld | null;
@@ -96,6 +100,8 @@ export const MIGRATIONS: Migrations = {
   2: (data) => ({ ...data, quests: defaultSavedQuests() }),
   3: (data) => ({ ...data, garden: defaultSavedGarden() }),
   4: (data) => ({ ...data, dungeon: defaultSavedDungeon() }),
+  // v9: the archangel children saved so far.
+  8: (data) => ({ ...data, archangels: defaultSavedArchangels() }),
   // v8: unlocked forms (a hero saved as a mermaid keeps the form).
   7: (data) => {
     const hero = isRecord(data.hero) ? data.hero : {};
@@ -135,6 +141,8 @@ export const MIGRATIONS: Migrations = {
     };
   },
 };
+
+export const defaultSavedArchangels = (): SavedArchangels => ({ saved: [] });
 
 export const defaultSavedGarden = (): SavedGarden => ({ pearlsTaken: [], shrineGift: false });
 
@@ -242,6 +250,17 @@ function parseProgress(raw: unknown): SavedProgress {
 const PEARL_IDS: ReadonlySet<string> = new Set(
   (RED_SQUARE.gatherables ?? []).filter((g) => g.kind === 'pearl').map((g) => g.id),
 );
+
+function parseArchangels(raw: unknown): SavedArchangels {
+  const result = defaultSavedArchangels();
+  if (!isRecord(raw) || !Array.isArray(raw.saved)) return result;
+  result.saved = [
+    ...new Set(
+      raw.saved.filter((id): id is string => typeof id === 'string' && ARCHANGEL_BY_ID.has(id)),
+    ),
+  ];
+  return result;
+}
 
 function parseGarden(raw: unknown): SavedGarden {
   const result = defaultSavedGarden();
@@ -423,6 +442,7 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
     progress,
     quests: parseQuests(data.quests),
     garden: parseGarden(data.garden),
+    archangels: parseArchangels(data.archangels),
     dungeon: parseDungeon(data.dungeon),
     world: parseWorld(data.world),
   };

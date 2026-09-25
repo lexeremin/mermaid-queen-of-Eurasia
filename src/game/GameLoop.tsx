@@ -60,7 +60,7 @@ const ndc = new Vector2();
 const raycaster = new Raycaster();
 const stepper = createFixedStepper(SIM_STEP, MAX_STEPS_PER_FRAME);
 const STUCK_SECONDS = 0.5;
-const SPOTS = currentMap.npcs;
+const SPOTS = [...currentMap.npcs, ...(currentMap.archangels ?? [])];
 const ARENA = currentMap.zones.find((z) => z.id === 'ug-arena')?.box ?? null;
 const PLACE_OF_ASSET = new Map<string, PlaceId>([
   ['questBoard', 'board'],

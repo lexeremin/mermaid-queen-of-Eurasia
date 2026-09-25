@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import type { DialogueTree } from '@/data/dialogue-types';
+import { ARCHANGEL_BY_ID, buildArchangelTree } from '@/data/archangels';
 import { NPC_BY_ID } from '@/data/npcs';
 import { buildPersuasionTree } from '@/data/persuasion';
+import { saveArchangel } from '@/game/archangel-actions';
 import { combat } from '@/game/combat-sim';
 import { useGameStore } from '@/store/game-store';
 import { npcContext, useNpcStore } from '@/store/npc-store';
@@ -23,9 +25,10 @@ const trees = new Map<string, DialogueTree>();
 export function treeFor(npcId: string): DialogueTree | null {
   const cached = trees.get(npcId);
   if (cached) return cached;
+  const child = ARCHANGEL_BY_ID.get(npcId);
   const npc = NPC_BY_ID.get(npcId);
-  if (!npc) return null;
-  const tree = buildPersuasionTree(npc);
+  if (!child && !npc) return null;
+  const tree = child ? buildArchangelTree(child) : buildPersuasionTree(npc!);
   trees.set(npcId, tree);
   return tree;
 }
@@ -49,6 +52,10 @@ export const useDialogueStore = create<DialogueState>((set, get) => ({
     if (!tree || !node) return;
     const step = advance(node, index);
     for (const effect of step.effects) {
+      if (effect.type === 'save') {
+        saveArchangel(effect.child);
+        continue;
+      }
       const charmed = (combat.charmed[active.npcId] ?? 0) > combat.time;
       useNpcStore.getState().apply(charmed ? charmBonus(effect) : effect);
       if (effect.type === 'follow') {

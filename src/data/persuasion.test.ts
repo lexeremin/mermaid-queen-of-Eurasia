@@ -16,6 +16,7 @@ function makeContext(state: {
     methodUsed: (_npc, method) => state.used.has(method),
     joined: () => state.joined,
     following: () => state.following === true,
+    saved: () => false,
   };
 }
 

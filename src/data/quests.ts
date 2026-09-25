@@ -10,7 +10,9 @@ export type Objective =
   | { kind: 'collect'; item: ItemId; count: number }
   | { kind: 'level'; level: number }
   /** A dungeon milestone (see the dungeon store): the halls cleared, the boss beaten. */
-  | { kind: 'flag'; flag: DungeonFlag; label: string };
+  | { kind: 'flag'; flag: DungeonFlag; label: string }
+  /** Archangel children saved (see the archangel store). */
+  | { kind: 'save'; count: number };
 
 export type DungeonFlag = 'hallsCleared' | 'bossDefeated';
 
@@ -217,6 +219,22 @@ export const QUESTS: readonly QuestDef[] = [
       items: [
         { id: 'healingTea', qty: 4 },
         { id: 'coldKvass', qty: 4 },
+      ],
+    },
+  },
+  {
+    id: 'save-the-archangels',
+    title: 'Save the Archangels',
+    blurb:
+      'Michael, Gabriel and Serafima, your three small archangels, are lost somewhere in Moscow. Michael hides where the fir trees guard the far end of Red Square, Gabriel among the kiosks at the end of the GUM gallery, and Serafima keeps a little flame on the far bank of the Moskva. Find them and answer their questions with a mother’s heart.',
+    minRank: 2,
+    objectives: [{ kind: 'save', count: 3 }],
+    reward: {
+      xp: 250,
+      rep: 30,
+      items: [
+        { id: 'archangelFeather', qty: 1 },
+        { id: 'healingTea', qty: 3 },
       ],
     },
   },

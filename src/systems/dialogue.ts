@@ -12,6 +12,7 @@ export type DialogueContext = {
   methodUsed: (npc: string, method: Method) => boolean;
   joined: (npc: string) => boolean;
   following: (npc: string) => boolean;
+  saved: (child: string) => boolean;
 };
 
 const MAX_ROUTER_HOPS = 12;
@@ -28,6 +29,8 @@ export function isMet(condition: Condition, ctx: DialogueContext): boolean {
       return ctx.joined(condition.npc) === condition.value;
     case 'following':
       return ctx.following(condition.npc) === condition.value;
+    case 'saved':
+      return ctx.saved(condition.child) === condition.value;
   }
 }
 
@@ -79,7 +82,7 @@ export function advance(node: DialogueNode, choiceIndex: number | null): Advance
 export const CHARM_PERSUASION_BONUS = 1.5;
 
 /** While an NPC is charmed by the Aura, positive relationship gains are multiplied. */
-export function charmBonus(effect: Effect): Effect {
+export function charmBonus<T extends Effect>(effect: T): T {
   if (effect.type !== 'relationship' || effect.delta <= 0) return effect;
   return { ...effect, delta: Math.round(effect.delta * CHARM_PERSUASION_BONUS) };
 }

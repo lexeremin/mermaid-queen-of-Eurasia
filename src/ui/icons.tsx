@@ -503,6 +503,31 @@ const ITEM_ICONS: Record<ItemId, ReactNode> = {
       <Sparkle x={39} y={9} s={2.2} />
     </>
   ),
+  archangelFeather: (
+    <>
+      <ellipse cx="24" cy="9" rx="10" ry="3.4" fill="none" stroke="#ffd36e" strokeWidth={2.6} />
+      <path
+        d="M12 40 Q6 22 20 14 Q34 8 40 12 Q40 28 28 36 Q20 40 12 40 Z"
+        fill="#fff4d6"
+        {...line}
+      />
+      <path
+        d="M12 40 Q22 28 34 16"
+        fill="none"
+        stroke={INK}
+        strokeWidth={2.2}
+        strokeLinecap="round"
+      />
+      <path
+        d="M20 30 L15 27 M25 25 L20 21 M30 20 L26 16 M22 33 L27 33 M27 28 L32 28"
+        fill="none"
+        stroke="#e6c98f"
+        strokeWidth={1.8}
+        strokeLinecap="round"
+      />
+      <Sparkle x={39} y={30} s={2.2} />
+    </>
+  ),
   songbirdWhistle: (
     <>
       <path
