@@ -17,11 +17,11 @@ const gear: Equipment = { weapon: 'trident', outfit: 'tweedJacket', charm: null 
 describe('bag', () => {
   it('stacks up to the item limit and overflows into a new slot', () => {
     let bag = emptyBag();
-    bag = addToBag(bag, 'healingTea', 9).bag;
+    bag = addToBag(bag, 'healingTea', 1000).bag;
     const r = addToBag(bag, 'healingTea', 3);
     expect(r.added).toBe(3);
-    expect(r.bag.filter((s) => s?.id === 'healingTea').map((s) => s?.qty)).toEqual([9, 3]);
-    expect(countOf(r.bag, 'healingTea')).toBe(12);
+    expect(r.bag.filter((s) => s?.id === 'healingTea').map((s) => s?.qty)).toEqual([1000, 3]);
+    expect(countOf(r.bag, 'healingTea')).toBe(1003);
   });
 
   it('does not mutate the input bag', () => {

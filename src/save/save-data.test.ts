@@ -183,7 +183,7 @@ describe('save v2: progress', () => {
           xp: -5,
           awarded: ['a', 'a', 7, 'x'.repeat(200)],
           bag: [
-            { id: 'healingTea', qty: 9999 },
+            { id: 'healingTea', qty: 99999 },
             { id: 'hackerSword', qty: 1 },
             'nope',
             { id: 'silverTrident', qty: -3 },
@@ -197,7 +197,7 @@ describe('save v2: progress', () => {
     expect(save.progress.xp).toBe(0);
     expect(save.progress.awarded).toEqual(['a']);
     expect(save.progress.bag).toHaveLength(20);
-    expect(save.progress.bag[0]).toEqual({ id: 'healingTea', qty: 9 });
+    expect(save.progress.bag[0]).toEqual({ id: 'healingTea', qty: 1000 });
     expect(save.progress.bag[1]).toBeNull();
     expect(save.progress.bag[3]).toEqual({ id: 'silverTrident', qty: 1 });
     expect(save.progress.equipment).toEqual({
