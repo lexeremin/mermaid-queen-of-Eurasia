@@ -22,6 +22,49 @@ export const TRIDENT = {
   damage: 14,
   knockback: 2.2,
 } as const;
+/**
+ * The three swings of the trident's auto-attack, in order: a forehand slash across the front, a wider backhand
+ * back again, and a slower finishing chop that reaches further, is narrow and hits much harder.
+ */
+export type ComboStep = {
+  range: number;
+  halfAngle: number;
+  /** Multiplier of `TRIDENT.damage`. */
+  damage: number;
+  knockback: number;
+  /** Length of the swing animation, and the time before the next attack can start. */
+  swing: number;
+  cooldown: number;
+};
+export const TRIDENT_COMBO: readonly [ComboStep, ComboStep, ComboStep] = [
+  {
+    range: 3.4,
+    halfAngle: TRIDENT.halfAngle,
+    damage: 1,
+    knockback: 2.2,
+    swing: 0.34,
+    cooldown: 0.45,
+  },
+  {
+    range: 3.4,
+    halfAngle: (75 * Math.PI) / 180,
+    damage: 1,
+    knockback: 2.2,
+    swing: 0.34,
+    cooldown: 0.45,
+  },
+  {
+    range: 4.1,
+    halfAngle: (35 * Math.PI) / 180,
+    damage: 1.7,
+    knockback: 4.6,
+    swing: 0.5,
+    cooldown: 0.75,
+  },
+];
+/** The chain starts over after this many seconds without an attack. */
+export const COMBO_RESET = 1.1;
+
 export const AIM_ASSIST = {
   range: 4.8,
   maxAngle: (80 * Math.PI) / 180,
@@ -132,4 +175,4 @@ export function spendAbility(cooldowns: Cooldowns, mana: number, id: AbilityId):
 
 /** Fraction of the cooldown remaining, 0 (ready) to 1 (just used). */
 export const cooldownFraction = (cooldowns: Cooldowns, id: AbilityId): number =>
-  ABILITIES[id].cooldown === 0 ? 0 : cooldowns[id] / ABILITIES[id].cooldown;
+  ABILITIES[id].cooldown === 0 ? 0 : Math.min(1, cooldowns[id] / ABILITIES[id].cooldown);

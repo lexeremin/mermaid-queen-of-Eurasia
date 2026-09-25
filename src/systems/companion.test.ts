@@ -121,6 +121,41 @@ describe('fighting', () => {
   });
 });
 
+describe('the three-swing chain', () => {
+  const enemy = (x: number, z: number) => ({ id: 'e1', pos: { x, z }, radius: 0.5 });
+
+  it('swings forehand, backhand and a heavier finisher in turn', () => {
+    const c = createCompanion('p', { x: 0, z: 0 }, north);
+    const kinds: number[] = [];
+    const hits = [];
+    for (let t = 0; t < 8; t += DT) {
+      const before = c.swing;
+      const hit = stepCompanion(c, ctx({ targets: [enemy(0, -3)] }));
+      if (c.swing > before) kinds.push(c.swingKind);
+      if (hit) hits.push(hit);
+    }
+    expect(kinds.slice(0, 6)).toEqual([0, 1, 2, 0, 1, 2]);
+    expect(hits[2]!.damage).toBeGreaterThan(hits[0]!.damage);
+    expect(hits[2]!.knockback).toBeGreaterThan(hits[0]!.knockback);
+    expect(hits[1]!.damage).toBe(hits[0]!.damage);
+  });
+
+  it('starts over after a rest', () => {
+    const c = createCompanion('p', { x: 0, z: 0 }, north);
+    run(c, 1, { targets: [enemy(0, -3)] });
+    expect(c.combo).toBeGreaterThan(0);
+    run(c, 3, { targets: [] });
+    let began = false;
+    for (let t = 0; t < 3 && !began; t += DT) {
+      const before = c.swing;
+      stepCompanion(c, ctx({ targets: [enemy(0, -3)] }));
+      began = c.swing > before;
+    }
+    expect(began).toBe(true);
+    expect(c.swingKind).toBe(0);
+  });
+});
+
 describe('stopping and starting', () => {
   it('does not stutter between walking and standing while keeping pace with a walking Rosa', () => {
     const c = createCompanion('p', { x: 0, z: 0 }, north);

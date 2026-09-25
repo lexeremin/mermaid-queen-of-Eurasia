@@ -27,6 +27,15 @@ export const COMPANION = {
   swingTime: 0.3,
 } as const;
 
+/** Prince Sasha's three sword swings, in order: forehand, backhand and a heavier finishing chop. */
+export const COMPANION_COMBO = [
+  { damage: 1, knockback: 2.4, swing: 0.3, recover: 1 },
+  { damage: 1, knockback: 2.4, swing: 0.3, recover: 1 },
+  { damage: 1.6, knockback: 4.2, swing: 0.42, recover: 1.6 },
+] as const;
+/** His chain starts over after this long without a swing. */
+export const COMPANION_COMBO_RESET = 1.6;
+
 export type CompanionState = 'follow' | 'chase' | 'windup' | 'strike' | 'recover';
 
 export type Companion = {
@@ -38,8 +47,12 @@ export type Companion = {
   state: CompanionState;
   timer: number;
   target: string | null;
-  /** Seconds left of the sword swing animation. */
+  /** Seconds left of the sword swing animation, and which of the three swings it is. */
   swing: number;
+  swingKind: number;
+  /** The swing he will make next, and the seconds since his last one. */
+  combo: number;
+  sinceSwing: number;
   /** Set on the step where the sword lands, so the hit is applied exactly once. */
   hitPending: boolean;
   /** Walking to his spot beside Rosa; starts and stops at different distances so he does not stutter. */
@@ -50,7 +63,7 @@ export type Companion = {
 
 export type CompanionTarget = { id: string; pos: Vec2; radius: number };
 
-export type CompanionHit = { enemyId: string; damage: number; dir: Vec2 };
+export type CompanionHit = { enemyId: string; damage: number; dir: Vec2; knockback: number };
 
 const dist = (a: Vec2, b: Vec2): number => Math.hypot(b.x - a.x, b.z - a.z);
 
@@ -76,6 +89,9 @@ export function createCompanion(id: string, player: Vec2, playerFacing: Vec2): C
     timer: 0,
     target: null,
     swing: 0,
+    swingKind: 0,
+    combo: 0,
+    sinceSwing: COMPANION_COMBO_RESET,
     hitPending: false,
     repositioning: false,
     lastPlayer: { x: player.x, z: player.z },
@@ -89,6 +105,16 @@ export type CompanionContext = {
   targets: readonly CompanionTarget[];
   world: CollisionWorld;
 };
+
+/** He raises his sword: the swing (of the chain) starts now, so the blow lands as the slash passes the front. */
+function beginSwing(c: Companion): void {
+  if (c.sinceSwing > COMPANION_COMBO_RESET) c.combo = 0;
+  c.swingKind = c.combo;
+  c.swing = COMPANION_COMBO[c.swingKind]?.swing ?? COMPANION.swingTime;
+  c.sinceSwing = 0;
+  c.state = 'windup';
+  c.timer = COMPANION.windup;
+}
 
 function walk(c: Companion, dir: Vec2, speed: number, dt: number, world: CollisionWorld): void {
   c.pos = resolveCircle(
@@ -119,6 +145,7 @@ function pickTarget(c: Companion, ctx: CompanionContext): CompanionTarget | null
 export function stepCompanion(c: Companion, ctx: CompanionContext): CompanionHit | null {
   const { dt, player, world } = ctx;
   c.swing = Math.max(0, c.swing - dt);
+  c.sinceSwing += dt;
   c.hitPending = false;
   c.prev = { x: c.pos.x, z: c.pos.z };
   const wasPlayer = c.lastPlayer;
@@ -160,8 +187,7 @@ export function stepCompanion(c: Companion, ctx: CompanionContext): CompanionHit
       const dir = directionTo(c.pos, next.pos);
       c.facing = dir;
       if (dist(c.pos, next.pos) <= next.radius + COMPANION.reach) {
-        c.state = 'windup';
-        c.timer = COMPANION.windup;
+        beginSwing(c);
       } else {
         walk(c, dir, COMPANION.speed * 1.15, dt, world);
       }
@@ -177,11 +203,17 @@ export function stepCompanion(c: Companion, ctx: CompanionContext): CompanionHit
       if (c.timer > 0) return null;
       c.state = 'strike';
       c.timer = COMPANION.strike;
-      c.swing = COMPANION.swingTime;
       c.hitPending = true;
+      const step = COMPANION_COMBO[c.swingKind] ?? COMPANION_COMBO[0];
+      c.combo = (c.swingKind + 1) % COMPANION_COMBO.length;
       const inReach = dist(c.pos, target.pos) <= target.radius + COMPANION.reach * 1.3;
       return inReach
-        ? { enemyId: target.id, damage: COMPANION.damage, dir: directionTo(c.pos, target.pos) }
+        ? {
+            enemyId: target.id,
+            damage: Math.round(COMPANION.damage * step.damage),
+            dir: directionTo(c.pos, target.pos),
+            knockback: step.knockback,
+          }
         : null;
     }
     case 'strike': {
@@ -191,7 +223,7 @@ export function stepCompanion(c: Companion, ctx: CompanionContext): CompanionHit
       }
       if (c.timer <= 0) {
         c.state = 'recover';
-        c.timer = COMPANION.recover;
+        c.timer = COMPANION.recover * (COMPANION_COMBO[c.swingKind]?.recover ?? 1);
       }
       return null;
     }

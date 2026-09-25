@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { ENEMIES } from '@/data/enemies';
-import { ARCANE_BLAST, LIGHT_BEAMS, SEA_WAVE, SHARKS } from '@/systems/abilities';
+import { ARCANE_BLAST, LIGHT_BEAMS, SEA_WAVE, SHARKS, TRIDENT_COMBO } from '@/systems/abilities';
 import type { CollisionWorld } from '@/systems/collision';
 import {
   createCombatState,
@@ -223,5 +223,74 @@ describe('fainting', () => {
     expect(s.downed).toBe(true);
     expect(s.sharks).toHaveLength(0);
     expect(s.seaWaves).toHaveLength(0);
+  });
+});
+
+describe('the three-swing auto-attack', () => {
+  const swingKinds = (s: CombatState, seconds: number) => {
+    const kinds: number[] = [];
+    let last = 0;
+    for (let t = 0; t < seconds; t += DT) {
+      step(s, 1, { attack: true });
+      if (s.swing > last) kinds.push(s.swingKind);
+      last = s.swing;
+    }
+    return kinds;
+  };
+  const wait = (s: CombatState) => {
+    let waited = 0;
+    while (s.cooldowns.attack > 0) {
+      step(s, 1);
+      waited += DT;
+    }
+    return waited;
+  };
+
+  it('goes forehand, backhand, finisher and round again while the button is held', () => {
+    expect(swingKinds(createCombatState(), 3.2)).toEqual([0, 1, 2, 0, 1, 2]);
+  });
+
+  it('starts over after a pause, and the finisher takes longer to follow than the slashes', () => {
+    const s = createCombatState();
+    step(s, 1, { attack: true });
+    expect(s.combo).toBe(1);
+    for (let t = 0; t < 1.5; t += DT) step(s, 1);
+    step(s, 1, { attack: true });
+    expect(s.swingKind).toBe(0);
+    const slashGap = wait(s);
+    step(s, 1, { attack: true });
+    expect(s.swingKind).toBe(1);
+    wait(s);
+    step(s, 1, { attack: true });
+    expect(s.swingKind).toBe(2);
+    expect(wait(s)).toBeGreaterThan(slashGap + 0.2);
+  });
+
+  it('the finisher hits harder and reaches further, and its cone is narrower', () => {
+    const hurt = (kind: number, x: number, z: number) => {
+      const s = createCombatState([dummy('d', x, z)]);
+      s.enemies[0]!.hp = 1000;
+      s.enemies[0]!.state = 'blinded';
+      s.enemies[0]!.blindedUntil = 999;
+      s.combo = kind;
+      s.comboIdle = 0;
+      step(s, 1, { attack: true }, { playerFacing: east });
+      return 1000 - s.enemies[0]!.hp;
+    };
+    expect(hurt(2, 4.4, 0)).toBeGreaterThan(hurt(0, 3.0, 0) * 1.5);
+    expect(hurt(0, 4.4, 0)).toBe(0);
+    expect(TRIDENT_COMBO[2].halfAngle).toBeLessThan(TRIDENT_COMBO[0].halfAngle);
+    expect(TRIDENT_COMBO[1].halfAngle).toBeGreaterThan(TRIDENT_COMBO[0].halfAngle);
+    expect(TRIDENT_COMBO[2].knockback).toBeGreaterThan(TRIDENT_COMBO[0].knockback);
+  });
+
+  it('marks each swing on its slash effect', () => {
+    const s = createCombatState();
+    const styles = new Set<number>();
+    for (let t = 0; t < 3.2; t += DT) {
+      step(s, 1, { attack: true });
+      for (const e of s.effects) if (e.type === 'arc') styles.add(e.style);
+    }
+    expect([...styles].sort()).toEqual([0, 1, 2]);
   });
 });

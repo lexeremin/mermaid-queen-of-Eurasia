@@ -15,9 +15,10 @@ import {
   MAX_HP,
   MAX_MANA,
   SPELL,
-  SWING_TIME,
   BLINK,
+  COMBO_RESET,
   TRIDENT,
+  TRIDENT_COMBO,
   canUse,
   createCooldowns,
   tickCooldowns,
@@ -25,7 +26,7 @@ import {
   type AbilityId,
   type Cooldowns,
 } from '@/systems/abilities';
-import { COMPANION, createCompanion, stepCompanion, type Companion } from '@/systems/companion';
+import { createCompanion, stepCompanion, type Companion } from '@/systems/companion';
 import { aimAssist, directionTo, inCircle, inCone } from '@/systems/combat-math';
 import { resolveCircle, type CollisionWorld } from '@/systems/collision';
 import {
@@ -63,6 +64,8 @@ export type Effect = {
   age: number;
   life: number;
   size: number;
+  /** Which of the three trident swings an `arc` belongs to (0 forehand, 1 backhand, 2 finisher). */
+  style: number;
 };
 
 export type CombatEvent =
@@ -112,8 +115,12 @@ export type CombatState = {
   effects: Effect[];
   /** A companion fighting beside Rosa, or null. */
   companion: Companion | null;
-  /** Seconds left of the trident swing animation. */
+  /** Seconds left of the trident swing animation, and which of the three swings it is. */
   swing: number;
+  swingKind: number;
+  /** The swing the next attack will be, and the seconds since the last one (the chain restarts when it is long). */
+  combo: number;
+  comboIdle: number;
   /** Seconds left of the pop-in after a blink (0 when not blinking). */
   blink: number;
   /** Seconds left of the temporary mermaid look (Aura song, Tide Surge). */
@@ -161,6 +168,9 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     effects: [],
     companion: null,
     swing: 0,
+    swingKind: 0,
+    combo: 0,
+    comboIdle: COMBO_RESET,
     blink: 0,
     mermaid: 0,
     charmed: {},
@@ -228,7 +238,8 @@ export const pushEffect = (
   dir: Vec2,
   life: number,
   size: number,
-) => s.effects.push({ id: s.nextId++, type, x, z, dir, age: 0, life, size });
+  style = 0,
+) => s.effects.push({ id: s.nextId++, type, x, z, dir, age: 0, life, size, style });
 
 function hurtPlayer(
   s: CombatState,
@@ -247,6 +258,7 @@ function hurtPlayer(
     s.downed = true;
     s.aura.active = false;
     s.swing = 0;
+    s.combo = 0;
     s.mermaid = 0;
     s.hazards = [];
     s.seaWaves = [];
@@ -448,6 +460,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   s.hurtFlash = Math.max(0, s.hurtFlash - dt * 2.5);
   s.attackLock = Math.max(0, s.attackLock - dt);
   s.swing = Math.max(0, s.swing - dt);
+  s.comboIdle += dt;
   s.blink = Math.max(0, s.blink - dt);
   s.mermaid = Math.max(0, s.mermaid - dt);
   s.sinceHurt += dt;
@@ -495,25 +508,32 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
           ? assisted
           : aimAssist(playerPos, facing, targets, AIM_ASSIST.closeRange, Math.PI);
       spendAbility(s.cooldowns, s.mana, 'attack');
+      if (s.comboIdle > COMBO_RESET) s.combo = 0;
+      const kind = s.combo;
+      const step = TRIDENT_COMBO[kind] ?? TRIDENT_COMBO[0];
+      s.cooldowns.attack = step.cooldown;
+      s.combo = (kind + 1) % TRIDENT_COMBO.length;
+      s.comboIdle = 0;
       events.push({ type: 'cast', ability: 'attack' });
       s.attackLock = ATTACK_LOCK;
-      s.swing = SWING_TIME;
+      s.swing = step.swing;
+      s.swingKind = kind;
       frame.faceOverride = facing;
       frame.cancelWalk = true;
-      pushEffect(s, 'arc', playerPos.x, playerPos.z, facing, 0.16, TRIDENT.range);
+      pushEffect(s, 'arc', playerPos.x, playerPos.z, facing, 0.16 + kind * 0.04, step.range, kind);
       if (hasPassive('attack', level)) {
         castSeaWave(s, playerPos, facing);
         events.push({ type: 'passive', ability: 'attack' });
       }
       for (const e of s.enemies) {
         if (e.state === 'dead' || e.dormant) continue;
-        if (inCone(playerPos, facing, e.pos, defOf(e).radius, TRIDENT.range, TRIDENT.halfAngle)) {
+        if (inCone(playerPos, facing, e.pos, defOf(e).radius, step.range, step.halfAngle)) {
           hitEnemy(
             s,
             e,
-            Math.round(TRIDENT.damage * stats.damageMult),
+            Math.round(TRIDENT.damage * step.damage * stats.damageMult),
             playerPos,
-            TRIDENT.knockback,
+            step.knockback,
             events,
           );
         }
@@ -617,15 +637,17 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     const struck = hit ? s.enemies.find((e) => e.id === hit.enemyId) : undefined;
     if (hit && struck) {
       const from = s.companion.pos;
-      hitEnemy(
+      hitEnemy(s, struck, Math.round(hit.damage * stats.damageMult), from, hit.knockback, events);
+      pushEffect(
         s,
-        struck,
-        Math.round(hit.damage * stats.damageMult),
-        from,
-        COMPANION.knockback,
-        events,
+        'arc',
+        from.x,
+        from.z,
+        hit.dir,
+        0.16 + s.companion.swingKind * 0.04,
+        1.9,
+        s.companion.swingKind,
       );
-      pushEffect(s, 'arc', from.x, from.z, hit.dir, 0.16, 1.9);
     }
   } else {
     s.companion = null;
@@ -737,6 +759,7 @@ export function revive(s: CombatState, stats: PlayerStats = BASE_STATS): void {
   s.hazards = [];
   s.aura.active = false;
   s.swing = 0;
+  s.combo = 0;
   s.mermaid = 0;
   for (const e of s.enemies) standDown(e);
 }

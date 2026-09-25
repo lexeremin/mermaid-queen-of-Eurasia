@@ -54,6 +54,12 @@ Rosa grows for much longer. The four abilities arrive one by one over the first 
 - Boss layers scale with depth (tests). Draw calls: the new effects add one call per kind that is showing (arms and droplets for Surge, sharks, the sigil, beams, a sea wave); a Surge or blink blast can push a busy scene a few calls past 70 for under a second (Surge already did before this phase); wings and halo add one call at level 60.
 - Typecheck, lint, prettier, tests, build, `assets:check`.
 
+## Follow-up: sword hold and a three-swing auto-attack
+- **Prince Sasha's sword.** The Blender model holds it pointing straight up, so the blade ran through his own forearm. It is now tipped forward and up at rest (about 60° from vertical, pivoting at the grip), clear of the arm. This is done at load time in `CompanionActor.tsx` on the `sword` node, so the model files are unchanged.
+- **Three different auto-attacks**, in a chain for both Rosa and Sasha (`TRIDENT_COMBO` in `abilities.ts`, `COMPANION_COMBO` in `companion.ts`): 1) a **forehand** sideways slash from the right across the front to the left, 2) a wider **backhand** back again, 3) a slower **finisher** chop, raised over the head and brought down and forward with the body leaning into it, narrower, reaching 4.1 m instead of 3.4, hitting for 1.7× (Sasha 1.6×) with more knockback. The chain restarts after a pause (1.1 s for Rosa, 1.6 s for Sasha), and the finisher takes longer before the next attack (0.75 s against 0.45 s).
+- **Animation** is in `entities/swing-pose.ts` (keyframed poses, unit-tested): the weapon arm, the weapon's own pitch (the trident is slid along itself so it is gripped near its butt end in the slashes), a twist of the whole body for the sideways sweep, and a lean. The slash effect on the ground sweeps the same way, and the finisher's is a long narrow chop.
+- Sasha's swing now starts when he raises the sword, so the blow lands as the slash passes the front.
+
 ## Verification
 - 603 tests (new: `skills.test.ts`, `combat-passives.test.ts` with locks, all four passives and fainting, soft noise, deeper boss-layer balance), lint, prettier, build, `assets:check`.
 - Browser (headless): level 1 shows the locked slots and "Aura unlocks at level 3" with no cast; level 60 shows halo and wings, sea wave, Aura beams, sharks around the Surge wave and the violet blast; no errors.

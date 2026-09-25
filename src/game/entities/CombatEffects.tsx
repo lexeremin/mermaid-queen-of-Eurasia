@@ -113,9 +113,14 @@ export function CombatEffects() {
     };
     place(arcs, byType.arc ?? [], (m, mat, fx, t) => {
       m.position.set(fx.x, 0.12, fx.z);
-      m.rotation.y = yawOf(fx.dir);
-      m.scale.setScalar(fx.size * (0.7 + 0.3 * easeOut(t)));
-      mat.opacity = 0.8 * (1 - t);
+      // The slash sweeps: forehand from the right to the left, backhand back again; the finisher is a narrow
+      // chop that reaches out and does not turn.
+      const sweep = fx.style === 0 ? 1 : fx.style === 1 ? -1 : 0;
+      m.rotation.y = yawOf(fx.dir) + sweep * (t - 0.5) * 1.3;
+      const reach = fx.size * (0.7 + 0.3 * easeOut(t));
+      if (fx.style === 2) m.scale.set(reach * 1.15, 1, reach * 0.5);
+      else m.scale.setScalar(reach);
+      mat.opacity = (fx.style === 2 ? 0.95 : 0.8) * (1 - t);
     });
     const waveEffects = byType.wave ?? [];
     waves.forEach((slot, i) => {

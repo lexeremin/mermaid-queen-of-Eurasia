@@ -11,28 +11,16 @@ import { sim } from '@/game/sim';
 import type { HeroForm } from '@/store/game-store';
 import { HolyCrown } from '@/game/entities/HolyCrown';
 import { useProgressStore } from '@/store/progress-store';
-import { SWING_TIME } from '@/systems/abilities';
+import { poseTool, restPose, swingPose } from '@/game/entities/swing-pose';
+import { TRIDENT_COMBO } from '@/systems/abilities';
 import { hasWings } from '@/systems/skills';
 
 const WALK_SPEED_THRESHOLD = 0.5;
 const CROSSFADE_SECONDS = 0.18;
+/** How far the trident slides along itself in a swing, so it is gripped near its butt end. */
+const TRIDENT_SLIDE = 0.8;
 
 type Clip = 'idle' | 'walk';
-
-const smooth = (t: number): number => t * t * (3 - 2 * t);
-const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
-
-/**
- * Extra rotation of the trident arm (radians around its shoulder) during a swing: a short wind-up
- * that lifts the trident back, a fast overhead slash that ends with the tips pointing forward,
- * then a recovery. `t` runs 0..1 over the swing.
- */
-export function swingAngle(t: number): number {
-  if (t <= 0 || t >= 1) return 0;
-  if (t < 0.25) return lerp(0, -0.55, smooth(t / 0.25));
-  if (t < 0.55) return lerp(-0.55, 1.75, smooth((t - 0.25) / 0.3));
-  return lerp(1.75, 0, smooth((t - 0.55) / 0.45));
-}
 
 /** Standing height of a figure, from its bounding box (1.75 m when it has none). */
 function heightOf(model: Object3D): number {
@@ -46,6 +34,7 @@ export function RosaModel({ form }: { form: HeroForm }) {
   const root = useRef<Group>(null);
   const current = useRef<Clip | null>(null);
   const arm = useRef<Object3D | null>(null);
+  const trident = useRef<{ node: Object3D; base: Vector3 } | null>(null);
 
   const gltf = useGLTF(ASSETS[ASSET_BY_FORM[form]].url);
   const scene = useMemo(() => clone(gltf.scene) as Group, [gltf.scene]);
@@ -56,6 +45,8 @@ export function RosaModel({ form }: { form: HeroForm }) {
   useEffect(() => {
     applyHeroLook(scene);
     arm.current = scene.getObjectByName('arm_r') ?? null;
+    const node = scene.getObjectByName('trident');
+    trident.current = node ? { node, base: node.position.clone() } : null;
   }, [scene]);
 
   useEffect(() => {
@@ -66,8 +57,14 @@ export function RosaModel({ form }: { form: HeroForm }) {
   }, [actions]);
 
   useFrame((_, delta) => {
-    if (arm.current && combat.swing > 0) {
-      arm.current.rotation.x += swingAngle(1 - combat.swing / SWING_TIME);
+    const kind = combat.swingKind;
+    const total = TRIDENT_COMBO[kind]?.swing ?? TRIDENT_COMBO[0].swing;
+    const pose = combat.swing > 0 ? swingPose(kind, 1 - combat.swing / total, 0) : restPose(0);
+    if (arm.current) arm.current.rotation.x += pose.arm;
+    if (trident.current) poseTool(trident.current.node, trident.current.base, pose, TRIDENT_SLIDE);
+    if (root.current) {
+      root.current.rotation.y = pose.twist;
+      root.current.rotation.x = pose.lean;
     }
     const dx = sim.curr.pos.x - sim.prev.pos.x;
     const dz = sim.curr.pos.z - sim.prev.pos.z;
