@@ -80,9 +80,11 @@ export function ControlsPanel({ touch }: { touch: boolean }) {
             ))}
           </section>
         ))}
-        <button type="button" className="hud-btn big" onClick={() => close(false)}>
-          BACK
-        </button>
+        <div className="menu-buttons">
+          <button type="button" className="hud-btn primary" onClick={() => close(false)}>
+            Back
+          </button>
+        </div>
       </div>
     </div>
   );

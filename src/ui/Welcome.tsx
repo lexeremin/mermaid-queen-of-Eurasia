@@ -20,12 +20,14 @@ export function Welcome() {
           Sing to win over the people of Red Square, send the gloomy politicians home with your
           trident, and follow the notice board to the depths beneath Manezhnaya Square.
         </p>
-        <button type="button" className="hud-btn big" onClick={() => begin(false)}>
-          BEGIN
-        </button>
-        <button type="button" className="hud-btn" onClick={() => openControls(true)}>
-          CONTROLS
-        </button>
+        <div className="menu-buttons">
+          <button type="button" className="hud-btn primary" onClick={() => begin(false)}>
+            Begin
+          </button>
+          <button type="button" className="hud-btn" onClick={() => openControls(true)}>
+            Controls
+          </button>
+        </div>
       </div>
     </div>
   );

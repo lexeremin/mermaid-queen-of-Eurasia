@@ -17,25 +17,54 @@ const SLOTS: { id: AbilityId; key: string; label: string }[] = [
   { id: 'spell', key: 'R', label: 'Surge' },
 ];
 
-/** Vertical sweep that shrinks as the cooldown ends. Updated every frame without re-rendering. */
+/** Longer cooldowns also show the seconds left; the quick trident swing only shows the sweep. */
+const SHOW_SECONDS_FROM = 1.5;
+
+const formatSeconds = (left: number): string =>
+  left >= 10 ? String(Math.ceil(left)) : left.toFixed(1);
+
+/**
+ * The cooldown of a skill: a dark sweep that drains from the top, a bright edge on it, the remaining seconds, and
+ * a flash when the skill is ready again. Updated every frame without re-rendering.
+ */
 export function CooldownSweep({ id }: { id: AbilityId }) {
-  const ref = useRef<HTMLSpanElement>(null);
+  const sweep = useRef<HTMLSpanElement>(null);
+  const time = useRef<HTMLSpanElement>(null);
+  const flash = useRef<HTMLSpanElement>(null);
   useEffect(() => {
     let raf = 0;
+    let wasCooling = false;
     const tick = () => {
-      const el = ref.current;
+      const el = sweep.current;
       if (el) {
+        const left = combat.cooldowns[id];
         const f = cooldownFraction(combat.cooldowns, id);
         const noMana = combat.mana < ABILITIES[id].mana;
         el.style.transform = `scaleY(${f})`;
         el.dataset.lowMana = noMana && f === 0 ? '1' : '0';
+        if (time.current) {
+          const show = left > 0 && ABILITIES[id].cooldown >= SHOW_SECONDS_FROM;
+          time.current.textContent = show ? formatSeconds(left) : '';
+        }
+        if (wasCooling && left <= 0 && flash.current) {
+          flash.current.classList.remove('on');
+          void flash.current.offsetWidth;
+          flash.current.classList.add('on');
+        }
+        wasCooling = left > 0;
       }
       raf = requestAnimationFrame(tick);
     };
     tick();
     return () => cancelAnimationFrame(raf);
   }, [id]);
-  return <span ref={ref} className="cooldown-sweep" />;
+  return (
+    <>
+      <span ref={sweep} className="cooldown-sweep" />
+      <span ref={time} className="cooldown-time" />
+      <span ref={flash} className="cooldown-flash" />
+    </>
+  );
 }
 
 function HurtVignette() {

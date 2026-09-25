@@ -103,3 +103,19 @@ describe('welcome screen and controls popup', () => {
     expect(state().paused).toBe(false);
   });
 });
+
+describe('menu popups', () => {
+  it('ESC closes the newest popup first: new game, then settings, then the menu', () => {
+    state().setPaused(true);
+    state().setSettingsOpen(true);
+    state().setNewGameOpen(true);
+    state().handleEscape();
+    expect(state().newGameOpen).toBe(false);
+    expect(state().settingsOpen).toBe(true);
+    state().handleEscape();
+    expect(state().settingsOpen).toBe(false);
+    expect(state().paused).toBe(true);
+    state().handleEscape();
+    expect(state().paused).toBe(false);
+  });
+});

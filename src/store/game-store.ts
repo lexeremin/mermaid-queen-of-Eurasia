@@ -15,6 +15,9 @@ export type GameState = {
   welcomeOpen: boolean;
   /** The keybindings popup (opened from the menu or the welcome screen). */
   controlsOpen: boolean;
+  /** Menu popups: settings, and the "start a new game?" confirmation. */
+  settingsOpen: boolean;
+  newGameOpen: boolean;
   downed: boolean;
   nearbyNpc: string | null;
   /** The notice board or shrine Rosa is close enough to use, if any. */
@@ -32,6 +35,8 @@ export type GameState = {
   setDialogueOpen: (open: boolean) => void;
   setWelcomeOpen: (open: boolean) => void;
   setControlsOpen: (open: boolean) => void;
+  setSettingsOpen: (open: boolean) => void;
+  setNewGameOpen: (open: boolean) => void;
   setDowned: (downed: boolean) => void;
   setNearbyNpc: (id: string | null) => void;
   setNearPlace: (place: PlaceId | null) => void;
@@ -51,6 +56,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   dialogueOpen: false,
   welcomeOpen: false,
   controlsOpen: false,
+  settingsOpen: false,
+  newGameOpen: false,
   downed: false,
   nearbyNpc: null,
   nearPlace: null,
@@ -62,6 +69,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   setDialogueOpen: (dialogueOpen) => set({ dialogueOpen }),
   setWelcomeOpen: (welcomeOpen) => set({ welcomeOpen, controlsOpen: false }),
   setControlsOpen: (controlsOpen) => set({ controlsOpen }),
+  setSettingsOpen: (settingsOpen) => set({ settingsOpen }),
+  setNewGameOpen: (newGameOpen) => set({ newGameOpen }),
   setDowned: (downed) => set({ downed }),
   setNearbyNpc: (nearbyNpc) => set({ nearbyNpc }),
   setNearPlace: (nearPlace) => set({ nearPlace }),
@@ -85,7 +94,9 @@ export const useGameStore = create<GameState>((set, get) => ({
     ),
   handleEscape: () => {
     if (get().downed) return;
-    if (get().controlsOpen) set({ controlsOpen: false });
+    if (get().newGameOpen) set({ newGameOpen: false });
+    else if (get().settingsOpen) set({ settingsOpen: false });
+    else if (get().controlsOpen) set({ controlsOpen: false });
     else if (get().welcomeOpen) return;
     else if (get().questPanel) set({ questPanel: null });
     else if (get().inventoryOpen) set({ inventoryOpen: false });

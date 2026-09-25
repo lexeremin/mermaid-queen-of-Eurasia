@@ -1578,19 +1578,6 @@
   color: var(--ui-text);
 }
 
-.panel.menu .hud-btn {
-  min-width: 220px;
-}
-
-.menu-link {
-  min-width: 0;
-  margin-top: 4px;
-  border-style: dashed;
-  text-transform: none;
-  letter-spacing: 0.04em;
-  font-size: 13px;
-}
-
 /* Avatars */
 .portrait,
 .follower-portrait {
@@ -1642,4 +1629,94 @@
   width: 58px;
   height: 58px;
   pointer-events: auto;
+}
+
+/* Cooldowns: a strong dark sweep with a bright edge, the seconds left in big numerals, a flash when ready. */
+.cooldown-sweep {
+  background: rgba(4, 3, 2, 0.82);
+  border-top: 2px solid var(--ui-gold-bright);
+  box-shadow: 0 -1px 6px rgba(232, 198, 106, 0.6);
+}
+
+.cooldown-time {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font: 700 22px/1 var(--ui-font);
+  color: #fff3d0;
+  text-shadow:
+    0 0 4px #000,
+    0 2px 2px #000;
+  pointer-events: none;
+}
+
+.action-btn .cooldown-time {
+  font-size: 20px;
+  transform: translateY(-8px);
+}
+
+.cooldown-flash {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(circle, rgba(255, 236, 170, 0.85), rgba(232, 198, 106, 0) 70%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.cooldown-flash.on {
+  animation: cooldown-ready 0.55s ease-out;
+}
+
+@keyframes cooldown-ready {
+  0% {
+    opacity: 1;
+    transform: scale(0.7);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.25);
+  }
+}
+
+/* Menus: every button in a column has the same width and height. */
+.menu-buttons {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  width: min(260px, 100%);
+}
+
+.menu-buttons .hud-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  height: 48px;
+  padding: 0 12px;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.hud-btn.primary {
+  border-color: var(--ui-gold-bright);
+  color: #f6e2a8;
+}
+
+.panel.dialog {
+  gap: 12px;
+  width: min(340px, 100%);
+  padding: 20px 24px 24px;
+}
+
+.panel.dialog p {
+  font-size: 15px;
+  color: var(--ui-text);
+}
+
+.panel.menu {
+  gap: 12px;
 }

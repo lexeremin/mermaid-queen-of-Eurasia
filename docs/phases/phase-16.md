@@ -108,3 +108,8 @@ Audio and music for the underground and the boss, more than one boss, Mermaid-fo
 - **Menu** in the same style, with RESUME, CONTROLS, sound, stats, NEW GAME and a link now labelled "lexeremin on Github".
 - **Controls popup** (`ControlsPanel.tsx`): every key or touch button with a one-line explanation, opened from the menu or the welcome screen; `Esc` closes it first.
 - **Overlap audit** (five viewports) is clean apart from transient toasts sharing space with the zone banner or the boss bar on a 320 px wide phone.
+
+## Follow-up (16e): tidier menu, popups, visible cooldowns
+- **Main menu:** five buttons of one size (Resume, Controls, Settings, New game, "lexeremin on Github", which now looks like the rest); the cloud message is gone.
+- **Settings** popup holds Sound and Anonymous stats. **New game** opens a small confirmation popup with two equal buttons (Start new game, Cancel). `Esc` closes the newest popup first.
+- **Cooldowns:** a stronger dark sweep with a bright gold edge, the remaining seconds in large numerals (for skills with a cooldown of 1.5 s or more), and a flash when the skill is ready again; on the touch buttons too.

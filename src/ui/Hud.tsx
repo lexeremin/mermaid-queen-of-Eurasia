@@ -15,7 +15,8 @@ import { FollowerButton } from '@/ui/FollowerButton';
 import { InventoryPanel } from '@/ui/InventoryPanel';
 import { QuestPanel } from '@/ui/QuestPanel';
 import { MenuMermaid } from '@/ui/MenuMermaid';
-import { PauseSettings } from '@/ui/PauseSettings';
+import { SettingsPanel } from '@/ui/SettingsPanel';
+import { NewGamePanel } from '@/ui/NewGamePanel';
 import { TouchControls } from '@/ui/TouchControls';
 import { useTouchDevice } from '@/ui/use-touch-device';
 import '@/ui/hud.css';
@@ -38,6 +39,10 @@ export function Hud() {
   const welcomeOpen = useGameStore((s) => s.welcomeOpen);
   const controlsOpen = useGameStore((s) => s.controlsOpen);
   const setControlsOpen = useGameStore((s) => s.setControlsOpen);
+  const settingsOpen = useGameStore((s) => s.settingsOpen);
+  const setSettingsOpen = useGameStore((s) => s.setSettingsOpen);
+  const newGameOpen = useGameStore((s) => s.newGameOpen);
+  const setNewGameOpen = useGameStore((s) => s.setNewGameOpen);
   const transitioning = useGameStore((s) => s.transitioning);
   const toggleQuestLog = useGameStore((s) => s.toggleQuestLog);
   const zone = useGameStore((s) => s.zone);
@@ -131,27 +136,31 @@ export function Hud() {
               Mermaid Queen <span>of Eurasia</span>
             </h1>
             <p className="menu-sub">Paused</p>
-            <button type="button" className="hud-btn big" onClick={togglePause}>
-              RESUME
-            </button>
-            <button type="button" className="hud-btn" onClick={() => setControlsOpen(true)}>
-              CONTROLS
-            </button>
-            <PauseSettings />
-            <a
-              className="hud-btn menu-link"
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              lexeremin on Github
-            </a>
+            <div className="menu-buttons">
+              <button type="button" className="hud-btn primary" onClick={togglePause}>
+                Resume
+              </button>
+              <button type="button" className="hud-btn" onClick={() => setControlsOpen(true)}>
+                Controls
+              </button>
+              <button type="button" className="hud-btn" onClick={() => setSettingsOpen(true)}>
+                Settings
+              </button>
+              <button type="button" className="hud-btn" onClick={() => setNewGameOpen(true)}>
+                New game
+              </button>
+              <a className="hud-btn" href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
+                lexeremin on Github
+              </a>
+            </div>
           </div>
         </div>
       )}
 
       {welcomeOpen && <Welcome />}
       {controlsOpen && <ControlsPanel touch={touch} />}
+      {settingsOpen && <SettingsPanel />}
+      {newGameOpen && <NewGamePanel />}
     </div>
   );
 }
