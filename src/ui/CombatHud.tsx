@@ -20,8 +20,8 @@ const SLOTS: { id: AbilityId; key: string; label: string }[] = [
 /** Longer cooldowns also show the seconds left; the quick trident swing only shows the sweep. */
 const SHOW_SECONDS_FROM = 1.5;
 
-const formatSeconds = (left: number): string =>
-  left >= 10 ? String(Math.ceil(left)) : left.toFixed(1);
+/** Whole seconds only, rounded up, so it never shows 0 while still cooling. */
+const formatSeconds = (left: number): string => String(Math.ceil(left));
 
 /**
  * The cooldown of a skill: a dark sweep that drains from the top, a bright edge on it, the remaining seconds, and

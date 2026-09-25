@@ -112,4 +112,4 @@ Audio and music for the underground and the boss, more than one boss, Mermaid-fo
 ## Follow-up (16e): tidier menu, popups, visible cooldowns
 - **Main menu:** five buttons of one size (Resume, Controls, Settings, New game, "lexeremin on Github", which now looks like the rest); the cloud message is gone.
 - **Settings** popup holds Sound and Anonymous stats. **New game** opens a small confirmation popup with two equal buttons (Start new game, Cancel). `Esc` closes the newest popup first.
-- **Cooldowns:** a stronger dark sweep with a bright gold edge, the remaining seconds in large numerals (for skills with a cooldown of 1.5 s or more), and a flash when the skill is ready again; on the touch buttons too.
+- **Cooldowns:** a stronger dark sweep with a bright gold edge, the remaining whole seconds in large numerals (for skills with a cooldown of 1.5 s or more), and a flash when the skill is ready again; on the touch buttons too.

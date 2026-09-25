@@ -140,14 +140,14 @@ export function Hud() {
               <button type="button" className="hud-btn primary" onClick={togglePause}>
                 Resume
               </button>
-              <button type="button" className="hud-btn" onClick={() => setControlsOpen(true)}>
-                Controls
+              <button type="button" className="hud-btn" onClick={() => setNewGameOpen(true)}>
+                New game
               </button>
               <button type="button" className="hud-btn" onClick={() => setSettingsOpen(true)}>
                 Settings
               </button>
-              <button type="button" className="hud-btn" onClick={() => setNewGameOpen(true)}>
-                New game
+              <button type="button" className="hud-btn" onClick={() => setControlsOpen(true)}>
+                Controls
               </button>
               <a className="hud-btn" href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                 lexeremin on Github
