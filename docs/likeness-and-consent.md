@@ -21,3 +21,7 @@ The hero, Rosa, is a **stylized low-poly character based on the look of a real p
 
 ## Look notes derived from the reference (no identification)
 Dark hair in an updo with a top bun and soft wavy strands; a cluster of cream, blush and lilac-pearl roses on one side of the head; warm light skin; dark almond eyes; nude-pink lips; ivory tweed jacket with a wide boat neckline; loose white petals drifting around the shoulders.
+
+## Later content (bosses, people, the archangels)
+- Bosses and generic NPCs are original satirical archetypes defined by costume and props (for example a lobbyist, a sanctions baron, a talk-show host). They never carry a real person's name, face, party or national symbol, and they never mock a nationality or an ethnic group; the joke is about corruption and bureaucracy.
+- The three archangels (Michael, Gabriel, Serafima) are fictional small winged children of Rosa and Prince Sasha. They are not modelled on any real child.

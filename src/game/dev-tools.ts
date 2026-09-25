@@ -47,6 +47,7 @@ declare global {
       grantXp: typeof grantXp;
       dungeon: typeof useDungeonStore;
       recall: typeof recall;
+      getForm: () => string;
       loadingState: typeof useLoadingState;
       goDown: typeof goDown;
       goUp: typeof goUp;
@@ -72,6 +73,7 @@ export function installDevTools(): void {
     grantXp,
     dungeon: useDungeonStore,
     recall,
+    getForm: () => useGameStore.getState().form,
     loadingState: useLoadingState,
     goDown,
     goUp,

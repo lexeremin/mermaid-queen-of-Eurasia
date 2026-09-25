@@ -1,14 +1,11 @@
 import { playSfx } from '@/audio/sfx';
 import { combat } from '@/game/combat-sim';
 import { sim } from '@/game/sim';
-import { currentWorld } from '@/game/world/current-map';
-import { nav } from '@/game/world/nav';
 import { track } from '@/net/stats';
 import { useGameStore } from '@/store/game-store';
 import { useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { pushEffect } from '@/systems/combat';
-import type { Collider } from '@/systems/collision';
 
 /** Seconds' worth of pause between two switches. */
 export const FORM_COOLDOWN_MS = 2000;
@@ -17,30 +14,51 @@ let lastSwitch = -Infinity;
 export const mermaidUnlocked = (): boolean => useProgressStore.getState().forms.includes('mermaid');
 
 /**
- * The mermaid swims: while she is one the water colliders (the garden pond) are out of the world, so she can
- * cross it; as a human they are back. The walk grid follows.
+ * Swimming. Stepping into water (a pond end, the river) turns Rosa into a mermaid on the spot, and she becomes human
+ * again a moment after she leaves it, unless she chose the mermaid form herself. Fountains are not water.
  */
-export function syncWaterToForm(form: 'human' | 'mermaid'): void {
-  const water = currentWorld.water ?? [];
-  if (water.length === 0) return;
-  const colliders = currentWorld.colliders as Collider[];
-  const present = colliders.includes(water[0]!);
-  if (form === 'mermaid' && present) {
-    for (const c of water) {
-      const i = colliders.indexOf(c);
-      if (i >= 0) colliders.splice(i, 1);
+export const swim = { active: false, t: 0, ripple: 0 };
+const LEAVE_DELAY = 0.45;
+let sinceLeft = 0;
+let byWater = false;
+
+/** Called every fixed step with whether Rosa is standing in water. */
+export function stepWater(inWater: boolean, dt: number): void {
+  const game = useGameStore.getState();
+  swim.t = inWater ? swim.t + dt : 0;
+  if (inWater) {
+    sinceLeft = 0;
+    if (!swim.active) {
+      swim.active = true;
+      splash();
     }
-    nav.reset();
-  } else if (form === 'human' && !present) {
-    colliders.push(...water);
-    nav.reset();
+    if (game.form === 'human') {
+      byWater = true;
+      game.setForm('mermaid');
+      splash();
+      const toasts = useToastStore.getState();
+      toasts.push('The water turns you into a mermaid', 'info');
+    }
+    return;
+  }
+  if (!swim.active) return;
+  sinceLeft += dt;
+  if (sinceLeft < LEAVE_DELAY) return;
+  swim.active = false;
+  if (byWater && game.form === 'mermaid') {
+    byWater = false;
+    game.setForm('human');
+    splash();
   }
 }
 
-useGameStore.subscribe((state, prev) => {
-  if (state.form !== prev.form) syncWaterToForm(state.form);
-});
-syncWaterToForm(useGameStore.getState().form);
+function splash(): void {
+  pushEffect(combat, 'bubbles', sim.curr.pos.x, sim.curr.pos.z, { x: 0, z: 1 }, 0.9, 1.5);
+  playSfx('bubbles');
+}
+
+/** True while Rosa's form came from the water (she cannot leave it by pressing F while swimming). */
+export const swimming = (): boolean => swim.active;
 
 export type SwitchResult = 'switched' | 'locked' | 'busy';
 
@@ -48,8 +66,10 @@ export type SwitchResult = 'switched' | 'locked' | 'busy';
 export function toggleForm(now: number = performance.now()): SwitchResult {
   if (!mermaidUnlocked()) return 'locked';
   const game = useGameStore.getState();
-  if (combat.downed || game.transitioning || now - lastSwitch < FORM_COOLDOWN_MS) return 'busy';
+  if (combat.downed || game.transitioning || swim.active || now - lastSwitch < FORM_COOLDOWN_MS)
+    return 'busy';
   lastSwitch = now;
+  byWater = false;
   const next = game.form === 'human' ? 'mermaid' : 'human';
   game.setForm(next);
   pushEffect(combat, 'bubbles', sim.curr.pos.x, sim.curr.pos.z, { x: 0, z: 1 }, 0.9, 1.3);
@@ -72,4 +92,8 @@ export function unlockMermaid(): void {
 
 export const resetFormClock = (): void => {
   lastSwitch = -Infinity;
+  swim.active = false;
+  swim.t = 0;
+  sinceLeft = 0;
+  byWater = false;
 };

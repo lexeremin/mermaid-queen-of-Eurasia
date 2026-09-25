@@ -1,4 +1,5 @@
 import { useFrame } from '@react-three/fiber';
+import { swim } from '@/game/form-sim';
 import { heroIsOccluded } from '@/game/assets/hero-occlusion';
 import { setXrayVisible } from '@/game/assets/xray';
 import { useRef, useState } from 'react';
@@ -35,6 +36,10 @@ export function Player() {
     if (body.current) {
       const s = combat.blink > 0 ? blinkScale(1 - combat.blink / BLINK.pop) : 1;
       body.current.scale.setScalar(s);
+      // Swimming: sunk into the water and leaning into the stroke.
+      const sink = swim.active ? -0.5 : 0;
+      body.current.position.y += (sink - body.current.position.y) * 0.18;
+      body.current.rotation.x += ((swim.active ? 0.22 : 0) - body.current.rotation.x) * 0.18;
     }
   });
 

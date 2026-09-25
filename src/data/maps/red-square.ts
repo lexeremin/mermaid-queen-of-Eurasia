@@ -11,7 +11,8 @@ const HALF_PI = Math.PI / 2;
 
 // The surface ends at z = 76; the Moscow underground lives in a distant region below z = 100 (see underground.ts),
 // with a solid block between so nothing on the surface can walk into it.
-const BOUNDS = { minX: -28, maxX: 62, minZ: -30, maxZ: 200 };
+// The river Moskva lies north of the garden's end; Rosa reaches it by the garden path and can swim in it.
+const BOUNDS = { minX: -28, maxX: 62, minZ: -64, maxZ: 200 };
 /** The metro pavilion on Manezhnaya Square: the way down. Its mouth faces south, toward the camera. */
 export const METRO = { x: 25, z: 65.5, rotY: 0, door: { x: 25, z: 69.4 } };
 
@@ -180,6 +181,8 @@ const SHRINE = { x: 59.4, z: -27.5 };
 const shrineNook: Placement[] = [
   { asset: 'shrine', x: SHRINE.x, z: SHRINE.z },
   ...[-28.7, -26.7, -24.7].map((z) => ({ asset: 'hedge' as const, x: 56.5, z, rotY: HALF_PI })),
+  // The nook's north side (the garden path now continues north to the river).
+  ...[57.6, 59.4, 61.2].map((x) => ({ asset: 'hedge' as const, x, z: -30.2 })),
   { asset: 'hedge', x: 57.6, z: -23.5 },
   { asset: 'hedge', x: 61.2, z: -23.5 },
 ];
@@ -203,7 +206,13 @@ const alexanderGarden: Placement[] = [
     { asset: 'bench' as const, x: 51.3, z, rotY: HALF_PI },
     { asset: 'bench' as const, x: 54.7, z: z + 2, rotY: -HALF_PI },
   ]),
-  ...[-26, -14, -2, 10].map((z) => ({ asset: 'lamppost' as const, x: 51.2, z })),
+  ...[-26, -14, -2, 10, -34, -40].map((z) => ({ asset: 'lamppost' as const, x: 51.2, z })),
+  ...[-33, -38, -42].flatMap((z) => [
+    { asset: 'linden' as const, x: 49, z },
+    { asset: 'linden' as const, x: 57.5, z },
+  ]),
+  { asset: 'bench', x: 51.4, z: -37, rotY: HALF_PI },
+  { asset: 'bench', x: 54.6, z: -41, rotY: -HALF_PI },
   ...[-20, -8, 4, 20].map((z) => ({ asset: 'lamppost' as const, x: 54.8, z })),
   { asset: 'flowerbed', x: 48.6, z: -15, rotY: HALF_PI },
   { asset: 'flowerbed', x: 58, z: -15, rotY: HALF_PI },
@@ -265,11 +274,12 @@ export const RED_SQUARE: MapData = {
     ...surroundingTrees(),
   ],
   waters: [
-    { ribbon: moskva, edgeWidth: 16, colliderRuns: [] },
+    { ribbon: moskva, edgeWidth: 16, swimRuns: [moskva.points] },
     {
       ribbon: { points: pondLine(21, 35), width: 3.4 },
       edgeWidth: 4.6,
-      colliderRuns: [pondLine(21, 24.6), pondLine(31.4, 35)],
+      // The two ends of the pond; the middle is under the Trinity Bridge.
+      swimRuns: [pondLine(21, 24.6), pondLine(31.4, 35)],
     },
   ],
   paths: [
@@ -287,6 +297,14 @@ export const RED_SQUARE: MapData = {
         [57.6, 8],
       ],
       width: 2.4,
+    },
+    // The garden path runs on north to the river bank.
+    {
+      points: [
+        [PROMENADE_X, -28],
+        [PROMENADE_X, -41],
+      ],
+      width: 3.2,
     },
   ],
   plazas: [
@@ -383,7 +401,7 @@ export const RED_SQUARE: MapData = {
     { id: 'pearl-3', kind: 'pearl', x: 61, z: -11 },
     { id: 'pearl-4', kind: 'pearl', x: 48.3, z: -27.5 },
     { id: 'pearl-5', kind: 'pearl', x: 61, z: 23.6 },
-    // In the pond's blocked ends: only a swimming mermaid can reach them.
+    // At the two ends of the pond, in the water.
     { id: 'pearl-6', kind: 'pearl', x: 48, z: 22.6 },
     { id: 'pearl-7', kind: 'pearl', x: 48, z: 33.4 },
   ],
@@ -394,8 +412,9 @@ export const RED_SQUARE: MapData = {
     {
       id: 'alexander-garden',
       label: 'Alexander Garden',
-      box: { cx: 53.8, cz: 10, hx: 8.2, hz: 40 },
+      box: { cx: 53.8, cz: 3, hx: 8.2, hz: 47 },
     },
+    { id: 'moskva', label: 'Moskva River', box: { cx: 17, cz: -52, hx: 46, hz: 8.5 } },
     ...UNDERGROUND.zones,
   ],
   floors: [
@@ -416,6 +435,9 @@ export const RED_SQUARE: MapData = {
     { kind: 'box', cx: 29.3, cz: 3.65, hx: 16.1, hz: 33.65 },
     // Museum, Kazan Cathedral and everything behind them.
     { kind: 'box', cx: -12, cz: 53, hx: 16.5, hz: 23 },
+    // Land north of Red Square and beyond the river: not part of the map (only the garden path leads to the water).
+    { kind: 'box', cx: 9, cz: -38, hx: 37.5, hz: 8 },
+    { kind: 'box', cx: 17, cz: -66, hx: 46, hz: 4 },
     // Solid ground between the surface and the underground region.
     { kind: 'box', cx: 17, cz: 88, hx: 46, hz: 12 },
     ...UNDERGROUND.colliders,

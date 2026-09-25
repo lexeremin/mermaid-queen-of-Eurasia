@@ -11,7 +11,7 @@ import {
 } from 'three';
 import { ASSETS, type AssetId } from '@/data/assets';
 import { HERO_OCCLUSION_HOLD_MS, heroOcclusion } from '@/game/assets/hero-occlusion';
-import { getRetroMaterial } from '@/game/assets/retro-material';
+import { getFadeMaterial, getRetroMaterial } from '@/game/assets/retro-material';
 import { getRenderPosition } from '@/game/sim';
 import {
   MIN_OCCLUDER_HEIGHT,
@@ -48,12 +48,33 @@ function InstancedPart({
   const candidates = useRef<number[]>([]);
   const tickCount = useRef(0);
 
+  // The world-space box of every instance, and whether any of them is tall enough to ever hide Rosa. Only tall
+  // models get the fading (dithering) material and a fade attribute; everything else stays on the plain, fast one.
+  const { boxes, tall } = useMemo(() => {
+    source.geometry.computeBoundingBox();
+    const local = source.geometry.boundingBox;
+    const list: Box[] = [];
+    if (local) {
+      for (const t of transforms) {
+        dummy.position.set(t.x, 0, t.z);
+        dummy.rotation.set(0, t.rotY ?? 0, 0);
+        const scale = t.scale ?? 1;
+        dummy.scale.set(scale * (t.stretch ?? 1), scale, scale);
+        dummy.updateMatrix();
+        combined.multiplyMatrices(dummy.matrix, source.matrix);
+        box3.copy(local).applyMatrix4(combined);
+        list.push({
+          min: { x: box3.min.x, y: box3.min.y, z: box3.min.z },
+          max: { x: box3.max.x, y: box3.max.y, z: box3.max.z },
+        });
+      }
+    }
+    return { boxes: list, tall: list.some((b) => b.max.y - b.min.y >= MIN_OCCLUDER_HEIGHT) };
+  }, [source, transforms]);
+
   useLayoutEffect(() => {
     const mesh = ref.current;
     if (!mesh) return;
-    source.geometry.computeBoundingBox();
-    const local = source.geometry.boundingBox;
-    const boxes: Box[] = [];
     transforms.forEach((t, i) => {
       dummy.position.set(t.x, 0, t.z);
       dummy.rotation.set(0, t.rotY ?? 0, 0);
@@ -62,23 +83,18 @@ function InstancedPart({
       dummy.updateMatrix();
       combined.multiplyMatrices(dummy.matrix, source.matrix);
       mesh.setMatrixAt(i, combined);
-      if (local) {
-        box3.copy(local).applyMatrix4(combined);
-        boxes.push({
-          min: { x: box3.min.x, y: box3.min.y, z: box3.min.z },
-          max: { x: box3.max.x, y: box3.max.y, z: box3.max.z },
-        });
-      }
     });
-    const opacity = new Float32Array(transforms.length).fill(1);
-    const attribute = new InstancedBufferAttribute(opacity, 1);
-    source.geometry.setAttribute('instanceFade', attribute);
-    // Only models that are tall in the world (not in their own, possibly quantized, units) can hide Rosa.
-    const tall = boxes.some((b) => b.max.y - b.min.y >= MIN_OCCLUDER_HEIGHT);
-    fade.current = tall ? { opacity, boxes, attribute } : null;
+    if (tall) {
+      const opacity = new Float32Array(transforms.length).fill(1);
+      const attribute = new InstancedBufferAttribute(opacity, 1);
+      source.geometry.setAttribute('instanceFade', attribute);
+      fade.current = { opacity, boxes, attribute };
+    } else {
+      fade.current = null;
+    }
     mesh.instanceMatrix.needsUpdate = true;
     mesh.computeBoundingSphere();
-  }, [source, transforms]);
+  }, [source, transforms, boxes, tall]);
 
   useFrame((state, delta) => {
     const f = fade.current;
@@ -136,8 +152,8 @@ function InstancedPart({
   return (
     <instancedMesh
       ref={ref}
-      args={[source.geometry, getRetroMaterial(), transforms.length]}
-      key={transforms.length}
+      args={[source.geometry, tall ? getFadeMaterial() : getRetroMaterial(), transforms.length]}
+      key={`${transforms.length}${tall ? 'f' : 'p'}`}
     />
   );
 }

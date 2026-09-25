@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { RED_SQUARE } from '@/data/maps/red-square';
 import type { MapData } from '@/data/maps/types';
+import { isInWater } from '@/systems/water';
 import { resolveCircle } from '@/systems/collision';
 import { buildCollisionWorld } from '@/systems/map-collision';
 import { PLAYER_RADIUS } from '@/systems/movement';
@@ -28,11 +29,8 @@ describe('garden gatherables', () => {
     expect(gathers.filter((g) => g.kind === 'pearl')).toHaveLength(7);
   });
 
-  // Two pearls lie in the pond's blocked ends: only a swimming mermaid reaches them.
-  const IN_WATER = new Set(['pearl-6', 'pearl-7']);
-
   it('puts every one on free ground inside the garden that Rosa can walk to', () => {
-    for (const g of gathers.filter((n) => !IN_WATER.has(n.id))) {
+    for (const g of gathers) {
       expect(free(g.x, g.z), g.id).toBe(true);
       expect(g.x, g.id).toBeGreaterThan(45.5);
       expect(g.x, g.id).toBeLessThan(RED_SQUARE.bounds.maxX);
@@ -40,16 +38,10 @@ describe('garden gatherables', () => {
     }
   });
 
-  it('hides two pearls in the pond: blocked on foot, free once the water colliders are gone', () => {
-    const swimming = {
-      bounds: world.bounds,
-      colliders: world.colliders.filter((c) => !world.water?.includes(c)),
-    };
-    for (const id of IN_WATER) {
+  it('hides two pearls in the pond ends, inside the swim zones', () => {
+    for (const id of ['pearl-6', 'pearl-7']) {
       const g = gathers.find((n) => n.id === id)!;
-      expect(free(g.x, g.z), id).toBe(false);
-      const p = resolveCircle({ x: g.x, z: g.z }, PLAYER_RADIUS, swimming);
-      expect(Math.hypot(p.x - g.x, p.z - g.z), id).toBeLessThan(1e-6);
+      expect(isInWater(world.water, { x: g.x, z: g.z }), id).toBe(true);
     }
   });
 

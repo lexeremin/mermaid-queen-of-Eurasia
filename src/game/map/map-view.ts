@@ -15,7 +15,7 @@ export const SURFACE_REGION: Region = {
   label: 'Red Square district',
   minX: -30,
   maxX: 64,
-  minZ: -32,
+  minZ: -66,
   maxZ: 78,
 };
 
@@ -66,4 +66,5 @@ export const SURFACE_LABELS: readonly { text: string; x: number; z: number }[] =
   { text: 'Manezhnaya Square', x: 25, z: 48 },
   { text: 'Alexander Garden', x: 54, z: 4 },
   { text: 'Pearl Shrine', x: 59, z: -22 },
+  { text: 'Moskva River', x: 17, z: -52 },
 ];

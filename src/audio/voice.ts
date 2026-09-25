@@ -1,3 +1,4 @@
+import { warmSfx } from '@/audio/sfx';
 import { AURA_FILE, AURA_GAIN } from '@/audio/recipes';
 import { getContext, log, soundEnabled } from '@/audio/engine';
 
@@ -15,7 +16,10 @@ function loadAura(ctx: AudioContext): Promise<AudioBuffer | null> {
 /** Call from the first pointer or key press: browsers only allow audio after a gesture. */
 export function unlockAudio(): void {
   const ctx = getContext();
-  if (ctx) void loadAura(ctx);
+  if (ctx) {
+    void loadAura(ctx);
+    warmSfx();
+  }
 }
 
 /** Rosa sings the Aura: one sustained "ah", quiet. A song still ringing is replaced. */

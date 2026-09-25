@@ -32,9 +32,15 @@ Feature list with phase mapping. Status lives in `docs/Task.md`.
 | Blink (Shift) replaces Dash, Recall (T) channelled return to Red Square, icon HUD buttons, dock layout without overlaps | 16c |
 | Stability: persisted world state, loading screen, startup and runtime performance, joystick fix | 17 |
 | Mermaid Queen form: quest unlock, F to switch, Tidal Song, swimming (two hidden pond pearls), save v8 | 18 |
-| Polish: SFX, ambient/music, weather particles, damage numbers, shake, returning-player title | 19 |
-| iPhone Safari QA | 20 |
-| Hosting, env config, release | 21 |
+| Water and performance: swimming, reachable river, graphics setting, lighter rendering | 19 |
+| Visual polish: no parts sticking out, rounder shapes, softer textures | 20 |
+| Save the archangels quest (Michael, Gabriel, Serafima) | 21 |
+| Endless dungeon: 100 generated layers | 22 |
+| Downtown Moscow areas and quests | 23 |
+| More bosses (satirical archetypes) and generic NPCs | 24 |
+| Polish: SFX, ambient/music, weather, damage numbers, shake, returning-player title | 25 |
+| iPhone Safari QA | 26 |
+| Hosting, env config, release | 27 |
 
 ## Stretch (post-slice)
 Cross-device cloud restore, leaderboard, PWA install polish, additional districts, Forest Spirit, Elvish Form and Tsarina of Eurasia transformations.

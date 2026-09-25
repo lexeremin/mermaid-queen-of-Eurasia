@@ -12,6 +12,12 @@ function noiseBuffer(ctx: AudioContext): AudioBuffer {
   return noise;
 }
 
+/** Builds the shared noise buffer ahead of time so the first sound effect does not stall a frame. */
+export function warmSfx(): void {
+  const ctx = getContext();
+  if (ctx) noiseBuffer(ctx);
+}
+
 function noiseSource(ctx: AudioContext): AudioBufferSourceNode {
   const source = ctx.createBufferSource();
   source.buffer = noiseBuffer(ctx);

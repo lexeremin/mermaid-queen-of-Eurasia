@@ -21,11 +21,15 @@ export type Placement = {
 
 export type Ribbon = { points: readonly Point[]; width: number };
 
-/** A river or pond: drawn as a ribbon with a wider bank edge; collider runs are capsule chains. */
+/**
+ * A river or pond: drawn as a ribbon with a wider bank edge. `swimRuns` are the polylines along which it can be
+ * swum (with the ribbon's half width as the radius): stepping into one turns Rosa into a mermaid. A bridge deck
+ * over the water is left out of them.
+ */
 export type Water = {
   ribbon: Ribbon;
   edgeWidth: number;
-  colliderRuns: readonly (readonly Point[])[];
+  swimRuns: readonly (readonly Point[])[];
 };
 
 export type NpcSpot = { id: string; x: number; z: number; rotY: number };

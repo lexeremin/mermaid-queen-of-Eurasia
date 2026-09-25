@@ -40,8 +40,10 @@ export function CooldownSweep({ id }: { id: AbilityId }) {
         const left = combat.cooldowns[id];
         const f = cooldownFraction(combat.cooldowns, id);
         const noMana = combat.mana < ABILITIES[id].mana;
-        el.style.transform = `scaleY(${f})`;
-        el.dataset.lowMana = noMana && f === 0 ? '1' : '0';
+        const transform = `scaleY(${f})`;
+        if (el.style.transform !== transform) el.style.transform = transform;
+        const low = noMana && f === 0 ? '1' : '0';
+        if (el.dataset.lowMana !== low) el.dataset.lowMana = low;
         if (time.current) {
           const show = left > 0 && ABILITIES[id].cooldown >= SHOW_SECONDS_FROM;
           time.current.textContent = show ? formatSeconds(left) : '';

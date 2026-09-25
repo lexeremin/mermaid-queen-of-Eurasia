@@ -108,13 +108,13 @@ describe('Red Square map (real layout)', () => {
     expect(canReach(46, 28)).toBe(true);
   });
 
-  it('blocks the solid parts, the pond and the Kremlin', () => {
+  it('blocks the solid parts and the Kremlin (the pond ends are swim zones now)', () => {
     expect(walkable(-16.5, 5)).toBe(false);
     expect(walkable(-23.3, 0)).toBe(false);
     expect(walkable(-23.3, 8)).toBe(false);
     expect(walkable(25, 56)).toBe(false);
-    expect(walkable(48, 22)).toBe(false);
-    expect(walkable(48, 33)).toBe(false);
+    expect(walkable(48, 22)).toBe(true);
+    expect(walkable(48, 33)).toBe(true);
     expect(walkable(57.5, 28)).toBe(false);
     expect(walkable(49.5, 13)).toBe(false);
     expect(walkable(-9, 25)).toBe(false);

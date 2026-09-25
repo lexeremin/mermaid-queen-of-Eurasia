@@ -28,7 +28,10 @@ export function RecallButton({ touch }: { touch: boolean }) {
     const tick = () => {
       const p = recallProgress(recall);
       if (ring.current) ring.current.style.strokeDashoffset = String(CIRCUMFERENCE * (1 - p));
-      if (button.current) button.current.dataset.casting = recall.active ? '1' : '0';
+      const casting = recall.active ? '1' : '0';
+      if (button.current && button.current.dataset.casting !== casting) {
+        button.current.dataset.casting = casting;
+      }
       raf = requestAnimationFrame(tick);
     };
     tick();

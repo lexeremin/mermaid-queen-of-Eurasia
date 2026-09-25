@@ -11,7 +11,7 @@ export type Bounds = { minX: number; maxX: number; minZ: number; maxZ: number };
 export type CollisionWorld = {
   bounds: Bounds;
   colliders: readonly Collider[];
-  /** The water colliders (also in `colliders`), so a swimmer can be let through them. */
+  /** Swim zones: capsules along rivers and ponds. Not solid; `isInWater` tests against them. */
   water?: readonly Collider[];
 };
 

@@ -5,7 +5,8 @@ let frame = 0;
 
 export function RenderStatsProbe() {
   useFrame(({ gl, scene }) => {
-    (window as { __mqScene?: unknown }).__mqScene = scene;
+    (window as { __mqScene?: unknown; __mqGl?: unknown }).__mqScene = scene;
+    (window as { __mqGl?: unknown }).__mqGl = gl;
     renderStats.calls = gl.info.render.calls;
     renderStats.triangles = gl.info.render.triangles;
     if (++frame % 20 !== 0) return;

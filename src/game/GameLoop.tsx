@@ -27,7 +27,7 @@ import { stepCombat, type CombatEvent } from '@/systems/combat';
 import { BLINK, MERMAID } from '@/systems/abilities';
 import { pickBlinkDestination } from '@/systems/blink';
 import { isInWater } from '@/systems/water';
-import { toggleForm } from '@/game/form-sim';
+import { stepWater, toggleForm } from '@/game/form-sim';
 import { nav } from '@/game/world/nav';
 import {
   clearPressed,
@@ -330,6 +330,7 @@ export function GameLoop() {
 
       sim.prev = sim.curr;
       sim.curr = stepPlayer(sim.curr, { move }, dt, currentWorld, speedMultiplier());
+      stepWater(isInWater(currentWorld.water, sim.curr.pos), dt);
       if (frame.faceOverride) sim.curr = { ...sim.curr, facing: frame.faceOverride };
 
       if (walking && sim.path.length > 0) {

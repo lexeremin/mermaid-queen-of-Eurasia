@@ -1,11 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { RED_SQUARE } from '@/data/maps/red-square';
 import { QUEST_BY_ID } from '@/data/quests';
 import { combat, resetCombat } from '@/game/combat-sim';
 import {
   FORM_COOLDOWN_MS,
   mermaidUnlocked,
   resetFormClock,
+  stepWater,
+  swim,
   toggleForm,
   unlockMermaid,
 } from '@/game/form-sim';
@@ -17,14 +18,9 @@ import { useProgressStore } from '@/store/progress-store';
 import { useQuestStore } from '@/store/quest-store';
 import { resolveCircle } from '@/systems/collision';
 import { PLAYER_RADIUS, PLAYER_SPEED, stepPlayer, createPlayer } from '@/systems/movement';
+import { isInWater } from '@/systems/water';
 import { computeStats } from '@/systems/progression';
 import { STARTER_EQUIPMENT } from '@/data/items';
-
-const pearl6 = RED_SQUARE.gatherables!.find((g) => g.id === 'pearl-6')!;
-const onFoot = () => {
-  const p = resolveCircle({ x: pearl6.x, z: pearl6.z }, PLAYER_RADIUS, currentWorld);
-  return Math.hypot(p.x - pearl6.x, p.z - pearl6.z) < 1e-6;
-};
 
 beforeEach(() => {
   useProgressStore.getState().reset();
@@ -63,13 +59,53 @@ describe('changing form', () => {
   });
 });
 
-describe('the mermaid swims', () => {
-  it('takes the water colliders out of the world, and puts them back for a human', () => {
-    expect(onFoot()).toBe(false);
-    useGameStore.getState().setForm('mermaid');
-    expect(onFoot()).toBe(true);
-    useGameStore.getState().setForm('human');
-    expect(onFoot()).toBe(false);
+describe('swimming', () => {
+  const pondEnd = { x: 48, z: 22.6 };
+  const dry = { x: 53, z: 24 };
+  const fountain = { x: 25, z: 56 };
+
+  it('knows the pond ends and the river, not the bridge, dry land or the fountains', () => {
+    expect(isInWater(currentWorld.water, pondEnd)).toBe(true);
+    expect(isInWater(currentWorld.water, { x: 48, z: 34 })).toBe(true);
+    expect(isInWater(currentWorld.water, { x: 48, z: 28 })).toBe(false);
+    expect(isInWater(currentWorld.water, { x: 20, z: -51 })).toBe(true);
+    expect(isInWater(currentWorld.water, dry)).toBe(false);
+    expect(isInWater(currentWorld.water, fountain)).toBe(false);
+  });
+
+  it('is not solid, and fountains still are', () => {
+    const at = (p: { x: number; z: number }) => {
+      const r = resolveCircle(p, PLAYER_RADIUS, currentWorld);
+      return Math.hypot(r.x - p.x, r.z - p.z) < 1e-6;
+    };
+    expect(at(pondEnd)).toBe(true);
+    expect(at({ x: 20, z: -51 })).toBe(true);
+    expect(at(fountain)).toBe(false);
+  });
+
+  it('stepping into water turns a human into a mermaid, and out of it back again', () => {
+    stepWater(true, 0.016);
+    expect(useGameStore.getState().form).toBe('mermaid');
+    expect(swim.active).toBe(true);
+    for (let t = 0; t < 0.3; t += 0.016) stepWater(false, 0.016);
+    expect(useGameStore.getState().form).toBe('mermaid');
+    for (let t = 0; t < 0.5; t += 0.016) stepWater(false, 0.016);
+    expect(useGameStore.getState().form).toBe('human');
+    expect(swim.active).toBe(false);
+  });
+
+  it('a mermaid who chose the form stays one on land', () => {
+    unlockMermaid();
+    toggleForm(10_000);
+    stepWater(true, 0.016);
+    for (let t = 0; t < 1; t += 0.016) stepWater(false, 0.016);
+    expect(useGameStore.getState().form).toBe('mermaid');
+  });
+
+  it('cannot change form in the water', () => {
+    unlockMermaid();
+    stepWater(true, 0.016);
+    expect(toggleForm(10_000)).toBe('busy');
   });
 
   it('is slower on land and faster in the water', () => {

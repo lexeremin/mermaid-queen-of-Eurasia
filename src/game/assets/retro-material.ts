@@ -3,11 +3,14 @@ import {
   NearestFilter,
   SRGBColorSpace,
   TextureLoader,
+  type Texture,
   type Object3D,
 } from 'three';
 import { ATLAS_URL } from '@/data/assets';
 
 let shared: MeshLambertMaterial | undefined;
+let fading: MeshLambertMaterial | undefined;
+let atlasTexture: Texture | undefined;
 
 /** Screen-door (ordered dither) fade: an instanced mesh with an `instanceFade` attribute below 1 turns see-through. */
 type ShaderSource = { vertexShader: string; fragmentShader: string };
@@ -49,19 +52,36 @@ float bayer4(vec2 p) {
     );
 }
 
-export function getRetroMaterial(): MeshLambertMaterial {
-  if (!shared) {
+function getAtlas(): Texture {
+  if (!atlasTexture) {
     const atlas = new TextureLoader().load(ATLAS_URL);
     atlas.colorSpace = SRGBColorSpace;
     atlas.magFilter = NearestFilter;
     atlas.minFilter = NearestFilter;
     atlas.generateMipmaps = false;
     atlas.flipY = false;
-    shared = new MeshLambertMaterial({ map: atlas });
-    shared.onBeforeCompile = addInstanceFade;
-    shared.customProgramCacheKey = () => 'retro-instance-fade';
+    atlasTexture = atlas;
   }
+  return atlasTexture;
+}
+
+/**
+ * The plain palette material: no `discard` anywhere in its shader, so the GPU keeps early depth testing (phones and
+ * Apple GPUs lose a lot of speed when a fragment shader can discard). Used by everything that never fades.
+ */
+export function getRetroMaterial(): MeshLambertMaterial {
+  shared ??= new MeshLambertMaterial({ map: getAtlas() });
   return shared;
+}
+
+/** The same material with the see-through dither: only for tall buildings and props that can hide Rosa. */
+export function getFadeMaterial(): MeshLambertMaterial {
+  if (!fading) {
+    fading = new MeshLambertMaterial({ map: getAtlas() });
+    fading.onBeforeCompile = addInstanceFade;
+    fading.customProgramCacheKey = () => 'retro-instance-fade';
+  }
+  return fading;
 }
 
 export function applyRetroMaterial(root: Object3D): void {
