@@ -38,7 +38,6 @@ export function Hud() {
   const nearPlace = useGameStore((s) => s.nearPlace);
   const welcomeOpen = useGameStore((s) => s.welcomeOpen);
   const controlsOpen = useGameStore((s) => s.controlsOpen);
-  const setControlsOpen = useGameStore((s) => s.setControlsOpen);
   const settingsOpen = useGameStore((s) => s.settingsOpen);
   const setSettingsOpen = useGameStore((s) => s.setSettingsOpen);
   const newGameOpen = useGameStore((s) => s.newGameOpen);
@@ -145,9 +144,6 @@ export function Hud() {
               </button>
               <button type="button" className="hud-btn" onClick={() => setSettingsOpen(true)}>
                 Settings
-              </button>
-              <button type="button" className="hud-btn" onClick={() => setControlsOpen(true)}>
-                Controls
               </button>
               <a className="hud-btn" href={GITHUB_URL} target="_blank" rel="noopener noreferrer">
                 lexeremin on Github
