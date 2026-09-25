@@ -3,11 +3,15 @@ import { NPCS } from '@/data/npcs';
 import { QUEST_BY_ID } from '@/data/quests';
 import { RED_SQUARE } from '@/data/maps/red-square';
 import { ITEMS, STARTER_EQUIPMENT, isItemId, type EquipSlot, type ItemId } from '@/data/items';
+import { ENEMIES } from '@/data/enemies';
+import { ABILITIES } from '@/systems/abilities';
+import { HERB_REGROW_SECONDS } from '@/systems/gathering';
+import { PICKUP_LIFE } from '@/systems/pickups';
 import { BAG_SIZE, MAX_KEEPSAKES, isKeepsake } from '@/systems/inventory';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 export type SavedNpc = {
   relationship: number;
@@ -39,6 +43,34 @@ export type SavedDungeon = {
   cachesTaken: string[];
 };
 
+/** One enemy that is not in its spawn state (hurt, dead, woken). Alive ones come back calm at this spot. */
+export type SavedEnemy = {
+  hp: number;
+  dead: boolean;
+  /** Seconds it has been dead (play time; it respawns when this reaches the respawn time). */
+  deadFor: number;
+  dormant: boolean;
+  x: number;
+  z: number;
+};
+
+/**
+ * The state of the world at save time, so a reload cannot refill mobs, the boss, health or cooldowns. Local only:
+ * it is never uploaded to the cloud.
+ */
+export type SavedWorld = {
+  hp: number;
+  mana: number;
+  downed: boolean;
+  /** Seconds left on each ability's cooldown. */
+  cooldowns: Record<string, number>;
+  enemies: Record<string, SavedEnemy>;
+  gateOpen: boolean;
+  pickups: { item: ItemId; x: number; z: number; age: number }[];
+  /** Seconds until each picked herb regrows. */
+  herbs: Record<string, number>;
+};
+
 export type SaveData = {
   version: number;
   savedAt: string;
@@ -49,6 +81,8 @@ export type SaveData = {
   quests: SavedQuests;
   garden: SavedGarden;
   dungeon: SavedDungeon;
+  /** Null in older saves and in cloud copies. */
+  world: SavedWorld | null;
 };
 
 type Raw = Record<string, unknown>;
@@ -60,6 +94,8 @@ export const MIGRATIONS: Migrations = {
   2: (data) => ({ ...data, quests: defaultSavedQuests() }),
   3: (data) => ({ ...data, garden: defaultSavedGarden() }),
   4: (data) => ({ ...data, dungeon: defaultSavedDungeon() }),
+  // v7: a local-only world snapshot is added (none for old saves).
+  6: (data) => ({ ...data, world: null }),
   // v6: the boss gate opens when the halls are cleared (no stamp), and two quests were renamed.
   5: (data) => {
     const d = isRecord(data.dungeon) ? data.dungeon : {};
@@ -225,6 +261,79 @@ function parseDungeon(raw: unknown): SavedDungeon {
   return result;
 }
 
+const ENEMY_KIND = new Map(RED_SQUARE.enemies.map((e) => [e.id, e.kind]));
+const HERB_IDS: ReadonlySet<string> = new Set(
+  (RED_SQUARE.gatherables ?? []).filter((g) => g.kind !== 'pearl').map((g) => g.id),
+);
+const MAX_PICKUPS = 40;
+const bounded = (value: unknown, min: number, max: number, fallback: number): number =>
+  Math.min(max, Math.max(min, finite(value, fallback)));
+
+/** Turns untrusted data into a valid world snapshot, or null. Unknown ids and impossible numbers are dropped. */
+function parseWorld(raw: unknown): SavedWorld | null {
+  if (!isRecord(raw)) return null;
+  const b = RED_SQUARE.bounds;
+  const inMap = (x: number, z: number) => x >= b.minX && x <= b.maxX && z >= b.minZ && z <= b.maxZ;
+
+  const cooldowns: Record<string, number> = {};
+  if (isRecord(raw.cooldowns)) {
+    for (const [id, def] of Object.entries(ABILITIES)) {
+      const left = bounded(raw.cooldowns[id], 0, def.cooldown, 0);
+      if (left > 0) cooldowns[id] = left;
+    }
+  }
+
+  const enemies: Record<string, SavedEnemy> = {};
+  if (isRecord(raw.enemies)) {
+    for (const [id, entry] of Object.entries(raw.enemies)) {
+      const kind = ENEMY_KIND.get(id);
+      if (!kind || !isRecord(entry)) continue;
+      const x = finite(entry.x, NaN);
+      const z = finite(entry.z, NaN);
+      if (!inMap(x, z)) continue;
+      enemies[id] = {
+        hp: bounded(entry.hp, 0, ENEMIES[kind].maxHp, ENEMIES[kind].maxHp),
+        dead: entry.dead === true,
+        deadFor: bounded(entry.deadFor, 0, 3600, 0),
+        dormant: entry.dormant === true,
+        x,
+        z,
+      };
+    }
+  }
+
+  const pickups: SavedWorld['pickups'] = [];
+  if (Array.isArray(raw.pickups)) {
+    for (const p of raw.pickups.slice(0, MAX_PICKUPS)) {
+      if (!isRecord(p) || !isItemId(p.item)) continue;
+      const x = finite(p.x, NaN);
+      const z = finite(p.z, NaN);
+      if (!inMap(x, z)) continue;
+      pickups.push({ item: p.item, x, z, age: bounded(p.age, 0, PICKUP_LIFE, 0) });
+    }
+  }
+
+  const herbs: Record<string, number> = {};
+  if (isRecord(raw.herbs)) {
+    for (const [id, left] of Object.entries(raw.herbs)) {
+      if (!HERB_IDS.has(id)) continue;
+      const seconds = bounded(left, 0, HERB_REGROW_SECONDS, 0);
+      if (seconds > 0) herbs[id] = seconds;
+    }
+  }
+
+  return {
+    hp: bounded(raw.hp, 0, 100000, 1),
+    mana: bounded(raw.mana, 0, 100000, 0),
+    downed: raw.downed === true,
+    cooldowns,
+    enemies,
+    gateOpen: raw.gateOpen === true,
+    pickups,
+    herbs,
+  };
+}
+
 function parseQuests(raw: unknown): SavedQuests {
   const result = defaultSavedQuests();
   if (!isRecord(raw)) return result;
@@ -299,6 +408,7 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
     quests: parseQuests(data.quests),
     garden: parseGarden(data.garden),
     dungeon: parseDungeon(data.dungeon),
+    world: parseWorld(data.world),
   };
 }
 

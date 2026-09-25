@@ -36,7 +36,7 @@ Events sent today: `session_started {device}`, `npc_method_used {npc, method}`, 
 
 ## Sync model
 - **Local save is the source of truth during play.** It is written on NPC or form changes (0.5 s debounce), every 10 s, when the tab hides and on `pagehide`. Parsed defensively on load (`parseSave`): bad or foreign data is dropped or clamped, saves from a newer game version are ignored, versions migrate through `MIGRATIONS`.
-- **Cloud save:** after sign-in, pull once; apply only if `saved_at` is newer than the local save (ties keep local). Push when progress (form, NPC state, level, XP, bag, equipment, quests, garden, dungeon) changed: at most every 30 s, and immediately when an NPC joins or the tab hides. Position alone never triggers a push.
+- **Cloud save:** after sign-in, pull once; apply only if `saved_at` is newer than the local save (ties keep local). The local save also carries a `world` snapshot (mobs, boss, health, loot); it is local only and is stripped before any push. Push when progress (form, NPC state, level, XP, bag, equipment, quests, garden, dungeon) changed: at most every 30 s, and immediately when an NPC joins or the tab hides. Position alone never triggers a push.
 - **Stats:** queued locally, batches of 25 upserted with `ignoreDuplicates`, exponential backoff 15 s → 10 min, queue capped at 200 (oldest dropped).
 - **Opt-out** (pause menu): stops collection, empties the queue, stored locally and in `players.stats_opt_out`.
 - **Failure states** (shown in the pause menu): not configured → local only; invalid settings; anonymous sign-ins disabled (one attempt per page load, no retry loop); offline (backoff 30 s → 10 min).

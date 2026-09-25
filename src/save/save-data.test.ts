@@ -421,3 +421,58 @@ describe('save v6: quest items take no bag slot', () => {
     expect(save.progress.keepsakes).toEqual({ pearl: 12 });
   });
 });
+
+describe('save v7: the world snapshot', () => {
+  const world = (over: Record<string, unknown> = {}) => ({
+    hp: 60,
+    mana: 40,
+    downed: false,
+    cooldowns: { blink: 2.5, aura: 99999, nothing: 3 },
+    enemies: {
+      'tycoon-basil': { hp: 5, dead: false, deadFor: 0, dormant: false, x: -3, z: -26 },
+      'speaker-basil': { hp: 0, dead: true, deadFor: 30, dormant: false, x: 4, z: -21 },
+      'not-an-enemy': { hp: 1, dead: false, deadFor: 0, dormant: false, x: 0, z: 0 },
+      'tycoon-manezh': { hp: 99999, dead: false, deadFor: 0, dormant: false, x: 5000, z: 5000 },
+    },
+    gateOpen: true,
+    pickups: [
+      { item: 'pearl', x: 1, z: 1, age: 10 },
+      { item: 'not-an-item', x: 1, z: 1, age: 0 },
+      { item: 'healingTea', x: 9999, z: 0, age: 0 },
+    ],
+    herbs: { 'rose-1': 40, 'pearl-1': 40, nothing: 10, 'rose-2': 99999 },
+    ...over,
+  });
+
+  it('migrates a v6 save with no world (null)', () => {
+    const save = parseSave({
+      ...good({ version: 6 }),
+      dungeon: {},
+      progress: {},
+      quests: {},
+      garden: {},
+    })!;
+    expect(save.version).toBe(SAVE_VERSION);
+    expect(save.world).toBeNull();
+  });
+
+  it('keeps a valid world and drops or clamps everything impossible', () => {
+    const save = parseSave(good({ world: world() }))!;
+    const w = save.world!;
+    expect(w.hp).toBe(60);
+    expect(w.gateOpen).toBe(true);
+    expect(w.cooldowns.blink).toBe(2.5);
+    expect(w.cooldowns.aura).toBe(8);
+    expect(w.cooldowns).not.toHaveProperty('nothing');
+    expect(Object.keys(w.enemies).sort()).toEqual(['speaker-basil', 'tycoon-basil']);
+    expect(w.enemies['speaker-basil']!.dead).toBe(true);
+    expect(w.pickups).toEqual([{ item: 'pearl', x: 1, z: 1, age: 10 }]);
+    expect(Object.keys(w.herbs)).toEqual(['rose-1', 'rose-2']);
+    expect(w.herbs['rose-2']).toBe(90);
+  });
+
+  it('is null for garbage', () => {
+    expect(parseSave(good({ world: 'nope' }))!.world).toBeNull();
+    expect(parseSave(good({ world: [] }))!.world).toBeNull();
+  });
+});

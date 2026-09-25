@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { combat, resetCombat } from '@/game/combat-sim';
+import { gather, rebuildGather } from '@/game/gather-sim';
+import { loot } from '@/game/loot-sim';
 import { currentMap } from '@/game/world/current-map';
+import { useDungeonStore } from '@/store/dungeon-store';
+import { useGardenStore } from '@/store/garden-store';
 import { resetSim, sim } from '@/game/sim';
 import { applySave, collectSave } from '@/save/game-save';
 import { parseSave, SAVE_VERSION } from '@/save/save-data';
@@ -24,6 +29,10 @@ describe('game save', () => {
     useProgressStore.getState().reset();
     useQuestStore.getState().reset();
     useGameStore.getState().setForm('human');
+    useGardenStore.getState().reset();
+    useDungeonStore.getState().reset();
+    resetCombat();
+    rebuildGather();
   });
 
   it('round-trips progress through apply and collect', () => {
@@ -101,5 +110,75 @@ describe('game save', () => {
     expect(out.quests.active['clear-the-gloom']).toEqual({ counts: [2], visited: [] });
     expect(out.quests.completed).toEqual(['first-notes']);
     expect(parseSave(JSON.parse(JSON.stringify(out)))?.quests).toEqual(out.quests);
+  });
+
+  describe('the world survives a reload', () => {
+    const enemy = (id: string) => combat.enemies.find((e) => e.id === id)!;
+    const reload = () => {
+      const saved = parseSave(JSON.parse(JSON.stringify(collectSave())))!;
+      resetCombat();
+      rebuildGather();
+      applySave(saved);
+    };
+
+    it('keeps dead mobs dead with their respawn timer, and hurt ones hurt', () => {
+      const dead = enemy('tycoon-basil');
+      dead.hp = 0;
+      dead.state = 'dead';
+      dead.deadFor = 100;
+      const hurt = enemy('speaker-basil');
+      hurt.hp = 12;
+      reload();
+      expect(enemy('tycoon-basil').state).toBe('dead');
+      expect(enemy('tycoon-basil').deadFor).toBe(100);
+      expect(enemy('speaker-basil').hp).toBe(12);
+      expect(enemy('speaker-basil').state).not.toBe('dead');
+      expect(enemy('tycoon-manezh').hp).toBeGreaterThan(0);
+    });
+
+    it('keeps health, mana, cooldowns and the fainted state', () => {
+      combat.hp = 37;
+      combat.mana = 11;
+      combat.cooldowns.blink = 3;
+      reload();
+      expect(combat.hp).toBe(37);
+      expect(combat.mana).toBe(11);
+      expect(combat.cooldowns.blink).toBe(3);
+      combat.downed = true;
+      combat.hp = 0;
+      reload();
+      expect(combat.downed).toBe(true);
+      expect(useGameStore.getState().downed).toBe(true);
+    });
+
+    it('keeps the boss hurt, his woken helpers and the open gate', () => {
+      const boss = enemy('ug-boss');
+      boss.hp = 300;
+      const helper = enemy('ug-helper-1');
+      helper.dormant = false;
+      useDungeonStore.getState().openGate();
+      reload();
+      expect(enemy('ug-boss').hp).toBe(300);
+      expect(enemy('ug-helper-1').dormant).toBe(false);
+      expect(enemy('ug-helper-2').dormant).toBe(true);
+      expect(useDungeonStore.getState().gateOpen).toBe(true);
+    });
+
+    it('keeps ground loot and herb timers', () => {
+      loot.pickups = [{ id: 1, item: 'pearl', pos: { x: 0, z: 20 }, age: 12, collectAfter: 0 }];
+      const herb = gather.nodes.find((n) => n.kind === 'roseHip')!;
+      herb.readyAt = gather.time + 50;
+      reload();
+      expect(loot.pickups).toHaveLength(1);
+      expect(loot.pickups[0]!.age).toBe(12);
+      expect(gather.nodes.find((n) => n.id === herb.id)!.readyAt).toBeCloseTo(50, 3);
+    });
+
+    it('a cloud copy (no world) does not refill what is running', () => {
+      combat.hp = 20;
+      const cloud = parseSave({ ...JSON.parse(JSON.stringify(collectSave())), world: null })!;
+      applySave(cloud);
+      expect(combat.hp).toBe(20);
+    });
   });
 });

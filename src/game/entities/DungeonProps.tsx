@@ -16,6 +16,7 @@ import { UNDERGROUND } from '@/data/maps/underground';
 import { applyRetroMaterial } from '@/game/assets/retro-material';
 import { currentMap } from '@/game/world/current-map';
 import { useDungeonStore } from '@/store/dungeon-store';
+import { useLoadingState } from '@/game/loading-state';
 import { useGameStore } from '@/store/game-store';
 
 useGLTF.preload(ASSETS.ugGate.url);
@@ -107,7 +108,9 @@ function Chest({ id, x, z, facing }: { id: string; x: number; z: number; facing:
 
 /** Underground extras that are not plain placements: the treasure chests and the boss gate. */
 export function DungeonProps() {
-  const underground = useGameStore((s) => s.underground);
+  const inUnderground = useGameStore((s) => s.underground);
+  const warming = useLoadingState((s) => s.warmUnderground);
+  const underground = inUnderground || warming;
   // Nothing here is worth drawing, or even keeping alive, while Rosa is on the surface.
   if (!underground) return null;
   return (

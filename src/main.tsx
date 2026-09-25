@@ -7,6 +7,7 @@ import { startGardenHooks } from '@/game/garden-actions';
 import { startDungeonHooks } from '@/game/dungeon-actions';
 import { startQuestHooks } from '@/game/quest-actions';
 import { startPersistence } from '@/save/game-save';
+import { useGameStore } from '@/store/game-store';
 import { startSync } from '@/net/sync';
 import { unlockAudio } from '@/audio/voice';
 
@@ -17,6 +18,7 @@ if (import.meta.env.DEV) {
   void import('@/game/dev-tools').then((m) => m.installDevTools());
 }
 
+useGameStore.getState().setLoading(true);
 startPersistence();
 startProgressHooks();
 startQuestHooks();

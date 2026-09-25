@@ -1,9 +1,11 @@
 import { useEffect, useRef } from 'react';
+import { addHudTask } from '@/ui/hud-ticker';
 import { drawMap } from '@/game/map/map-draw';
 import { fitRegion, regionFor } from '@/game/map/map-view';
 import { sim } from '@/game/sim';
 import { useGameStore } from '@/store/game-store';
 
+const MAP_INTERVAL_MS = 50;
 const dpr = () => Math.min(2, window.devicePixelRatio || 1);
 
 /** A small map that follows Rosa. Tapping or clicking it opens the full map. */
@@ -20,8 +22,11 @@ export function MiniMap({ touch }: { touch: boolean }) {
     el.height = size * ratio;
     const ctx = el.getContext('2d');
     if (!ctx) return;
-    let raf = 0;
-    const tick = () => {
+    let last = 0;
+    const tick = (now: number) => {
+      // About 20 redraws a second is plenty for a map.
+      if (now - last < MAP_INTERVAL_MS) return;
+      last = now;
       const pos = sim.curr.pos;
       ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
       drawMap(
@@ -30,10 +35,8 @@ export function MiniMap({ touch }: { touch: boolean }) {
         regionFor(pos.z),
         { labels: false, enemyRange: 45, marker: touch ? 3 : 4 },
       );
-      raf = requestAnimationFrame(tick);
     };
-    tick();
-    return () => cancelAnimationFrame(raf);
+    return addHudTask(tick);
   }, [size, touch]);
 
   return (
@@ -62,8 +65,10 @@ export function MapOverlay({ touch }: { touch: boolean }) {
     if (!box || !el) return;
     const ctx = el.getContext('2d');
     if (!ctx) return;
-    let raf = 0;
-    const tick = () => {
+    let last = 0;
+    const tick = (now: number) => {
+      if (now - last < MAP_INTERVAL_MS) return;
+      last = now;
       const w = box.clientWidth;
       const h = box.clientHeight;
       const ratio = dpr();
@@ -75,10 +80,8 @@ export function MapOverlay({ touch }: { touch: boolean }) {
       const current = regionFor(sim.curr.pos.z);
       const view = fitRegion(current, w, h, touch ? 20 : 36);
       drawMap(ctx, view, current, { labels: true, enemyRange: 30, marker: touch ? 4 : 5 });
-      raf = requestAnimationFrame(tick);
     };
-    tick();
-    return () => cancelAnimationFrame(raf);
+    return addHudTask(tick);
   }, [touch]);
 
   return (

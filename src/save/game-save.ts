@@ -9,6 +9,8 @@ import { useProgressStore, currentStats } from '@/store/progress-store';
 import { useGardenStore } from '@/store/garden-store';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { syncDungeonWorld } from '@/game/dungeon-sim';
+import { applyWorld, collectWorld } from '@/save/world-save';
+import { onSaveRequest } from '@/save/save-requests';
 import { useQuestStore } from '@/store/quest-store';
 import { rebuildGather } from '@/game/gather-sim';
 import { resolveCircle } from '@/systems/collision';
@@ -54,6 +56,7 @@ export function collectSave(): SaveData {
       pearlsTaken: [...useGardenStore.getState().pearlsTaken],
       shrineGift: useGardenStore.getState().shrineGift,
     },
+    world: collectWorld(),
     dungeon: {
       hallsCleared: useDungeonStore.getState().hallsCleared,
       bossDefeated: useDungeonStore.getState().bossDefeated,
@@ -88,7 +91,7 @@ function collectProgress(): SaveData['progress'] {
 }
 
 /** Applies a parsed save to the stores and the player. A blocked or invalid position falls back to the spawn. */
-export function applySave(save: SaveData): void {
+export function applySave(save: SaveData, options: { keepPosition?: boolean } = {}): void {
   const npcs: Record<string, NpcRuntime> = {};
   for (const [id, n] of Object.entries(save.npcs)) {
     npcs[id] = {
@@ -119,10 +122,13 @@ export function applySave(save: SaveData): void {
   useNpcStore.getState().hydrate(npcs);
   useGameStore.getState().setForm(save.hero.form);
   playSeconds = save.playSeconds;
-  refreshVitals();
+  if (save.world) applyWorld(save.world);
+  else if (!applied) refreshVitals();
+  else clampVitals();
+  applied = true;
 
   const { x, z } = save.hero;
-  if (Number.isFinite(x) && Number.isFinite(z)) {
+  if (!options.keepPosition && Number.isFinite(x) && Number.isFinite(z)) {
     const pos = resolveCircle({ x, z }, PLAYER_RADIUS, currentWorld);
     const moved = Math.hypot(pos.x - x, pos.z - z) > 1;
     if (!moved) {
@@ -135,7 +141,16 @@ export function applySave(save: SaveData): void {
   }
 }
 
-/** Health and mana are not saved: start every load at the maximums of the loaded level and gear. */
+let applied = false;
+
+/** A save without a world snapshot (a cloud copy) must not refill what is already running. */
+function clampVitals(): void {
+  const stats = currentStats();
+  combat.hp = Math.min(combat.hp, stats.maxHp);
+  combat.mana = Math.min(combat.mana, stats.maxMana);
+}
+
+/** Saves from before the world snapshot have no health or mana: start at the maximums of the level and gear. */
 function refreshVitals(): void {
   const stats = currentStats();
   combat.hp = stats.maxHp;
@@ -194,6 +209,7 @@ export function startPersistence(): void {
   useQuestStore.subscribe(scheduleSave);
   useGardenStore.subscribe(scheduleSave);
   useDungeonStore.subscribe(scheduleSave);
+  onSaveRequest(scheduleSave);
 
   window.setInterval(() => {
     if (isSimRunning(useGameStore.getState()) && !document.hidden)

@@ -1,5 +1,11 @@
 import { normalize, type Vec2 } from '@/utils/vec2';
-import { resetInput, setHeld, type Action, type InputState } from '@/input/input-state';
+import {
+  resetInput,
+  resetPointerInput,
+  setHeld,
+  type Action,
+  type InputState,
+} from '@/input/input-state';
 
 const MOVE_CODES = {
   up: ['KeyW', 'ArrowUp'],
@@ -86,6 +92,7 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
     if (!(e.target instanceof HTMLCanvasElement)) return;
     const touch = e.pointerType === 'touch';
     if (e.pointerType === 'mouse' && e.button === 2) {
+      input.mouseAttack = true;
       setHeld(input, 'attack', true);
       return;
     }
@@ -109,14 +116,23 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
     };
   };
   const onPointerUp = (e: PointerEvent) => {
-    if (e.pointerType === 'mouse' && e.button === 2) setHeld(input, 'attack', false);
+    if (e.pointerType === 'mouse' && e.button === 2) {
+      input.mouseAttack = false;
+      setHeld(input, 'attack', false);
+    }
   };
   const onContextMenu = (e: Event) => {
     if (e.target instanceof HTMLCanvasElement) e.preventDefault();
   };
+  const onTouches = (e: TouchEvent) => {
+    input.touchEvents = true;
+    input.touches = e.touches.length;
+    if (e.touches.length === 0) input.noTouchSince = performance.now();
+  };
   const onBlur = () => {
     heldKeys.clear();
     resetInput(input);
+    resetPointerInput(input);
   };
 
   window.addEventListener('keydown', onKeyDown);
@@ -125,6 +141,9 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
   window.addEventListener('contextmenu', onContextMenu);
+  window.addEventListener('touchstart', onTouches, { passive: true });
+  window.addEventListener('touchend', onTouches, { passive: true });
+  window.addEventListener('touchcancel', onTouches, { passive: true });
   window.addEventListener('blur', onBlur);
 
   return () => {
@@ -134,6 +153,9 @@ export function attachKeyboardMouse(input: InputState, handlers: KeyboardHandler
     window.removeEventListener('pointermove', onPointerMove);
     window.removeEventListener('pointerup', onPointerUp);
     window.removeEventListener('contextmenu', onContextMenu);
+    window.removeEventListener('touchstart', onTouches);
+    window.removeEventListener('touchend', onTouches);
+    window.removeEventListener('touchcancel', onTouches);
     window.removeEventListener('blur', onBlur);
   };
 }

@@ -8,6 +8,7 @@ import { xpToNext, MAX_LEVEL } from '@/systems/progression';
 import { ABILITIES, cooldownFraction, type AbilityId } from '@/systems/abilities';
 import { AbilityIcon } from '@/ui/icons';
 import { QuestTracker } from '@/ui/QuestTracker';
+import { addHudTask } from '@/ui/hud-ticker';
 import { Toasts } from '@/ui/Toasts';
 
 const SLOTS: { id: AbilityId; key: string; label: string }[] = [
@@ -32,7 +33,6 @@ export function CooldownSweep({ id }: { id: AbilityId }) {
   const time = useRef<HTMLSpanElement>(null);
   const flash = useRef<HTMLSpanElement>(null);
   useEffect(() => {
-    let raf = 0;
     let wasCooling = false;
     const tick = () => {
       const el = sweep.current;
@@ -53,10 +53,8 @@ export function CooldownSweep({ id }: { id: AbilityId }) {
         }
         wasCooling = left > 0;
       }
-      raf = requestAnimationFrame(tick);
     };
-    tick();
-    return () => cancelAnimationFrame(raf);
+    return addHudTask(tick);
   }, [id]);
   return (
     <>
@@ -69,15 +67,13 @@ export function CooldownSweep({ id }: { id: AbilityId }) {
 
 function HurtVignette() {
   const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    let raf = 0;
-    const tick = () => {
-      if (ref.current) ref.current.style.opacity = String(Math.min(1, combat.hurtFlash) * 0.9);
-      raf = requestAnimationFrame(tick);
-    };
-    tick();
-    return () => cancelAnimationFrame(raf);
-  }, []);
+  useEffect(
+    () =>
+      addHudTask(() => {
+        if (ref.current) ref.current.style.opacity = String(Math.min(1, combat.hurtFlash) * 0.9);
+      }),
+    [],
+  );
   return <div ref={ref} className="hurt-vignette" />;
 }
 
@@ -87,9 +83,14 @@ function BossBar() {
   const fill = useRef<HTMLDivElement>(null);
   const name = useRef<HTMLElement>(null);
   useEffect(() => {
-    let raf = 0;
+    let source: typeof combat | null = null;
+    let boss: (typeof combat.enemies)[number] | undefined;
     const tick = () => {
-      const boss = combat.enemies.find((e) => e.kind === 'boss');
+      // The boss is looked up again only when the combat state was replaced (a new game).
+      if (source !== combat) {
+        source = combat;
+        boss = combat.enemies.find((e) => e.kind === 'boss');
+      }
       const el = root.current;
       if (el && boss) {
         const show = !!boss.brain?.awake && boss.state !== 'dead';
@@ -100,10 +101,8 @@ function BossBar() {
           name.current.textContent = `${ENEMIES.boss.name}${phase > 1 ? ' · ' + (phase === 3 ? 'FURIOUS' : 'ANGRY') : ''}`;
         }
       }
-      raf = requestAnimationFrame(tick);
     };
-    tick();
-    return () => cancelAnimationFrame(raf);
+    return addHudTask(tick);
   }, []);
   return (
     <div ref={root} className="boss-bar" style={{ display: 'none' }}>

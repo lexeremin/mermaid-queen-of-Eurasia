@@ -25,7 +25,8 @@ export async function pushSave(userId: string, save: SaveData): Promise<boolean>
   const { error } = await client.from('saves').upsert({
     player_id: userId,
     version: SAVE_VERSION,
-    data: save,
+    // The world snapshot (mobs, boss, health) stays on this device.
+    data: { ...save, world: null },
     saved_at: save.savedAt,
   });
   return !error;

@@ -1,5 +1,6 @@
-import type { CSSProperties } from 'react';
-import { input, setHeld, type Action } from '@/input/input-state';
+import { useEffect, useMemo, type CSSProperties } from 'react';
+import { input, onInputReset, setHeld, type Action } from '@/input/input-state';
+import { createPointerTracker } from '@/input/pointer-tracker';
 import type { AbilityId } from '@/systems/abilities';
 import { CooldownSweep } from '@/ui/CombatHud';
 import { AbilityIcon } from '@/ui/icons';
@@ -16,7 +17,28 @@ const ABILITY_OF: Record<Action, AbilityId | undefined> = {
 type Props = { action: Action; label: string; size: number; style: CSSProperties };
 
 export function ActionButton({ action, label, size, style }: Props) {
-  const release = () => setHeld(input, action, false);
+  const tracker = useMemo(() => createPointerTracker(), []);
+  const release = () => {
+    tracker.reset();
+    setHeld(input, action, false);
+  };
+
+  useEffect(() => {
+    const onEnd = (e: PointerEvent) => {
+      if (tracker.up(e.pointerId)) setHeld(input, action, false);
+    };
+    window.addEventListener('pointerup', onEnd);
+    window.addEventListener('pointercancel', onEnd);
+    const offReset = onInputReset(() => tracker.reset());
+    return () => {
+      window.removeEventListener('pointerup', onEnd);
+      window.removeEventListener('pointercancel', onEnd);
+      offReset();
+      tracker.reset();
+      setHeld(input, action, false);
+    };
+  }, [action, tracker]);
+
   return (
     <button
       type="button"
@@ -24,11 +46,17 @@ export function ActionButton({ action, label, size, style }: Props) {
       style={{ width: size, height: size, ...style }}
       onContextMenu={(e) => e.preventDefault()}
       onPointerDown={(e) => {
-        e.currentTarget.setPointerCapture(e.pointerId);
+        tracker.down(e.pointerId);
+        try {
+          e.currentTarget.setPointerCapture(e.pointerId);
+        } catch {
+          // Already gone; the window listeners still see it end.
+        }
         setHeld(input, action, true);
       }}
-      onPointerUp={release}
-      onPointerCancel={release}
+      onLostPointerCapture={(e) => {
+        if (tracker.up(e.pointerId)) release();
+      }}
     >
       {ABILITY_OF[action] && <AbilityIcon id={ABILITY_OF[action]} size={Math.round(size * 0.46)} />}
       <span className="action-label">{label}</span>

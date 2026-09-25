@@ -20,13 +20,21 @@ import { canTake } from '@/systems/inventory';
 import { stepPickups } from '@/systems/pickups';
 import { MAX_STEPS_PER_FRAME, SIM_STEP, sim } from '@/game/sim';
 import { track } from '@/net/stats';
+import { requestSave } from '@/save/save-requests';
 import { useCombatStore } from '@/store/combat-store';
 import { ENEMIES } from '@/data/enemies';
 import { stepCombat, type CombatEvent } from '@/systems/combat';
 import { BLINK } from '@/systems/abilities';
 import { pickBlinkDestination } from '@/systems/blink';
 import { nav } from '@/game/world/nav';
-import { clearPressed, consumePressed, getMove, input } from '@/input/input-state';
+import {
+  clearPressed,
+  consumePressed,
+  getMove,
+  input,
+  setHeld,
+  staleInput,
+} from '@/input/input-state';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { useNpcStore } from '@/store/npc-store';
 import { isSimRunning, useGameStore, type PlaceId } from '@/store/game-store';
@@ -115,6 +123,7 @@ function tryCollect(item: (typeof ITEMS)[keyof typeof ITEMS]['id']): boolean {
   const result = useProgressStore.getState().addItem(item);
   if (result.added === 0) return false;
   useToastStore.getState().push(`Picked up ${ITEMS[item].name}`, 'item');
+  requestSave();
   return true;
 }
 
@@ -127,6 +136,7 @@ function warnBagFull(): void {
 }
 
 function handleCombatEvents(events: readonly CombatEvent[]): void {
+  if (events.length > 0) requestSave();
   for (const event of events) {
     if (event.type === 'enemyDefeated') {
       track('enemy_defeated', { kind: event.kind });
@@ -163,6 +173,9 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
 export function GameLoop() {
   useFrame((state, delta) => {
     if (import.meta.env.DEV) (window as { __mqCamera?: Camera }).__mqCamera = state.camera;
+    const stale = staleInput(input, performance.now());
+    if (stale.stick) input.stickMove = { x: 0, z: 0 };
+    if (stale.attack) setHeld(input, 'attack', false);
     if (!isSimRunning(useGameStore.getState())) {
       clearPressed(input);
       input.click = null;

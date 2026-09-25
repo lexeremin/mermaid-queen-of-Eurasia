@@ -1,4 +1,6 @@
 import { useFrame } from '@react-three/fiber';
+import { heroIsOccluded } from '@/game/assets/hero-occlusion';
+import { setXrayVisible } from '@/game/assets/xray';
 import { useRef, useState } from 'react';
 import type { Group } from 'three';
 import { ATMOSPHERE } from '@/game/atmosphere';
@@ -24,6 +26,7 @@ export function Player() {
   useFrame(() => {
     const g = group.current;
     if (!g) return;
+    setXrayVisible(heroIsOccluded(performance.now()));
     getRenderPosition(position);
     g.position.set(position.x, 0, position.z);
     g.rotation.y = Math.atan2(sim.curr.facing.x, sim.curr.facing.z);

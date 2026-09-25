@@ -11,6 +11,9 @@ export type GameState = {
   /** Quest panel: the read-only log, or the notice board where quests are accepted and claimed. */
   questPanel: QuestPanel;
   dialogueOpen: boolean;
+  /** The loading screen: assets, the first scene commit, shader compile and the walk grid are not ready yet. */
+  loading: boolean;
+  setLoading: (loading: boolean) => void;
   /** The welcome screen of a brand new game. */
   welcomeOpen: boolean;
   /** The keybindings popup (opened from the menu or the welcome screen). */
@@ -58,6 +61,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   inventoryOpen: false,
   questPanel: null,
   dialogueOpen: false,
+  loading: false,
+  setLoading: (loading) => set({ loading }),
   welcomeOpen: false,
   controlsOpen: false,
   settingsOpen: false,
@@ -143,6 +148,7 @@ export function isSimRunning(
     | 'transitioning'
     | 'welcomeOpen'
     | 'mapBlocking'
+    | 'loading'
   >,
 ): boolean {
   return (
@@ -153,6 +159,7 @@ export function isSimRunning(
     !state.downed &&
     !state.transitioning &&
     !state.welcomeOpen &&
-    !state.mapBlocking
+    !state.mapBlocking &&
+    !state.loading
   );
 }

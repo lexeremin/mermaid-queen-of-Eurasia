@@ -35,7 +35,7 @@ Requested after Phase 14b: move two NPCs that were hard to see, give Prince Sash
 
 ## Notes
 - The companion is invulnerable and always fights on Rosa's side; a later phase could give him health, a downed state and equipment.
-- A title screen at game start is still planned for Phase 18 (the menu here is the pause menu).
+- A title screen at game start was planned for a later phase; the welcome screen (16d) covers new games, a title screen for returning players is in Phase 19.
 
 ## Follow-up fixes
 - **Old dialogue spot:** a following NPC stayed "talkable" at his original map position (walking there showed the prompt and opened his dialogue). He is now removed from talk spots, click picking and Aura charm targets while he follows. A **TALK** button (portrait and label; bottom right on desktop, left column on touch) appears only while someone follows and opens his dialogue from anywhere; it hides during dialogue, menus and panels.

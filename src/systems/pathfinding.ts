@@ -1,4 +1,4 @@
-import { resolveCircle, type CollisionWorld } from '@/systems/collision';
+import { type Collider, type CollisionWorld } from '@/systems/collision';
 import type { Vec2 } from '@/utils/vec2';
 
 export type NavGrid = {
@@ -9,8 +9,10 @@ export type NavGrid = {
   isFreePoint: (x: number, z: number) => boolean;
   toCell: (x: number, z: number) => [number, number];
   cellCenter: (i: number, j: number) => Vec2;
-  /** Fills the walkability cache in small chunks so the first click does not stall. */
+  /** Fills the walkability cache in time slices so the first click does not stall. */
   prewarm: () => Promise<void>;
+  /** Resolves when the cache is fully filled (again, after a reset). */
+  ready: () => Promise<void>;
   /** Forgets the cache (a gate opened or closed, so walkability changed). */
   reset: () => void;
   /** Whether two points lie in the same walkable region (a walk from one to the other exists). */
@@ -21,17 +23,99 @@ const UNKNOWN = 0;
 const FREE = 1;
 const BLOCKED = 2;
 
+const EPS = 1e-6;
+const BUCKET = 4;
+
+/**
+ * A fast, allocation-free "can a circle of `radius` stand here?" for a fixed world: the same answer as moving the
+ * circle out with `resolveCircle` and finding it did not move, but it only looks at the colliders near the point
+ * (a bucket grid built on first use). Rebuild it (call `rebuild`) after colliders are added or removed.
+ */
+export function createFreeTest(world: CollisionWorld, radius: number) {
+  const { minX, maxX, minZ, maxZ } = world.bounds;
+  const cols = Math.ceil((maxX - minX) / BUCKET) + 1;
+  const rows = Math.ceil((maxZ - minZ) / BUCKET) + 1;
+  let buckets: Collider[][] | null = null;
+
+  const build = (): Collider[][] => {
+    const out: Collider[][] = Array.from({ length: cols * rows }, () => []);
+    const pad = radius + EPS;
+    for (const c of world.colliders) {
+      let x0: number, x1: number, z0: number, z1: number;
+      if (c.kind === 'box') {
+        x0 = c.cx - c.hx - pad;
+        x1 = c.cx + c.hx + pad;
+        z0 = c.cz - c.hz - pad;
+        z1 = c.cz + c.hz + pad;
+      } else if (c.kind === 'circle') {
+        x0 = c.x - c.r - pad;
+        x1 = c.x + c.r + pad;
+        z0 = c.z - c.r - pad;
+        z1 = c.z + c.r + pad;
+      } else {
+        x0 = Math.min(c.ax, c.bx) - c.r - pad;
+        x1 = Math.max(c.ax, c.bx) + c.r + pad;
+        z0 = Math.min(c.az, c.bz) - c.r - pad;
+        z1 = Math.max(c.az, c.bz) + c.r + pad;
+      }
+      const i0 = Math.max(0, Math.floor((x0 - minX) / BUCKET));
+      const i1 = Math.min(cols - 1, Math.floor((x1 - minX) / BUCKET));
+      const j0 = Math.max(0, Math.floor((z0 - minZ) / BUCKET));
+      const j1 = Math.min(rows - 1, Math.floor((z1 - minZ) / BUCKET));
+      for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) out[j * cols + i]?.push(c);
+    }
+    return out;
+  };
+
+  const overlaps = (c: Collider, x: number, z: number): boolean => {
+    if (c.kind === 'box') {
+      const nx = x < c.cx - c.hx ? c.cx - c.hx : x > c.cx + c.hx ? c.cx + c.hx : x;
+      const nz = z < c.cz - c.hz ? c.cz - c.hz : z > c.cz + c.hz ? c.cz + c.hz : z;
+      if (nx === x && nz === z) return true;
+      return radius - Math.hypot(x - nx, z - nz) > EPS;
+    }
+    if (c.kind === 'circle') return c.r + radius - Math.hypot(x - c.x, z - c.z) > EPS;
+    const abx = c.bx - c.ax;
+    const abz = c.bz - c.az;
+    const lengthSq = abx * abx + abz * abz;
+    let t = lengthSq === 0 ? 0 : ((x - c.ax) * abx + (z - c.az) * abz) / lengthSq;
+    t = t < 0 ? 0 : t > 1 ? 1 : t;
+    return c.r + radius - Math.hypot(x - (c.ax + abx * t), z - (c.az + abz * t)) > EPS;
+  };
+
+  return {
+    rebuild: () => {
+      buckets = null;
+    },
+    isFree(x: number, z: number): boolean {
+      if (
+        x < minX + radius - EPS ||
+        x > maxX - radius + EPS ||
+        z < minZ + radius - EPS ||
+        z > maxZ - radius + EPS
+      ) {
+        return false;
+      }
+      buckets ??= build();
+      const i = Math.min(cols - 1, Math.max(0, Math.floor((x - minX) / BUCKET)));
+      const j = Math.min(rows - 1, Math.max(0, Math.floor((z - minZ) / BUCKET)));
+      const list = buckets[j * cols + i];
+      if (!list) return true;
+      for (const c of list) if (overlaps(c, x, z)) return false;
+      return true;
+    },
+  };
+}
+
 /** Walkability grid for a circle of `radius` over the collision world, computed lazily and cached. */
 export function createNavGrid(world: CollisionWorld, radius: number, cell = 0.5): NavGrid {
   const { minX, maxX, minZ, maxZ } = world.bounds;
   const cols = Math.floor((maxX - minX) / cell) + 1;
   const rows = Math.floor((maxZ - minZ) / cell) + 1;
   const state = new Uint8Array(cols * rows);
+  const test = createFreeTest(world, radius);
 
-  const isFreePoint = (x: number, z: number): boolean => {
-    const p = resolveCircle({ x, z }, radius, world);
-    return Math.abs(p.x - x) < 1e-6 && Math.abs(p.z - z) < 1e-6;
-  };
+  const isFreePoint = (x: number, z: number): boolean => test.isFree(x, z);
 
   // Connected walkable regions, labelled lazily by a flood fill and dropped whenever the cache is reset.
   let labels: Int32Array | null = null;
@@ -98,6 +182,24 @@ export function createNavGrid(world: CollisionWorld, radius: number, cell = 0.5)
     return s === FREE;
   };
 
+  /** Fills the cache row by row, yielding to the browser whenever a slice has used its time budget. */
+  const SLICE_MS = 6;
+  async function fill(): Promise<void> {
+    let sliceStart = performance.now();
+    for (let j = 0; j < rows; j++) {
+      for (let i = 0; i < cols; i++) isFreeCell(i, j);
+      if (performance.now() - sliceStart > SLICE_MS) {
+        await new Promise((resolve) => setTimeout(resolve, 0));
+        sliceStart = performance.now();
+      }
+    }
+  }
+  let warming: Promise<void> = Promise.resolve();
+  const prewarm = (): Promise<void> => {
+    warming = fill();
+    return warming;
+  };
+
   return {
     cell,
     cols,
@@ -109,17 +211,15 @@ export function createNavGrid(world: CollisionWorld, radius: number, cell = 0.5)
     reset: () => {
       state.fill(UNKNOWN);
       labels = null;
+      test.rebuild();
+      warming = prewarm();
     },
+    ready: () => warming,
     sameRegion: (a, b) => {
       const ra = regionAt(a.x, a.z);
       return ra !== 0 && ra === regionAt(b.x, b.z);
     },
-    async prewarm() {
-      for (let j = 0; j < rows; j++) {
-        for (let i = 0; i < cols; i++) isFreeCell(i, j);
-        if (j % 12 === 11) await new Promise((resolve) => setTimeout(resolve, 0));
-      }
-    },
+    prewarm,
   };
 }
 

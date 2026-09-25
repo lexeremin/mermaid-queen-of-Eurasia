@@ -30,10 +30,11 @@ Feature list with phase mapping. Status lives in `docs/Task.md`.
 | Map: minimap and full overlay (Tab/M), lamp glow, 3-minute respawn | 16f |
 | Vintage HUD theme, welcome screen, controls popup, Prince Sasha avatar, dock on the left | 16d |
 | Blink (Shift) replaces Dash, Recall (T) channelled return to Red Square, icon HUD buttons, dock layout without overlaps | 16c |
-| Transformations: Mermaid Queen (Tidal Song), Forest Spirit, Elvish Form, Tsarina of Eurasia | 17 |
-| Audio, VFX (mist, drizzle, particles), HUD polish, title screen, settings, occlusion fade | 18 |
-| iPhone Safari QA, performance tuning | 19 |
-| Hosting, env config, release | 20 |
+| Stability: persisted world state, loading screen, startup and runtime performance, joystick fix | 17 |
+| Mermaid Queen transformation (unlock, toggle, Tidal Song, water crossing) | 18 |
+| Polish: SFX, ambient/music, weather particles, damage numbers, shake, returning-player title | 19 |
+| iPhone Safari QA | 20 |
+| Hosting, env config, release | 21 |
 
 ## Stretch (post-slice)
-Cross-device cloud restore, leaderboard, PWA install polish, additional districts.
+Cross-device cloud restore, leaderboard, PWA install polish, additional districts, Forest Spirit, Elvish Form and Tsarina of Eurasia transformations.

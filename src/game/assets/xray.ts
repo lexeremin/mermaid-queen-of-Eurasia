@@ -49,6 +49,20 @@ function getXrayMaterial(): Material {
   return xray;
 }
 
+const twins: Mesh[] = [];
+let twinsShown = true;
+
+/** Shows or hides every X-ray twin (they cost a draw call each), driven by `heroOcclusion`. */
+export function setXrayVisible(visible: boolean): void {
+  if (visible === twinsShown) return;
+  twinsShown = visible;
+  for (let i = twins.length - 1; i >= 0; i--) {
+    const twin = twins[i];
+    if (!twin?.parent) twins.splice(i, 1);
+    else twin.visible = visible;
+  }
+}
+
 /** Applies the hero material and adds an X-ray twin under every mesh so it follows the same animation. */
 export function applyHeroLook(root: Object3D): void {
   const material = getHeroMaterial();
@@ -62,6 +76,8 @@ export function applyHeroLook(root: Object3D): void {
     const twin = new Mesh(mesh.geometry, twinMaterial);
     twin.userData.xray = true;
     twin.renderOrder = 10;
+    twin.visible = twinsShown;
+    twins.push(twin);
     mesh.add(twin);
   }
 }

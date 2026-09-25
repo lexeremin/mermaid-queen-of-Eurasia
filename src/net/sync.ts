@@ -5,6 +5,7 @@ import { useNetStore } from '@/net/net-store';
 import { statsQueue, track, watchOptOut } from '@/net/stats';
 import { applySave, collectSave, loadLocalSave, onSaved, writeLocalSave } from '@/save/game-save';
 import { pickNewer, type SaveData } from '@/save/save-data';
+import { useGameStore } from '@/store/game-store';
 import { useNpcStore } from '@/store/npc-store';
 import { useSettingsStore } from '@/store/settings-store';
 
@@ -73,7 +74,8 @@ export function startSync(): void {
     const local = loadLocalSave();
     const cloud = await pullSave(auth.userId).catch(() => null);
     if (pickNewer(local, cloud) === 'cloud' && cloud) {
-      applySave(cloud);
+      // Once the game is running, a late cloud copy must not teleport Rosa.
+      applySave(cloud, { keepPosition: !useGameStore.getState().loading });
       latest = writeLocalSave();
       lastPushed = progressKey(latest);
     } else {

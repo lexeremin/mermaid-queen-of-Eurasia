@@ -1,9 +1,10 @@
 import { useEffect } from 'react';
-import { input } from '@/input/input-state';
+import { input, resetPointerInput } from '@/input/input-state';
+import { attachInputReset } from '@/input/input-reset';
 import { attachKeyboardMouse } from '@/input/keyboard';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { canQuickUse, quickUse } from '@/game/progress-actions';
-import { useGameStore } from '@/store/game-store';
+import { isSimRunning, useGameStore } from '@/store/game-store';
 
 export function useInputBridge(): void {
   useEffect(() => {
@@ -21,12 +22,20 @@ export function useInputBridge(): void {
         if (canQuickUse()) quickUse(slot === 0 ? 'healingTea' : 'coldKvass');
       },
     });
+    const detachReset = attachInputReset(useGameStore, input, isSimRunning);
     const onVisibility = () => {
-      if (document.hidden) setPaused(true);
+      if (document.hidden) {
+        resetPointerInput(input);
+        setPaused(true);
+      }
     };
+    const onPageHide = () => resetPointerInput(input);
     document.addEventListener('visibilitychange', onVisibility);
+    window.addEventListener('pagehide', onPageHide);
     return () => {
       detach();
+      detachReset();
+      window.removeEventListener('pagehide', onPageHide);
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);

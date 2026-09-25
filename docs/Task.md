@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 16 complete (Moscow underground + boss).** Next: **Phase 17 — Transformations** (`docs/phases/phase-17.md` — write it first, it does not exist yet).
+**Phase 16 complete (Moscow underground + boss, with follow-ups 16b–16f).** Next: **Phase 17 — Stability pass** (`docs/phases/phase-17.md`): persisted world state, loading screen, performance, joystick fix.
 
 ---
 
@@ -102,10 +102,12 @@ Read these files before starting any work:
 | Phase 15d — Gate fixes, glow, hitbox rings | ✅ Complete | Floating seam plates removed from the gates, one united entrance glow, green/red hitbox rings, ground flicker fix, Trident reach 3.4 m | 85ba93c |
 | Phase 15e — Kits and generators | ✅ Complete | Wall-run assembler with a four-piece kit and a corner tower, ground autotiler (grid, variants, kerbs, connectors through both gates), see-through fade for occluding buildings | 75457cc |
 | Phase 16 — Moscow underground + boss | ✅ Complete | Generated underground level (3 rooms, corridors, boss arena) reached by a metro pavilion, dark-brick wall kit, torch-lit mood with fade transitions, chests, Chief Registrar and the stamp, boss gate, Father of Corruption (three phases, telegraphed hazards, helpers), save v5 | e7cfe72 |
-| Phase 17 — Transformations | ⬜ Next | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
-| Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings (hero X-ray silhouette already done in Phase 8) | |
-| Phase 19 — Mobile QA + perf | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
-| Phase 20 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |
+| Phase 16b–16f — Underground rework, Blink/Recall, vintage HUD, menus, map | ✅ Complete | Father of Corruption, cleared-halls gate, instanced mobs, quest items off the bag, Blink replaces Dash, Recall, vintage HUD theme, welcome screen, settings/new-game popups, visible cooldowns, minimap + full map (Tab/M), lamp glow, 3 min respawn | see `git log` |
+| Phase 17 — Stability pass | ⬜ Next | Persisted world (mobs, boss, hp, loot survive a reload), loading screen + startup lag fix, performance optimization, mobile joystick stuck-input fix | |
+| Phase 18 — Mermaid Queen | ⬜ Todo | One persistent transformation: unlock, toggle, Tidal Song, water crossing (model and the temporary look already exist). Forest Spirit, Elvish and Tsarina moved to the stretch list | |
+| Phase 19 — Polish | ⬜ Todo | Only what is missing: SFX (UI, level-up, quest, loot, blink, recall, boss, hits), ambient loop/music, volume slider, mist/drizzle particles, damage numbers, screen shake, title screen for returning players. (Occlusion fade, welcome screen, settings, base audio and the HUD theme are already done.) | |
+| Phase 20 — Real-device QA | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
+| Phase 21 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |
 
 Order rationale: asset pipeline (3) comes before content so style and performance risk is found early; the direction changes (5–9) land before NPCs so characters are built for the final setting; Supabase (11) comes before gameplay data grows so the save schema stays stable.
 

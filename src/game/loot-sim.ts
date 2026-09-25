@@ -1,5 +1,6 @@
 import type { EnemyKind } from '@/data/enemies';
 import type { ItemId } from '@/data/items';
+import { requestSave } from '@/save/save-requests';
 import { rollLoot } from '@/systems/loot';
 import { DROP_DELAY, scatter, type Pickup } from '@/systems/pickups';
 import type { Vec2 } from '@/utils/vec2';
@@ -12,6 +13,7 @@ export function resetLoot(): void {
 }
 
 export function spawnPickup(item: ItemId, pos: Vec2, collectAfter = 0): void {
+  requestSave();
   loot.pickups.push({ id: loot.nextId++, item, pos: { ...pos }, age: 0, collectAfter });
 }
 

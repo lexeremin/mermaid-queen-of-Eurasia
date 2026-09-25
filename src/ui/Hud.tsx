@@ -7,6 +7,7 @@ import { DebugOverlay } from '@/ui/DebugOverlay';
 import { CombatHud } from '@/ui/CombatHud';
 import { DialogueBox } from '@/ui/DialogueBox';
 import { ControlsPanel } from '@/ui/ControlsPanel';
+import { LoadingScreen } from '@/ui/LoadingScreen';
 import { Welcome } from '@/ui/Welcome';
 import { MapOverlay, MiniMap } from '@/ui/MapViews';
 import { RecallButton } from '@/ui/RecallButton';
@@ -38,6 +39,7 @@ export function Hud() {
   const questPanel = useGameStore((s) => s.questPanel);
   const nearPlace = useGameStore((s) => s.nearPlace);
   const welcomeOpen = useGameStore((s) => s.welcomeOpen);
+  const loading = useGameStore((s) => s.loading);
   const controlsOpen = useGameStore((s) => s.controlsOpen);
   const settingsOpen = useGameStore((s) => s.settingsOpen);
   const setSettingsOpen = useGameStore((s) => s.setSettingsOpen);
@@ -139,6 +141,7 @@ export function Hud() {
       </div>
 
       <DialogueBox />
+      <LoadingScreen />
 
       {inventoryOpen && <InventoryPanel />}
       {questPanel && <QuestPanel />}
@@ -169,7 +172,7 @@ export function Hud() {
         </div>
       )}
 
-      {welcomeOpen && <Welcome />}
+      {welcomeOpen && !loading && <Welcome />}
       {settingsOpen && <SettingsPanel />}
       {newGameOpen && <NewGamePanel />}
       {controlsOpen && <ControlsPanel touch={touch} />}

@@ -15,6 +15,7 @@ import { GRASS_URL, type AssetId } from '@/data/assets';
 import type { Placement } from '@/data/maps/types';
 import { PALETTE } from '@/data/palette';
 import { InstancedModel, type Transform } from '@/game/assets/InstancedModel';
+import { useLoadingState } from '@/game/loading-state';
 import { useGameStore } from '@/store/game-store';
 import { GroundPaving } from '@/game/world/GroundPaving';
 import { EntranceGlow } from '@/game/world/EntranceGlow';
@@ -155,7 +156,9 @@ export function MapScene() {
   const map = currentMap;
   const groups = useMemo(() => groupByAsset(map.placements), [map]);
   const inGum = useGameStore((s) => s.zone?.id === 'gum');
-  const underground = useGameStore((s) => s.underground);
+  const inUnderground = useGameStore((s) => s.underground);
+  const warming = useLoadingState((s) => s.warmUnderground);
+  const underground = inUnderground || warming;
   const surfaceFloors = useMemo(() => (map.floors ?? []).filter((f) => f.cz < UG_MIN_Z), [map]);
   const undergroundFloors = useMemo(
     () => (map.floors ?? []).filter((f) => f.cz >= UG_MIN_Z),

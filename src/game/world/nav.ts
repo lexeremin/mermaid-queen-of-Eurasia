@@ -4,6 +4,5 @@ import { createNavGrid } from '@/systems/pathfinding';
 
 export const nav = createNavGrid(currentWorld, PLAYER_RADIUS, 0.5);
 
-if (typeof window !== 'undefined') {
-  window.setTimeout(() => void nav.prewarm(), 800);
-}
+/** The walkability cache fills itself in short slices as soon as the game starts; the loading screen waits for it. */
+export const navReady: Promise<void> = nav.prewarm();

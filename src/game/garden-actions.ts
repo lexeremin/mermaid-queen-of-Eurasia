@@ -4,6 +4,7 @@ import { combat } from '@/game/combat-sim';
 import { gather } from '@/game/gather-sim';
 import { awardOnce } from '@/game/progress-actions';
 import { track } from '@/net/stats';
+import { requestSave } from '@/save/save-requests';
 import { useGameStore } from '@/store/game-store';
 import { useGardenStore } from '@/store/garden-store';
 import { currentStats, useProgressStore } from '@/store/progress-store';
@@ -36,6 +37,7 @@ function take(node: GatherNode): boolean {
     toast(`Gathered ${ITEMS[item].name}`, 'item');
   }
   playSfx('gather');
+  requestSave();
   return true;
 }
 
