@@ -30,7 +30,7 @@ import { MAX_STEPS_PER_FRAME, SIM_STEP, sim } from '@/game/sim';
 import { track } from '@/net/stats';
 import { requestSave } from '@/save/save-requests';
 import { useCombatStore } from '@/store/combat-store';
-import { ENEMIES } from '@/data/enemies';
+import { BOSS_LINES, ENEMIES, isBossKind } from '@/data/enemies';
 import { stepCombat, type CombatEvent } from '@/systems/combat';
 import { BLINK, MERMAID } from '@/systems/abilities';
 import { pickBlinkDestination } from '@/systems/blink';
@@ -70,7 +70,7 @@ const ndc = new Vector2();
 const raycaster = new Raycaster();
 const stepper = createFixedStepper(SIM_STEP, MAX_STEPS_PER_FRAME);
 const STUCK_SECONDS = 0.5;
-const SPOTS = [...currentMap.npcs, ...(currentMap.archangels ?? [])];
+const SPOTS = [...currentMap.npcs, ...(currentMap.archangels ?? []), ...(currentMap.locals ?? [])];
 const PLACE_OF_ASSET = new Map<string, PlaceId>([
   ['questBoard', 'board'],
   ['shrine', 'shrine'],
@@ -174,14 +174,14 @@ function handleCombatEvents(events: readonly CombatEvent[]): void {
       );
       onEnemyDefeatedForQuests(event.kind);
       spawnDrops(event.kind, { x: event.x, z: event.z });
-      if (event.kind === 'boss') onBossDefeated({ x: event.x, z: event.z });
+      if (isBossKind(event.kind)) onBossDefeated({ x: event.x, z: event.z }, event.kind);
     } else if (event.type === 'bossPhase') {
       useToastStore
         .getState()
         .push(
           event.phase === 2
-            ? 'The Father of Corruption calls for backup!'
-            : 'Form 27-B: he is furious!',
+            ? (BOSS_LINES[event.kind]?.angry ?? 'The boss calls for backup!')
+            : (BOSS_LINES[event.kind]?.furious ?? 'The boss is furious!'),
           'warn',
         );
     } else if (event.type === 'bossSummon') {

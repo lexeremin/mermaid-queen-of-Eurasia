@@ -1,3 +1,4 @@
+import { isBossKind } from '@/data/enemies';
 import { isUnderground, layerLevel } from '@/data/maps/underground';
 import { METRO } from '@/data/maps/red-square';
 import { combat } from '@/game/combat-sim';
@@ -137,6 +138,10 @@ export function drawMap(
       const p = toScreen(view, n.x, n.z);
       dot(ctx, p.x, p.y, m * 0.7, '#5dff8f');
     }
+    for (const n of currentMap.locals ?? []) {
+      const p = toScreen(view, n.x, n.z);
+      dot(ctx, p.x, p.y, m * 0.6, '#9fe8b0');
+    }
     // The hidden archangels only appear on the map once they are saved.
     const saved = useArchangelStore.getState().saved;
     for (const n of currentMap.archangels ?? []) {
@@ -159,7 +164,7 @@ export function drawMap(
       ctx,
       p.x,
       p.y,
-      m * (e.kind === 'boss' ? 1.3 : 0.6) * (defOf(e).radius > 1 ? 1.2 : 1),
+      m * (isBossKind(e.kind) ? 1.3 : 0.6) * (defOf(e).radius > 1 ? 1.2 : 1),
       '#ff4d4d',
     );
   }

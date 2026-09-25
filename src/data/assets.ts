@@ -108,6 +108,17 @@ export const ASSETS = {
     footprint: [box(7.3, 3.3, 0, -5.5)],
   },
   chapel: { url: '/assets/bld/bld_chapel.glb', clips: [], footprint: [box(1.7, 3.2, 0, -0.575)] },
+  npcVanya: { url: '/assets/npc/npc_vanya.glb', clips: [] },
+  npcBabushka: { url: '/assets/npc/npc_babushka.glb', clips: [] },
+  npcTourist: { url: '/assets/npc/npc_tourist.glb', clips: [] },
+  npcPainter: { url: '/assets/npc/npc_painter.glb', clips: [] },
+  npcKvass: { url: '/assets/npc/npc_kvass.glb', clips: [] },
+  npcSentry: { url: '/assets/npc/npc_sentry.glb', clips: [] },
+  npcKid: { url: '/assets/npc/npc_kid.glb', clips: [] },
+  bossLobbyist: { url: '/assets/boss/boss_lobbyist.glb', clips: ['idle'] },
+  bossSenator: { url: '/assets/boss/boss_senator.glb', clips: ['idle'] },
+  bossBaron: { url: '/assets/boss/boss_baron.glb', clips: ['idle'] },
+  bossSpin: { url: '/assets/boss/boss_spin.glb', clips: ['idle'] },
   bossRegistrar: { url: '/assets/boss/boss_registrar.glb', clips: ['idle'] },
 } as const satisfies Record<string, AssetDef>;
 

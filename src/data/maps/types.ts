@@ -80,6 +80,8 @@ export type MapData = {
   npcs: readonly NpcSpot[];
   /** The hidden archangel children (see data/archangels.ts). They talk like NPCs but are not persuadable. */
   archangels?: readonly NpcSpot[];
+  /** Ordinary people of the square (see data/locals.ts): good company, not recruitable. */
+  locals?: readonly NpcSpot[];
   enemies: readonly EnemySpawn[];
   gatherables?: readonly Gatherable[];
   entrances?: readonly Entrance[];

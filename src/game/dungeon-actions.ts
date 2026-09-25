@@ -1,3 +1,4 @@
+import { ENEMIES, type EnemyKind } from '@/data/enemies';
 import { chestLoot } from '@/data/chests';
 import { ITEMS, type ItemId } from '@/data/items';
 import { METRO } from '@/data/maps/red-square';
@@ -163,11 +164,11 @@ export function bossReward(layer: number): { pearls: number; gear: ItemId } {
 }
 
 /** The boss falls. The reward spills onto the floor, once per boss layer; the boss returns on the next visit. */
-export function onBossDefeated(at: Vec2): void {
+export function onBossDefeated(at: Vec2, kind: EnemyKind = 'boss'): void {
   const dungeon = useDungeonStore.getState();
   const layer = dungeon.layer;
   const first = !dungeon.bossDefeated;
-  useToastStore.getState().announce('THE FATHER OF CORRUPTION IS DOWN');
+  useToastStore.getState().announce(`${ENEMIES[kind].name.toUpperCase()} IS DOWN`);
   if (dungeon.bossLayers.includes(layer)) {
     dungeon.payBoss(layer);
     return;

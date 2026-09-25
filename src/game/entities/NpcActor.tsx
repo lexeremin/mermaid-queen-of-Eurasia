@@ -17,7 +17,7 @@ import { turnToward } from '@/systems/movement';
 const LOOK_RANGE = 6;
 const TURN_RATE = 4;
 
-export function NpcActor({ def, spot }: { def: NpcDef; spot: NpcSpot }) {
+export function NpcActor({ def, spot }: { def: Pick<NpcDef, 'id' | 'asset'>; spot: NpcSpot }) {
   const root = useRef<Group>(null);
   const body = useRef<Group>(null);
   const facing = useRef({ x: Math.sin(spot.rotY), z: Math.cos(spot.rotY) });

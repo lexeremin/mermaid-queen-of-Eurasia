@@ -4,37 +4,43 @@ import { useEffect, useMemo, useRef } from 'react';
 import { Color, type Group, type Mesh, type MeshLambertMaterial, type Object3D } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
-import { ENEMIES } from '@/data/enemies';
+import { ENEMIES, type EnemyKind } from '@/data/enemies';
 import { getRetroMaterial } from '@/game/assets/retro-material';
 import { BlindMark } from '@/game/entities/BlindMark';
 import { combat } from '@/game/combat-sim';
-import { BOSS } from '@/systems/boss';
+import { bossTuning } from '@/systems/boss';
 import { smoothstep as smooth } from '@/utils/math';
 
 const FLASH = new Color('#ffffff');
 const RAISED = -2.4;
-const DEF = ENEMIES.boss;
 
 /** How far the stamp arm is raised for this moment of the current move: up during the windup, down at the impact. */
-function armAngle(kind: string, t: number): number {
+function armAngle(boss: EnemyKind, kind: string, t: number): number {
+  const cfg = bossTuning(boss);
   const windup =
     kind === 'stomp'
-      ? BOSS.stomp.windup
+      ? cfg.stomp.windup
       : kind === 'stamp'
-        ? BOSS.stamp.windup
+        ? cfg.stamp.windup
         : kind === 'form'
-          ? BOSS.form.windup
-          : 0;
+          ? cfg.form.windup
+          : kind === 'charge'
+            ? cfg.charge.windup
+            : kind === 'rain'
+              ? cfg.rain.windup
+              : 0;
   if (windup > 0) {
     if (t < windup) return RAISED * smooth(t / windup);
     return RAISED * (1 - smooth(Math.min(1, (t - windup) / 0.14)));
   }
-  if (kind === 'summon' || kind === 'storm') return RAISED * 0.85 * smooth(Math.min(1, t / 0.5));
+  if (kind === 'summon' || kind === 'storm' || kind === 'darts')
+    return RAISED * 0.85 * smooth(Math.min(1, t / 0.5));
   return 0;
 }
 
 /** Father of Corruption: the same walk-in-place model, with the stamp arm raised and slammed to match his moves. */
-export function BossActor({ index }: { index: number }) {
+export function BossActor({ index, kind }: { index: number; kind: EnemyKind }) {
+  const DEF = ENEMIES[kind];
   const root = useRef<Group>(null);
   const yaw = useRef<Group>(null);
   const body = useRef<Group>(null);
@@ -73,7 +79,7 @@ export function BossActor({ index }: { index: number }) {
     yawGroup.rotation.y = Math.atan2(enemy.facing.x, enemy.facing.z);
 
     const action = enemy.brain?.action ?? null;
-    if (arm.current && action) arm.current.rotation.x += armAngle(action.kind, action.t);
+    if (arm.current && action) arm.current.rotation.x += armAngle(kind, action.kind, action.t);
     const deathScale = dead ? Math.max(0, 1 - enemy.deadFor * 0.85) : 1;
     const windup = action && action.t < 1 ? action.t : 0;
     b.scale.set(deathScale, deathScale * (1 + 0.04 * Math.min(1, windup)), deathScale);

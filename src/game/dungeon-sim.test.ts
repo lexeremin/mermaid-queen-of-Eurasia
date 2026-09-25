@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { isBossKind } from '@/data/enemies';
 import { isUnderground, layerLevel } from '@/data/maps/underground';
 import { combat, resetCombat } from '@/game/combat-sim';
 import {
@@ -130,9 +131,9 @@ describe('the boss gate', () => {
   it('counts the monsters of the layer, not the boss or his helpers', () => {
     enterLayer(20);
     const level = layerLevel(20);
-    const expected = level.enemies.filter((e) => e.kind !== 'boss' && !e.dormant).length;
+    const expected = level.enemies.filter((e) => !isBossKind(e.kind) && !e.dormant).length;
     expect(hallMonsters()).toHaveLength(expected);
-    expect(hallMonsters().every((e) => e.kind !== 'boss' && !e.helper)).toBe(true);
+    expect(hallMonsters().every((e) => !isBossKind(e.kind) && !e.helper)).toBe(true);
     expect(hallsAreClear()).toBe(false);
     hallMonsters().forEach(kill);
     expect(hallsAreClear()).toBe(true);

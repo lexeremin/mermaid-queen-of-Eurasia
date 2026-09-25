@@ -16,10 +16,14 @@ export type Effect =
   | { type: 'join'; npc: string }
   | { type: 'follow'; npc: string; value: boolean }
   /** Saves an archangel child (see the archangel store). */
-  | { type: 'save'; child: string };
+  | { type: 'save'; child: string }
+  /** Talking to an ordinary local for the first time (a little XP, once). */
+  | { type: 'meet'; who: string }
+  /** The small gift a local hands over (once, if the bag has room). */
+  | { type: 'gift'; who: string };
 
 /** The effects that change a person's relationship state. */
-export type NpcEffect = Exclude<Effect, { type: 'save' }>;
+export type NpcEffect = Exclude<Effect, { type: 'save' | 'meet' | 'gift' }>;
 
 export type Choice = {
   text: string;

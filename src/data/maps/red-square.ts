@@ -1,4 +1,5 @@
 import { ARCHANGELS } from '@/data/archangels';
+import { LOCALS } from '@/data/locals';
 import type { MapData, Placement, Point, Ribbon } from '@/data/maps/types';
 import { assembleWallRun, type WallRun } from '@/data/maps/wall-runs';
 import { mulberry32 } from '@/utils/random';
@@ -380,6 +381,7 @@ export const RED_SQUARE: MapData = {
     { id: 'kolya', x: 52.2, z: 6.5, rotY: HALF_PI },
   ],
   archangels: ARCHANGELS.map((a) => ({ id: a.id, ...a.spot })),
+  locals: LOCALS.map((l) => ({ id: l.id, ...l.spot })),
   enemies: [
     { id: 'tycoon-basil', kind: 'tycoon', x: -3, z: -26 },
     { id: 'speaker-basil', kind: 'speaker', x: 4, z: -21 },

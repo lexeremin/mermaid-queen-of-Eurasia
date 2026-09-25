@@ -1,4 +1,5 @@
 import { ARCHANGELS } from '@/data/archangels';
+import { LOCAL_BY_ID } from '@/data/locals';
 import { NPC_BY_ID } from '@/data/npcs';
 import { ArchangelActor } from '@/game/entities/ArchangelActor';
 import { NpcActor } from '@/game/entities/NpcActor';
@@ -12,6 +13,10 @@ export function Npcs() {
       {currentMap.npcs.map((spot) => {
         const def = NPC_BY_ID.get(spot.id);
         if (npcs[spot.id]?.following) return null;
+        return def ? <NpcActor key={spot.id} def={def} spot={spot} /> : null;
+      })}
+      {(currentMap.locals ?? []).map((spot) => {
+        const def = LOCAL_BY_ID.get(spot.id);
         return def ? <NpcActor key={spot.id} def={def} spot={spot} /> : null;
       })}
       {(currentMap.archangels ?? []).map((spot) => {

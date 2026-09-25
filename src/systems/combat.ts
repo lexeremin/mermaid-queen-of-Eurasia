@@ -1,4 +1,4 @@
-import { RESPAWN_SECONDS, type EnemyKind } from '@/data/enemies';
+import { RESPAWN_SECONDS, isBossKind, type EnemyKind } from '@/data/enemies';
 import {
   AIM_ASSIST,
   AURA,
@@ -35,7 +35,7 @@ import {
   wakeEnemy,
   type Enemy,
 } from '@/systems/enemy-ai';
-import { BOSS, stepBoss, type Box } from '@/systems/boss';
+import { bossTuning, stepBoss, type Box } from '@/systems/boss';
 import { overlapsHazard, stepHazards, type Hazard } from '@/systems/hazards';
 import { PLAYER_RADIUS } from '@/systems/movement';
 import { BASE_STATS, type PlayerStats } from '@/systems/progression';
@@ -65,7 +65,7 @@ export type CombatEvent =
   /** Rosa used an ability (drives voice and sound). */
   | { type: 'cast'; ability: AbilityId }
   /** The boss entered his second or third phase. */
-  | { type: 'bossPhase'; phase: 2 | 3 }
+  | { type: 'bossPhase'; phase: 2 | 3; kind: EnemyKind }
   /** The boss woke helpers. */
   | { type: 'bossSummon'; count: number };
 
@@ -246,7 +246,7 @@ function hitEnemy(
       z: e.pos.z,
     });
     pushEffect(s, 'puff', e.pos.x, e.pos.z, dir, 0.5, defOf(e).radius * 2.2);
-    if (e.kind === 'boss') collapseHelpers(s);
+    if (isBossKind(e.kind)) collapseHelpers(s);
   }
 }
 
@@ -402,7 +402,10 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       if (e.state === 'dead' || e.dormant || s.aura.hit.has(e.id)) continue;
       if (inCircle(playerPos, e.pos, defOf(e).radius, radius)) {
         s.aura.hit.add(e.id);
-        blindEnemy(e, s.time + song.enemyBlind * (e.kind === 'boss' ? BOSS.blindFactor : 1));
+        blindEnemy(
+          e,
+          s.time + song.enemyBlind * (isBossKind(e.kind) ? bossTuning(e.kind).blindFactor : 1),
+        );
       }
     }
     if (s.aura.t >= song.duration) s.aura.active = false;
@@ -444,7 +447,7 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
   const dormantLeft = s.enemies.filter((e) => e.dormant).length;
   for (const e of s.enemies) {
     if (e.dormant) continue;
-    if (e.kind === 'boss') {
+    if (isBossKind(e.kind)) {
       const out = stepBoss(
         e,
         {
@@ -468,7 +471,8 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
           age: 0,
         });
       }
-      if (out.phaseChanged) events.push({ type: 'bossPhase', phase: out.phaseChanged });
+      if (out.phaseChanged)
+        events.push({ type: 'bossPhase', phase: out.phaseChanged, kind: e.kind });
       if (out.summon > 0) {
         const woken = s.enemies.filter((h) => h.dormant).slice(0, out.summon);
         for (const h of woken) {

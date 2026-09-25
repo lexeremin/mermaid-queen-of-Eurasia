@@ -4,6 +4,8 @@ import { ARCHANGEL_BY_ID, buildArchangelTree } from '@/data/archangels';
 import { NPC_BY_ID } from '@/data/npcs';
 import { buildPersuasionTree } from '@/data/persuasion';
 import { saveArchangel } from '@/game/archangel-actions';
+import { meetLocal, receiveGift } from '@/game/local-actions';
+import { LOCAL_BY_ID, buildLocalTree } from '@/data/locals';
 import { combat } from '@/game/combat-sim';
 import { useGameStore } from '@/store/game-store';
 import { npcContext, useNpcStore } from '@/store/npc-store';
@@ -26,9 +28,14 @@ export function treeFor(npcId: string): DialogueTree | null {
   const cached = trees.get(npcId);
   if (cached) return cached;
   const child = ARCHANGEL_BY_ID.get(npcId);
+  const local = LOCAL_BY_ID.get(npcId);
   const npc = NPC_BY_ID.get(npcId);
-  if (!child && !npc) return null;
-  const tree = child ? buildArchangelTree(child) : buildPersuasionTree(npc!);
+  if (!child && !local && !npc) return null;
+  const tree = child
+    ? buildArchangelTree(child)
+    : local
+      ? buildLocalTree(local)
+      : buildPersuasionTree(npc!);
   trees.set(npcId, tree);
   return tree;
 }
@@ -54,6 +61,14 @@ export const useDialogueStore = create<DialogueState>((set, get) => ({
     for (const effect of step.effects) {
       if (effect.type === 'save') {
         saveArchangel(effect.child);
+        continue;
+      }
+      if (effect.type === 'meet') {
+        meetLocal(effect.who);
+        continue;
+      }
+      if (effect.type === 'gift') {
+        receiveGift(effect.who);
         continue;
       }
       const charmed = (combat.charmed[active.npcId] ?? 0) > combat.time;

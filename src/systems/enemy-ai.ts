@@ -1,4 +1,4 @@
-import { ENEMIES, LEASH_DISTANCE, type EnemyDef, type EnemyKind } from '@/data/enemies';
+import { ENEMIES, LEASH_DISTANCE, isBossKind, type EnemyDef, type EnemyKind } from '@/data/enemies';
 import { directionTo } from '@/systems/combat-math';
 import { resolveCircle, type CollisionWorld } from '@/systems/collision';
 import { PLAYER_RADIUS } from '@/systems/movement';
@@ -41,7 +41,8 @@ export type Enemy = {
   brain: BossBrain | null;
 };
 
-export type BossActionKind = 'stomp' | 'stamp' | 'darts' | 'summon' | 'storm' | 'form';
+export type BossActionKind =
+  'stomp' | 'stamp' | 'darts' | 'summon' | 'storm' | 'form' | 'rain' | 'charge';
 export type BossAction = {
   kind: BossActionKind;
   /** Seconds into the action. */
@@ -53,6 +54,9 @@ export type BossAction = {
   dir: Vec2;
   /** How many timed emissions have gone out already (storm rings). */
   fired: number;
+  /** A charge: how far it runs, and how far it has run so far. */
+  len: number;
+  travelled: number;
 };
 export type BossBrain = {
   phase: 1 | 2 | 3;
@@ -100,7 +104,7 @@ const hashId = (id: string): number => {
 };
 
 /** Deterministic xorshift in [0, 1), advancing the enemy's own seed. */
-function random(enemy: Enemy): number {
+export function random(enemy: Enemy): number {
   let x = enemy.seed;
   x ^= x << 13;
   x >>>= 0;
@@ -163,7 +167,7 @@ export function createEnemy(
     instanced: options.instanced ?? false,
     helper: options.dormant ?? false,
     power,
-    brain: kind === 'boss' ? createBrain() : null,
+    brain: isBossKind(kind) ? createBrain() : null,
   };
 }
 
@@ -210,7 +214,8 @@ export function damageEnemy(
   }
   const push = knockback * (1 - def.knockbackResist);
   enemy.knock = { x: knockDir.x * push, z: knockDir.z * push };
-  const armored = (def.knockbackResist >= 0.5 && enemy.state === 'windup') || enemy.kind === 'boss';
+  const armored =
+    (def.knockbackResist >= 0.5 && enemy.state === 'windup') || isBossKind(enemy.kind);
   if (!armored && enemy.state !== 'blinded') {
     enemy.state = 'stunned';
     enemy.timer = 0.3 * (1 - def.knockbackResist);

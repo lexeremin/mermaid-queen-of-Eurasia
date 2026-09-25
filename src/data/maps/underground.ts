@@ -1,6 +1,6 @@
 import type { EnemySpawn, Placement } from '@/data/maps/types';
 import { assembleWallRun, UNDERGROUND_KIT, type WallRun } from '@/data/maps/wall-runs';
-import type { EnemyKind } from '@/data/enemies';
+import { BOSS_KINDS, type EnemyKind } from '@/data/enemies';
 import type { Collider } from '@/systems/collision';
 import { PLAYER_RADIUS } from '@/systems/movement';
 import { createNavGrid, findPath } from '@/systems/pathfinding';
@@ -33,6 +33,19 @@ export const isUnderground = (pos: Vec2): boolean => pos.z >= UG_MIN_Z;
 export const MAX_LAYER = 100;
 /** Every this many layers the way down leads through the boss arena. */
 export const BOSS_EVERY = 10;
+/** Which boss guards a boss layer: the five take turns, then start again (tougher, through the layer's power). */
+export const bossKindFor = (layer: number): EnemyKind =>
+  BOSS_KINDS[(Math.floor(layer / BOSS_EVERY) - 1) % BOSS_KINDS.length]!;
+
+/** The arena of each boss: its name and floor colour. */
+const ARENAS: Readonly<Record<string, { label: string; color: string }>> = {
+  boss: { label: 'Registry Vault', color: '#4a2f3a' },
+  lobbyist: { label: 'The Lobby', color: '#3a3f55' },
+  senator: { label: 'Senate Floor', color: '#4a4638' },
+  baron: { label: 'Yacht Club', color: '#2f4552' },
+  spin: { label: 'Press Room', color: '#4a3550' },
+};
+
 export const isBossLayer = (layer: number): boolean => layer % BOSS_EVERY === 0;
 /** How much tougher the monsters of a layer are than the base kind (see `Enemy.power`). */
 export const layerPower = (layer: number): number => 1 + 0.06 * (layer - 1);
@@ -104,7 +117,6 @@ const mid = gridX(MID_COL + 1);
 
 const HALL_COLOR = '#4b4046';
 const EXIT_COLOR = '#3f4650';
-const ARENA_COLOR = '#4a2f3a';
 const CORRIDOR_COLOR = '#302a35';
 const ROOM_COLORS = ['#3b3547', '#3a4a50', '#43393a', '#38423c', '#463a4c', '#41403a'];
 const ROOM_NAMES = [
@@ -493,10 +505,10 @@ function buildLayer(layer: number, attempt: number): UndergroundLevel {
   if (bossLayer)
     rooms.push({
       id: 'ug-arena',
-      label: 'Registry Vault',
+      label: ARENAS[bossKindFor(layer)]!.label,
       kind: 'arena',
       ...ARENA,
-      color: ARENA_COLOR,
+      color: ARENAS[bossKindFor(layer)]!.color,
     });
   const names = [...ROOM_NAMES];
   placed.forEach((r, i) => {
@@ -655,7 +667,13 @@ function buildLayer(layer: number, attempt: number): UndergroundLevel {
     const a = centers['ug-arena']!;
     arena = rectBox(ARENA);
     boss = { x: a.x, z: a.z - 3 };
-    enemies.push({ id: `L${layer}-boss`, kind: 'boss', x: boss.x, z: boss.z, power });
+    enemies.push({
+      id: `L${layer}-boss`,
+      kind: bossKindFor(layer),
+      x: boss.x,
+      z: boss.z,
+      power,
+    });
     [
       [-9, -2],
       [9, -2],

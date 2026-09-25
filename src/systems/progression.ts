@@ -80,7 +80,17 @@ export function computeStats(
 }
 
 export const XP_REWARDS = {
-  enemy: { tycoon: 15, speaker: 40, demagogue: 22, registrar: 120, boss: 400 },
+  enemy: {
+    tycoon: 15,
+    speaker: 40,
+    demagogue: 22,
+    registrar: 120,
+    boss: 400,
+    lobbyist: 450,
+    senator: 550,
+    baron: 500,
+    spin: 450,
+  },
   npcMesmerized: 25,
   npcJoined: 50,
 } as const;

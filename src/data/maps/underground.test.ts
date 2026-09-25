@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ENEMIES } from '@/data/enemies';
+import { BOSS_KINDS, ENEMIES, isBossKind } from '@/data/enemies';
 import { METRO, RED_SQUARE } from '@/data/maps/red-square';
 import {
   BOSS_EVERY,
+  bossKindFor,
   CELL,
   COLS,
   MAX_LAYER,
@@ -137,6 +138,24 @@ describe('the fixed entrance and exit', () => {
   });
 });
 
+describe('the bosses of the tenth layers', () => {
+  it('take turns, five kinds, then again', () => {
+    const order = layers.filter(isBossLayer).map((n) => bossKindFor(n));
+    expect(order).toEqual([...BOSS_KINDS, ...BOSS_KINDS]);
+    expect(order.slice(0, 5)).toEqual(['boss', 'lobbyist', 'senator', 'baron', 'spin']);
+  });
+
+  it('put the right boss in each arena, with its own name on the door', () => {
+    const labels = new Set<string>();
+    for (const n of layers.filter(isBossLayer)) {
+      const l = level(n);
+      expect(l.enemies.find((e) => isBossKind(e.kind))!.kind).toBe(bossKindFor(n));
+      labels.add(l.zones.find((z) => z.id === 'ug-arena')!.label);
+    }
+    expect(labels.size).toBe(5);
+  });
+});
+
 describe('the way through a layer', () => {
   it('always leads from the landing to the stairs down (through the open gate on boss layers)', () => {
     for (const n of layers) {
@@ -191,7 +210,7 @@ describe('what a layer holds', () => {
       const l = level(n);
       const ids = [...l.enemies.map((e) => e.id), ...l.chests.map((c) => c.id)];
       expect(new Set(ids).size, `${n}`).toBe(ids.length);
-      const mobs = l.enemies.filter((e) => e.kind !== 'boss' && !e.dormant);
+      const mobs = l.enemies.filter((e) => !isBossKind(e.kind) && !e.dormant);
       expect(mobs.length, `${n}`).toBeGreaterThanOrEqual(3);
       expect(l.chests.length, `${n}`).toBeGreaterThanOrEqual(1);
       for (const e of l.enemies) {
@@ -205,7 +224,7 @@ describe('what a layer holds', () => {
 
   it('gets tougher with depth: more monsters, elites from layer 5, a much higher power', () => {
     const count = (n: number) =>
-      level(n).enemies.filter((e) => e.kind !== 'boss' && !e.dormant).length;
+      level(n).enemies.filter((e) => !isBossKind(e.kind) && !e.dormant).length;
     const avg = (from: number, to: number) =>
       layers.slice(from - 1, to).reduce((sum, n) => sum + count(n), 0) / (to - from + 1);
     expect(avg(91, 100)).toBeGreaterThan(avg(1, 10));
@@ -221,7 +240,7 @@ describe('what a layer holds', () => {
     expect(BOSS_EVERY).toBe(10);
     for (const n of layers) {
       const l = level(n);
-      const bosses = l.enemies.filter((e) => e.kind === 'boss');
+      const bosses = l.enemies.filter((e) => isBossKind(e.kind));
       const helpers = l.enemies.filter((e) => e.dormant);
       if (isBossLayer(n)) {
         expect(bosses, `${n}`).toHaveLength(1);

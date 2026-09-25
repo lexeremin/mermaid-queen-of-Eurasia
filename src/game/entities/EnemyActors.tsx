@@ -12,7 +12,7 @@ import {
 } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
-import { ENEMIES, type EnemyKind } from '@/data/enemies';
+import { ENEMIES, isBossKind, type EnemyKind } from '@/data/enemies';
 import { layerLevel } from '@/data/maps/underground';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { combat } from '@/game/combat-sim';
@@ -157,8 +157,8 @@ export function EnemyActors() {
   return (
     <>
       {currentMap.enemies.map((spawn, index) =>
-        spawn.kind === 'boss' ? (
-          <BossActor key={spawn.id} index={index} />
+        isBossKind(spawn.kind) ? (
+          <BossActor key={spawn.id} index={index} kind={spawn.kind} />
         ) : (
           <EnemyActor key={spawn.id} index={index} kind={spawn.kind} />
         ),
@@ -167,8 +167,8 @@ export function EnemyActors() {
         // The layer's monsters are added after the map's, in order, when the layer is installed (see dungeon-sim).
         <group key={level.layer}>
           {level.enemies.map((spawn, i) =>
-            spawn.kind === 'boss' ? (
-              <BossActor key={spawn.id} index={surface + i} />
+            isBossKind(spawn.kind) ? (
+              <BossActor key={spawn.id} index={surface + i} kind={spawn.kind} />
             ) : (
               <EnemyActor key={spawn.id} index={surface + i} kind={spawn.kind} />
             ),

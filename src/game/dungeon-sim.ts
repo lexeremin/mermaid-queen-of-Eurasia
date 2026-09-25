@@ -1,3 +1,4 @@
+import { isBossKind } from '@/data/enemies';
 import { layerLevel, type UndergroundLevel } from '@/data/maps/underground';
 import { combat } from '@/game/combat-sim';
 import { currentWorld } from '@/game/world/current-map';
@@ -86,7 +87,7 @@ export function syncDungeonWorld(): void {
 
 /** Every monster of the layer (not the boss or his helpers). */
 export const hallMonsters = () =>
-  combat.enemies.filter((e) => e.instanced && e.kind !== 'boss' && !e.helper);
+  combat.enemies.filter((e) => e.instanced && !isBossKind(e.kind) && !e.helper);
 
 export const hallsAreClear = (): boolean => {
   const monsters = hallMonsters();

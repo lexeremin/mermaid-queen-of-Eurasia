@@ -40,6 +40,10 @@ export const LOOT_TABLES: Readonly<Record<EnemyKind, LootTable>> = {
   },
   // The boss's rewards are handed out by the boss fight itself (see dungeon-actions).
   boss: { rolls: [], gear: { chance: 0, pool: [] } },
+  lobbyist: { rolls: [], gear: { chance: 0, pool: [] } },
+  senator: { rolls: [], gear: { chance: 0, pool: [] } },
+  baron: { rolls: [], gear: { chance: 0, pool: [] } },
+  spin: { rolls: [], gear: { chance: 0, pool: [] } },
 };
 
 /** Rolls the drops for one kill. `random` returns [0, 1). */

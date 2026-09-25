@@ -12,8 +12,8 @@ import {
 import { combat } from '@/game/combat-sim';
 import { HAZARD_LINGER } from '@/systems/hazards';
 
-const CIRCLES = 6;
-const RECTS = 6;
+const CIRCLES = 12;
+const RECTS = 8;
 const Y = 0.1;
 
 /** Red ground markings for the boss's telegraphed moves: they fill up until the hit lands, then flash. */

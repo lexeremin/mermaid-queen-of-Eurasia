@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ENEMIES } from '@/data/enemies';
+import { BOSS_KINDS, ENEMIES, isBossKind, type EnemyKind } from '@/data/enemies';
 import { generateLayer, layerPower } from '@/data/maps/underground';
 import { canUse } from '@/systems/abilities';
 import { directionTo } from '@/systems/combat-math';
@@ -51,16 +51,17 @@ function fight(
   level: number,
   seconds: number,
   power = 1,
+  kind: EnemyKind = 'boss',
 ): { won: boolean; hp: number; time: number; state: CombatState } {
   const stats = computeStats(level, STARTER_EQUIPMENT);
   const spawns = layer.enemies
-    .filter((e) => e.kind === 'boss' || e.dormant)
-    .map((e) => ({ ...e, power }));
+    .filter((e) => isBossKind(e.kind) || e.dormant)
+    .map((e) => ({ ...e, power, kind: isBossKind(e.kind) ? kind : e.kind }));
   const s = createCombatState(spawns);
   s.hp = stats.maxHp;
   s.mana = stats.maxMana;
   let player: PlayerState = { pos: { x: arena.cx, z: arena.cz + 9 }, facing: { x: 0, z: -1 } };
-  const boss = s.enemies.find((e) => e.kind === 'boss')!;
+  const boss = s.enemies.find((e) => isBossKind(e.kind))!;
   let time = 0;
   while (time < seconds) {
     time += DT;
@@ -115,11 +116,11 @@ function fight(
 
 describe('the fight is beatable', () => {
   it.skipIf(!process.env.BOSS_REPORT)('report', () => {
-    for (const power of [1, layerPower(10), layerPower(30)]) {
+    for (const kind of BOSS_KINDS) {
       for (const level of [3, 5, 7, 10]) {
-        const r = fight(level, 300, power);
+        const r = fight(level, 300, 1, kind);
         console.log(
-          `power ${power.toFixed(2)} level ${level}: ${r.won ? 'WON' : 'lost'} in ${r.time.toFixed(0)} s, hp left ${Math.round(r.hp)}`,
+          `${kind} level ${level}: ${r.won ? 'WON' : 'lost'} in ${r.time.toFixed(0)} s, hp left ${Math.round(r.hp)}`,
         );
       }
     }
@@ -144,6 +145,15 @@ describe('the fight is beatable', () => {
       (e) => e.kind === 'boss',
     )!;
     expect(boss.hp).toBeCloseTo(ENEMIES.boss.maxHp * power, 0);
+  });
+
+  it('every boss of the tenth layers can be beaten by a level-10 Rosa in starter gear, and hurts her', () => {
+    for (const kind of BOSS_KINDS) {
+      const result = fight(10, 300, 1, kind);
+      expect(result.won, `${kind}: hp ${result.hp} after ${result.time.toFixed(0)} s`).toBe(true);
+      expect(result.time, kind).toBeGreaterThan(15);
+      expect(result.hp, kind).toBeLessThan(computeStats(10, STARTER_EQUIPMENT).maxHp);
+    }
   });
 
   it('the boss has the health the design promises', () => {

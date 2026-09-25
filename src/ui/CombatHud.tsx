@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { ENEMIES } from '@/data/enemies';
+import { ENEMIES, isBossKind } from '@/data/enemies';
+import { maxHpOf } from '@/systems/enemy-ai';
 import { combat, reviveAtSpawn } from '@/game/combat-sim';
 import { useCombatStore } from '@/store/combat-store';
 import { useGameStore } from '@/store/game-store';
@@ -91,16 +92,16 @@ function BossBar() {
       // The boss is looked up again only when the combat state was replaced (a new game).
       if (source !== combat) {
         source = combat;
-        boss = combat.enemies.find((e) => e.kind === 'boss');
+        boss = combat.enemies.find((e) => isBossKind(e.kind));
       }
       const el = root.current;
       if (el && boss) {
         const show = !!boss.brain?.awake && boss.state !== 'dead';
         el.style.display = show ? 'flex' : 'none';
         if (show && fill.current && name.current) {
-          fill.current.style.width = `${Math.max(0, (boss.hp / ENEMIES.boss.maxHp) * 100)}%`;
+          fill.current.style.width = `${Math.max(0, (boss.hp / maxHpOf(boss)) * 100)}%`;
           const phase = boss.brain?.phase ?? 1;
-          name.current.textContent = `${ENEMIES.boss.name}${phase > 1 ? ' · ' + (phase === 3 ? 'FURIOUS' : 'ANGRY') : ''}`;
+          name.current.textContent = `${ENEMIES[boss.kind].name}${phase > 1 ? ' · ' + (phase === 3 ? 'FURIOUS' : 'ANGRY') : ''}`;
         }
       }
     };
