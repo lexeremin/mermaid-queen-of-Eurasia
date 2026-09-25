@@ -84,3 +84,26 @@ describe('pickups', () => {
         );
   });
 });
+
+describe('magnet with a full bag', () => {
+  it('does not pull an item the bag cannot take, and still collects it later when there is room', () => {
+    const no = () => false;
+    let list = [pickup(MAGNET_RADIUS - 0.5, 0)];
+    const startX = list[0]!.pos.x;
+    for (let i = 0; i < 120; i++) list = stepPickups(list, player, 0.016, no, no).pickups;
+    expect(list[0]?.pos.x).toBe(startX);
+    for (let i = 0; i < 300 && list.length > 0; i++) {
+      list = stepPickups(list, player, 0.016, yes, yes).pickups;
+    }
+    expect(list).toHaveLength(0);
+  });
+
+  it('only pulls the items that fit', () => {
+    const fits = (item: string) => item === 'pearl';
+    const a = { ...pickup(2.5, 0), item: 'pearl' as const };
+    const b = { ...pickup(2.5, 1), id: 2, item: 'healingTea' as const };
+    const r = stepPickups([a, b], player, 0.1, () => false, fits);
+    expect(r.pickups.find((p) => p.id === a.id)!.pos.x).toBeLessThan(2.5);
+    expect(r.pickups.find((p) => p.id === b.id)!.pos.x).toBe(2.5);
+  });
+});

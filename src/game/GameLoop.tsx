@@ -12,6 +12,7 @@ import { currentStats, useProgressStore } from '@/store/progress-store';
 import { useToastStore } from '@/store/toast-store';
 import { ITEMS } from '@/data/items';
 import { XP_REWARDS } from '@/systems/progression';
+import { hasSpaceFor } from '@/systems/inventory';
 import { stepPickups } from '@/systems/pickups';
 import { MAX_STEPS_PER_FRAME, SIM_STEP, sim } from '@/game/sim';
 import { track } from '@/net/stats';
@@ -238,7 +239,9 @@ export function GameLoop() {
         sim.stuckTime = 0;
       }
       stepGather(dt, sim.curr.pos);
-      const picked = stepPickups(loot.pickups, sim.curr.pos, dt, tryCollect);
+      const picked = stepPickups(loot.pickups, sim.curr.pos, dt, tryCollect, (item) =>
+        hasSpaceFor(useProgressStore.getState().bag, item),
+      );
       loot.pickups = picked.pickups;
       if (picked.blocked.length > 0) warnBagFull();
       clearPressed(input);

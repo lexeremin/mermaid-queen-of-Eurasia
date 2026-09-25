@@ -25,13 +25,15 @@ export type PickupStep = {
 
 /**
  * Advances pickups: ageing and expiry, magnet pull, collection. `tryAdd` is asked for each item in
- * reach and returns true when the bag took it. Pure apart from `tryAdd`.
+ * reach and returns true when the bag took it. The magnet only pulls items `canTake` says the bag has
+ * room for, so loot never chases Rosa when her bag is full. Pure apart from the callbacks.
  */
 export function stepPickups(
   pickups: readonly Pickup[],
   player: Vec2,
   dt: number,
   tryAdd: (item: ItemId) => boolean,
+  canTake: (item: ItemId) => boolean = () => true,
 ): PickupStep {
   const kept: Pickup[] = [];
   const collected: ItemId[] = [];
@@ -50,7 +52,7 @@ export function stepPickups(
         continue;
       }
       blocked.push(p.item);
-    } else if (ready && d <= MAGNET_RADIUS && d > 1e-6) {
+    } else if (ready && d <= MAGNET_RADIUS && d > 1e-6 && canTake(p.item)) {
       const step = Math.min(d, MAGNET_SPEED * dt);
       pos = { x: pos.x + (dx / d) * step, z: pos.z + (dz / d) * step };
     }

@@ -22,7 +22,7 @@ Give the fights and conversations a payoff: experience and levels, loot that dro
 
 ### Loot
 - Enemies roll a table on death (independent chances, seeded RNG so it is testable): Tycoon (tea 30%, kvass 20%, pearl 25%, gear 6%), Speaker (tea 55%, kvass 35%, pearl 40%, gear 30%), Demagogue (tea 25%, kvass 45%, pearl 25%, gear 15%).
-- Drops appear as spinning colored gems on the ground near the body. Rosa collects them by walking within 1.3 m; they are pulled toward her inside 3 m; they vanish after 60 s. A full bag leaves the item on the ground with a "Bag full" toast. Dropped items cannot be picked up for 3 s.
+- Drops appear as spinning colored gems on the ground near the body. Rosa collects them by walking within 1.3 m; they are pulled toward her inside 3 m; they vanish after 60 s. A full bag leaves the item on the ground with a "Bag full" toast, and the magnet only pulls items the bag has room for, so loot never chases her when the bag is full (changed after Phase 15e). Dropped items cannot be picked up for 3 s.
 
 ### Bag and equipment
 - 20 slots (5 × 4), consumables stack. Tap or click a tile to select it; the detail panel shows text, stats, and **big buttons: Use, Equip, Unequip, Drop** (no hover, no drag; targets ≥ 44 px). Equipping swaps the old item back into the bag (refused, with a toast, if the bag is full).
