@@ -57,7 +57,7 @@ Read these files before starting any work:
 
 ## Current Phase
 
-**Phase 23 complete (downtown Moscow).** Next: **Phase 24 — Bosses and people** (`docs/phases/phase-24.md` — write it first, it does not exist yet).
+**Phase 24 complete (bosses and people).** Next: **Phase 25 — Polish** (`docs/phases/phase-25.md` — write it first, it does not exist yet).
 
 ---
 
@@ -65,7 +65,7 @@ Read these files before starting any work:
 
 1. Run `git log --oneline -20` — phases in the log are done, skip their docs.
 2. Read the context files listed above (only the ones relevant to the phase).
-3. Read `docs/phases/phase-24.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
+3. Read `docs/phases/phase-25.md` for the specific task. If the doc for the current phase does not exist yet, write it first (goal, scope, steps, DoD) and add it to the commit.
 4. Implement the phase.
 5. Verify against `docs/dod-global.md` and the phase's own DoD.
 6. Commit as `feat: phase N — ...` and push to `origin main`.
@@ -110,8 +110,8 @@ Read these files before starting any work:
 | Phase 21 — Archangels | ✅ Complete | Michael, Gabriel and Serafima, three hidden winged children (animated models, unique intro and prompt each, wrong answers loop back), joy sound and hearts when saved, quest Save the Archangels with the Archangel's Feather charm, save v9 | e792afd |
 | Phase 22 — Endless dungeon | ✅ Complete | 100 generated layers (random rooms, corridors, monsters, chests) with a fixed landing and stairs hall on every layer, the Father of Corruption on every 10th layer, monsters tougher with depth, Depth panel at the metro, per-layer chests and boss rewards, save v10 | 9a59a6d |
 | Phase 23 — Downtown Moscow | ✅ Complete | The land behind Saint Basil's opens: Vasilievsky Spusk and a railed embankment promenade joined to the garden path, Zaryadye Park (amphitheatre, chapel), Lobnoye Mesto and a monument on Red Square, five models, ten monsters, five hidden pearls, six new quests | a1467a2 |
-| Phase 24 — Bosses and people | ⬜ Next | More bosses (original satirical evil-politician and foreign-lobbyist archetypes, no real people), generic NPCs such as "Russian guy" | |
-| Phase 25 — Polish | ⬜ Todo | SFX (UI, level-up, quest, loot, blink, recall, boss, hits), ambient loop/music, volume slider, mist/drizzle particles, damage numbers, screen shake, title screen for returning players | |
+| Phase 24 — Bosses and people | ✅ Complete | Four more underground bosses (Lobbyist, Senator Endless, Yacht Baron, Spin Doctor) taking turns with the Father of Corruption on every tenth layer, new rain and charge moves and per-boss move tables, seven ordinary people to talk to (hints, first-meeting XP, small gifts) | cb974ab |
+| Phase 25 — Polish | ⬜ Next | SFX (UI, level-up, quest, loot, blink, recall, boss, hits), ambient loop/music, volume slider, mist/drizzle particles, damage numbers, screen shake, title screen for returning players | |
 | Phase 26 — Real-device QA | ⬜ Todo | iPhone Safari pass, budgets, fixes | |
 | Phase 27 — Deploy | ⬜ Todo | Hosting (Cloudflare Pages or Vercel), env config, release | |
 
