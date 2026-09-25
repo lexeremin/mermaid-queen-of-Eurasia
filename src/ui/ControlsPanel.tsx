@@ -20,6 +20,7 @@ const KEYBOARD: { title: string; rows: Row[] }[] = [
       ['Q', 'Aura: sing to charm people and blind monsters (30 mana)'],
       ['R', 'Surge: a wave that hurts everything near you (35 mana)'],
       ['T', 'Recall: stand still for 3 s to return to Red Square'],
+      ['F', 'Change form (once the mermaid form is unlocked): Tidal Song and swimming'],
     ],
   },
   {
@@ -50,6 +51,7 @@ const TOUCH: { title: string; rows: Row[] }[] = [
       ['AURA', 'Sing to charm people and blind monsters (30 mana)'],
       ['SPELL', 'A wave that hurts everything near you (35 mana)'],
       ['Round icon above SPELL', 'Recall: stand still for 3 s to return to Red Square'],
+      ['Mermaid icon (left)', 'Change form once unlocked: Tidal Song and swimming'],
     ],
   },
   {

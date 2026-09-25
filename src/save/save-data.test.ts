@@ -13,6 +13,7 @@ const good = (over: Record<string, unknown> = {}) => ({
   savedAt: '2026-09-24T12:00:00.000Z',
   playSeconds: 120.5,
   hero: { form: 'mermaid', x: 3.5, z: -8, facingX: 1, facingZ: 0 },
+  progress: { forms: ['mermaid'] },
   npcs: {
     grisha: { relationship: 58, used: ['song', 'kindness'], joined: false },
     tolik: { relationship: 80, used: ['song'], joined: true },
@@ -474,5 +475,34 @@ describe('save v7: the world snapshot', () => {
   it('is null for garbage', () => {
     expect(parseSave(good({ world: 'nope' }))!.world).toBeNull();
     expect(parseSave(good({ world: [] }))!.world).toBeNull();
+  });
+});
+
+describe('save v8: forms', () => {
+  it('migrates a v7 save: a mermaid hero keeps the form unlocked, a human has none', () => {
+    const v7 = (form: string) => ({
+      version: 7,
+      savedAt: '2026-09-25T12:00:00.000Z',
+      playSeconds: 1,
+      hero: { form, x: 1, z: 1, facingX: 0, facingZ: 1 },
+      npcs: {},
+    });
+    const mermaid = parseSave(v7('mermaid'))!;
+    expect(mermaid.version).toBe(SAVE_VERSION);
+    expect(mermaid.progress.forms).toEqual(['mermaid']);
+    expect(mermaid.hero.form).toBe('mermaid');
+    const human = parseSave(v7('human'))!;
+    expect(human.progress.forms).toEqual([]);
+  });
+
+  it('turns a mermaid hero human when the form was never unlocked', () => {
+    const save = parseSave(good({ progress: {} }))!;
+    expect(save.hero.form).toBe('human');
+    expect(save.progress.forms).toEqual([]);
+  });
+
+  it('keeps only known forms', () => {
+    const save = parseSave(good({ progress: { forms: ['dragon', 'mermaid', 7] } }))!;
+    expect(save.progress.forms).toEqual(['mermaid']);
   });
 });

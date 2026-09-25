@@ -31,7 +31,7 @@ Feature list with phase mapping. Status lives in `docs/Task.md`.
 | Vintage HUD theme, welcome screen, controls popup, Prince Sasha avatar, dock on the left | 16d |
 | Blink (Shift) replaces Dash, Recall (T) channelled return to Red Square, icon HUD buttons, dock layout without overlaps | 16c |
 | Stability: persisted world state, loading screen, startup and runtime performance, joystick fix | 17 |
-| Mermaid Queen transformation (unlock, toggle, Tidal Song, water crossing) | 18 |
+| Mermaid Queen form: quest unlock, F to switch, Tidal Song, swimming (two hidden pond pearls), save v8 | 18 |
 | Polish: SFX, ambient/music, weather particles, damage numbers, shake, returning-player title | 19 |
 | iPhone Safari QA | 20 |
 | Hosting, env config, release | 21 |

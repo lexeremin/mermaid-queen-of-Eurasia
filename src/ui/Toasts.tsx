@@ -15,7 +15,7 @@ export function Toasts() {
       </div>
       {banner && (
         <div key={banner.id} className="boss-banner" role="status">
-          <b>VICTORY</b>
+          <b>{banner.title}</b>
           <span>{banner.text}</span>
         </div>
       )}

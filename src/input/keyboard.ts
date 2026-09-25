@@ -23,6 +23,7 @@ const ACTION_CODES: Readonly<Record<string, Action>> = {
   KeyQ: 'aura',
   KeyR: 'spell',
   KeyT: 'recall',
+  KeyF: 'form',
   KeyE: 'interact',
 };
 

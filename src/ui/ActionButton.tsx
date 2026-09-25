@@ -3,6 +3,7 @@ import { input, onInputReset, setHeld, type Action } from '@/input/input-state';
 import { createPointerTracker } from '@/input/pointer-tracker';
 import type { AbilityId } from '@/systems/abilities';
 import { CooldownSweep } from '@/ui/CombatHud';
+import { useGameStore } from '@/store/game-store';
 import { AbilityIcon } from '@/ui/icons';
 
 const ABILITY_OF: Record<Action, AbilityId | undefined> = {
@@ -11,12 +12,14 @@ const ABILITY_OF: Record<Action, AbilityId | undefined> = {
   aura: 'aura',
   spell: 'spell',
   recall: undefined,
+  form: undefined,
   interact: undefined,
 };
 
 type Props = { action: Action; label: string; size: number; style: CSSProperties };
 
 export function ActionButton({ action, label, size, style }: Props) {
+  const form = useGameStore((s) => s.form);
   const tracker = useMemo(() => createPointerTracker(), []);
   const release = () => {
     tracker.reset();
@@ -58,8 +61,12 @@ export function ActionButton({ action, label, size, style }: Props) {
         if (tracker.up(e.pointerId)) release();
       }}
     >
-      {ABILITY_OF[action] && <AbilityIcon id={ABILITY_OF[action]} size={Math.round(size * 0.46)} />}
-      <span className="action-label">{label}</span>
+      {ABILITY_OF[action] && (
+        <AbilityIcon id={ABILITY_OF[action]} size={Math.round(size * 0.46)} form={form} />
+      )}
+      <span className="action-label">
+        {action === 'aura' && form === 'mermaid' ? 'TIDE' : label}
+      </span>
       {ABILITY_OF[action] && <CooldownSweep id={ABILITY_OF[action]} />}
     </button>
   );

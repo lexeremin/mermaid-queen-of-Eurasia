@@ -12,6 +12,8 @@ import {
   type EquipResult,
   type Keepsakes,
 } from '@/systems/inventory';
+import { useGameStore } from '@/store/game-store';
+import type { Form } from '@/systems/abilities';
 import { addXp, computeStats, type Equipment, type PlayerStats } from '@/systems/progression';
 
 export type ProgressSnapshot = {
@@ -19,6 +21,8 @@ export type ProgressSnapshot = {
   xp: number;
   awarded: string[];
   bag: Bag;
+  /** Transformations unlocked (the human form is always available). */
+  forms: Form[];
   /** Quest items (pearls...): counted, but they take no bag slot. */
   keepsakes: Keepsakes;
   equipment: Equipment;
@@ -31,6 +35,7 @@ export const defaultProgress = (): ProgressSnapshot => ({
   xp: 0,
   awarded: [],
   bag: emptyBag(),
+  forms: [],
   keepsakes: emptyKeepsakes(),
   equipment: starterEquipment(),
 });
@@ -42,6 +47,7 @@ type ProgressState = ProgressSnapshot & {
   award: (key: string, amount: number) => { awarded: boolean; levelsGained: number };
   setBag: (bag: Bag) => void;
   setStash: (bag: Bag, keepsakes: Keepsakes) => void;
+  unlockForm: (form: Form) => void;
   addItem: (id: ItemId, qty?: number) => AddResult;
   removeAt: (index: number, qty?: number) => void;
   equip: (index: number) => EquipResult;
@@ -68,6 +74,9 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
 
   setBag: (bag) => set({ bag }),
   setStash: (bag, keepsakes) => set({ bag, keepsakes }),
+  unlockForm: (form) => {
+    if (!get().forms.includes(form)) set({ forms: [...get().forms, form] });
+  },
 
   addItem: (id, qty = 1) => {
     const { bag, keepsakes } = get();
@@ -94,7 +103,9 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   reset: () => set({ ...defaultProgress() }),
 }));
 
-export const selectStats = (s: Pick<ProgressSnapshot, 'level' | 'equipment'>): PlayerStats =>
-  computeStats(s.level, s.equipment);
+export const selectStats = (
+  s: Pick<ProgressSnapshot, 'level' | 'equipment'> & { form?: Form },
+): PlayerStats => computeStats(s.level, s.equipment, s.form);
 
-export const currentStats = (): PlayerStats => selectStats(useProgressStore.getState());
+export const currentStats = (): PlayerStats =>
+  selectStats({ ...useProgressStore.getState(), form: useGameStore.getState().form });

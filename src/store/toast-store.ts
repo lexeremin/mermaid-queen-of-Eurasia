@@ -11,10 +11,10 @@ type ToastState = {
   toasts: Toast[];
   levelUp: { level: number; id: number } | null;
   /** A big centre-screen banner (a boss falls). */
-  banner: { text: string; id: number } | null;
+  banner: { text: string; title: string; id: number } | null;
   push: (text: string, kind?: ToastKind) => void;
   announceLevelUp: (level: number) => void;
-  announce: (text: string) => void;
+  announce: (text: string, title?: string) => void;
 };
 
 export const useToastStore = create<ToastState>((set) => ({
@@ -26,9 +26,9 @@ export const useToastStore = create<ToastState>((set) => ({
     set((s) => ({ toasts: [...s.toasts.slice(-(MAX_TOASTS - 1)), { id, text, kind }] }));
     setTimeout(() => set((s) => ({ toasts: s.toasts.filter((t) => t.id !== id) })), LIFETIME_MS);
   },
-  announce: (text) => {
+  announce: (text, title = 'VICTORY') => {
     const id = nextId++;
-    set({ banner: { text, id } });
+    set({ banner: { text, title, id } });
     setTimeout(() => set((s) => (s.banner?.id === id ? { banner: null } : s)), 4200);
   },
   announceLevelUp: (level) => {

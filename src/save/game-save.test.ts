@@ -20,6 +20,7 @@ const save = (hero: Record<string, unknown>, npcs: Record<string, unknown> = {})
     playSeconds: 90,
     hero,
     npcs,
+    progress: { forms: ['mermaid'] },
   })!;
 
 describe('game save', () => {

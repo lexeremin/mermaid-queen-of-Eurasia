@@ -94,6 +94,7 @@ export function installDevTools(): void {
     },
   };
   if (new URLSearchParams(window.location.search).get('form') === 'mermaid') {
+    useProgressStore.getState().unlockForm('mermaid');
     useGameStore.getState().setForm('mermaid');
   }
 }

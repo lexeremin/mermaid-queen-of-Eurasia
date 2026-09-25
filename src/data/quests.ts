@@ -1,5 +1,6 @@
 import type { EnemyKind } from '@/data/enemies';
 import type { ItemId } from '@/data/items';
+import type { Form } from '@/systems/abilities';
 
 export type Objective =
   | { kind: 'kill'; count: number; enemy?: EnemyKind }
@@ -16,6 +17,8 @@ export type DungeonFlag = 'hallsCleared' | 'bossDefeated';
 export type QuestReward = {
   xp: number;
   rep: number;
+  /** Transformations this quest unlocks. */
+  unlocks?: readonly Form[];
   items?: readonly { id: ItemId; qty: number }[];
 };
 
@@ -152,6 +155,18 @@ export const QUESTS: readonly QuestDef[] = [
         { id: 'coldKvass', qty: 1 },
       ],
     },
+  },
+  {
+    id: 'return-to-the-water',
+    title: 'Return to the Water',
+    blurb:
+      'The old song remembers the sea. Carry four pearls to the Pearl Shrine in the garden, and the tide will remember you.',
+    minRank: 1,
+    objectives: [
+      { kind: 'visit', zones: ['pearl-shrine'], label: 'Visit the Pearl Shrine' },
+      { kind: 'collect', item: 'pearl', count: 4 },
+    ],
+    reward: { xp: 90, rep: 14, unlocks: ['mermaid'], items: [{ id: 'coldKvass', qty: 2 }] },
   },
   {
     id: 'into-the-depths',

@@ -30,7 +30,20 @@ export const AIM_ASSIST = {
 } as const;
 /** Instant blink to the cursor (or straight ahead), like the Wizard's Teleport: over walls, never into another region. */
 export const BLINK = { range: 14, invuln: 0.35, pop: 0.3 } as const;
-export const AURA = {
+export type Form = 'human' | 'mermaid';
+
+/** How an Aura-type song behaves: the human Aura and the mermaid's Tidal Song share one shape. */
+export type SongSpec = {
+  duration: number;
+  maxRadius: number;
+  rings: number;
+  ringWidth: number;
+  npcCharm: number;
+  enemyBlind: number;
+  mermaidTail: number;
+};
+
+export const AURA: SongSpec = {
   duration: 2.4,
   maxRadius: 8,
   rings: 3,
@@ -39,7 +52,23 @@ export const AURA = {
   enemyBlind: 5,
   /** Rosa keeps her mermaid look this long after the song ends. */
   mermaidTail: 0.5,
-} as const;
+};
+/** The mermaid's version of the song: wider, longer and stronger (docs/phases/phase-18.md). */
+export const TIDAL: SongSpec = {
+  duration: 2.8,
+  maxRadius: 12,
+  rings: 4,
+  ringWidth: 1.4,
+  npcCharm: 24,
+  enemyBlind: 8,
+  mermaidTail: 0.5,
+};
+
+export const songFor = (form: Form | undefined): SongSpec => (form === 'mermaid' ? TIDAL : AURA);
+
+/** Speed multipliers of the mermaid form (and how much faster it swims). */
+export const MERMAID = { landSpeed: 0.9, swimSpeed: 1.35, manaRegen: 2 } as const;
+
 export const SPELL = {
   radius: 4.8,
   damage: 28,

@@ -121,7 +121,8 @@ export function CombatHud({ touch }: { touch: boolean }) {
   const level = useProgressStore((s) => s.level);
   const xp = useProgressStore((s) => s.xp);
   const equipment = useProgressStore((s) => s.equipment);
-  const stats = selectStats({ level, equipment });
+  const form = useGameStore((s) => s.form);
+  const stats = selectStats({ level, equipment, form });
   const xpFraction = level >= MAX_LEVEL ? 1 : xp / xpToNext(level);
 
   return (
@@ -157,8 +158,8 @@ export function CombatHud({ touch }: { touch: boolean }) {
           {SLOTS.map((slot) => (
             <div key={slot.id} className="ability-slot" title={slot.label}>
               <b>{slot.key}</b>
-              <AbilityIcon id={slot.id} size={30} />
-              <em>{slot.label}</em>
+              <AbilityIcon id={slot.id} size={30} form={form} />
+              <em>{slot.id === 'aura' && form === 'mermaid' ? 'Tidal Song' : slot.label}</em>
               {ABILITIES[slot.id].mana > 0 && <i>{ABILITIES[slot.id].mana}</i>}
               <CooldownSweep id={slot.id} />
             </div>

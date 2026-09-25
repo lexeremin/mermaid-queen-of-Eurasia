@@ -1,6 +1,7 @@
 import type { EnemyKind } from '@/data/enemies';
 import { ITEMS } from '@/data/items';
 import { QUEST_BY_ID } from '@/data/quests';
+import { unlockMermaid } from '@/game/form-sim';
 import { grantXp } from '@/game/progress-actions';
 import { track } from '@/net/stats';
 import { useDungeonStore } from '@/store/dungeon-store';
@@ -70,6 +71,7 @@ export function claimQuestAction(id: string): boolean {
   toast(`Quest complete: ${def.title}`, 'info');
   for (const item of def.reward.items ?? []) toast(`Received ${ITEMS[item.id].name}`, 'item');
   grantXp(def.reward.xp);
+  if (def.reward.unlocks?.includes('mermaid')) unlockMermaid();
   track('quest_completed', { id });
   return true;
 }

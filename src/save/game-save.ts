@@ -85,6 +85,7 @@ function collectProgress(): SaveData['progress'] {
     xp: p.xp,
     awarded: [...p.awarded],
     bag: p.bag.map((s) => (s ? { ...s } : null)),
+    forms: [...p.forms],
     keepsakes: Object.fromEntries(Object.entries(p.keepsakes).map(([id, n]) => [id, n ?? 0])),
     equipment: { ...p.equipment },
   };
@@ -106,6 +107,7 @@ export function applySave(save: SaveData, options: { keepPosition?: boolean } = 
     xp: save.progress.xp,
     awarded: [...save.progress.awarded],
     bag: save.progress.bag.map((s) => (s ? { ...s } : null)),
+    forms: [...save.progress.forms],
     keepsakes: { ...save.progress.keepsakes },
     equipment: { ...save.progress.equipment },
   });

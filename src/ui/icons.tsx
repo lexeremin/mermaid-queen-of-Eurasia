@@ -160,8 +160,47 @@ const ABILITY_ICONS: Record<AbilityId, ReactNode> = {
   ),
 };
 
-export function AbilityIcon({ id, size = 32 }: { id: AbilityId; size?: number }) {
-  return <Icon size={size}>{ABILITY_ICONS[id]}</Icon>;
+/** The mermaid's Tidal Song: wide rings around a note. */
+const TIDAL_ICON: ReactNode = (
+  <>
+    <circle cx="24" cy="26" r="19" fill="none" stroke={INK} strokeWidth={5.4} />
+    <circle cx="24" cy="26" r="19" fill="none" stroke="#7fd6f5" strokeWidth={2.6} />
+    <circle cx="24" cy="26" r="12" fill="none" stroke={INK} strokeWidth={5.4} />
+    <circle cx="24" cy="26" r="12" fill="none" stroke="#ffb0cb" strokeWidth={2.6} />
+    <path
+      d="M21 34 V17 L31 14 V29"
+      fill="none"
+      stroke={INK}
+      strokeWidth={5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <path
+      d="M21 34 V17 L31 14 V29"
+      fill="none"
+      stroke="#fff1a8"
+      strokeWidth={2.4}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <ellipse cx="18" cy="35" rx="4.6" ry="3.6" fill="#ff8fb0" {...line} />
+    <ellipse cx="28" cy="30" rx="4.6" ry="3.6" fill="#ff8fb0" {...line} />
+    <Sparkle x={40} y={9} s={2} />
+  </>
+);
+
+export function AbilityIcon({
+  id,
+  size = 32,
+  form,
+}: {
+  id: AbilityId;
+  size?: number;
+  form?: 'human' | 'mermaid';
+}) {
+  return (
+    <Icon size={size}>{id === 'aura' && form === 'mermaid' ? TIDAL_ICON : ABILITY_ICONS[id]}</Icon>
+  );
 }
 
 /* ---------- items ---------- */
@@ -504,9 +543,22 @@ export function ItemIcon({ id, size = 36, label }: { id: ItemId; size?: number; 
 
 /* ---------- interface ---------- */
 
-export type UiIconId = 'map' | 'quests' | 'bag' | 'pause' | 'recall';
+export type UiIconId = 'form' | 'map' | 'quests' | 'bag' | 'pause' | 'recall';
 
 const UI_ICONS: Record<UiIconId, ReactNode> = {
+  // A mermaid tail.
+  form: (
+    <>
+      <circle cx="24" cy="24" r="18" fill="#5fd6c8" {...line} />
+      <path
+        d="M17 12 Q24 12 26 20 Q27 27 22 32 Q19 35 14 36 Q19 39 24 39 Q30 39 33 34 Q30 33 29 30 Q34 30 37 33 Q37 27 32 24 Q29 22 28 16 Q26 10 17 12 Z"
+        fill="#e4fbff"
+        {...line}
+        strokeWidth={2}
+      />
+      <Sparkle x={38} y={10} s={2} />
+    </>
+  ),
   // A folded map with a dotted route and a pin.
   map: (
     <>

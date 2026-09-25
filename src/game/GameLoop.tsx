@@ -24,8 +24,10 @@ import { requestSave } from '@/save/save-requests';
 import { useCombatStore } from '@/store/combat-store';
 import { ENEMIES } from '@/data/enemies';
 import { stepCombat, type CombatEvent } from '@/systems/combat';
-import { BLINK } from '@/systems/abilities';
+import { BLINK, MERMAID } from '@/systems/abilities';
 import { pickBlinkDestination } from '@/systems/blink';
+import { isInWater } from '@/systems/water';
+import { toggleForm } from '@/game/form-sim';
 import { nav } from '@/game/world/nav';
 import {
   clearPressed,
@@ -110,6 +112,12 @@ function resolveBlink(from: Vec2, move: Vec2): Vec2 | null {
   return pickBlinkDestination(from, aim, BLINK.range, currentWorld, (to) =>
     nav.sameRegion(from, to),
   );
+}
+
+/** The mermaid is slower on land and faster in the water; a human is the same everywhere. */
+function speedMultiplier(): number {
+  if (useGameStore.getState().form !== 'mermaid') return 1;
+  return isInWater(currentWorld.water, sim.curr.pos) ? MERMAID.swimSpeed : MERMAID.landSpeed;
 }
 
 export function walkTo(target: Vec2): boolean {
@@ -204,6 +212,11 @@ export function GameLoop() {
       }
     }
 
+    if (consumePressed(input, 'form')) {
+      if (recall.active) cancelRecall(recall);
+      toggleForm();
+    }
+
     if (consumePressed(input, 'recall')) {
       if (!recall.active) {
         sim.path = [];
@@ -278,6 +291,7 @@ export function GameLoop() {
         npcs: followingId ? NPC_TARGETS.filter((n) => n.id !== followingId) : NPC_TARGETS,
         world: currentWorld,
         arena: ARENA,
+        form: useGameStore.getState().form,
         stats,
         companion: followingId ? { id: followingId } : null,
       });
@@ -315,7 +329,7 @@ export function GameLoop() {
         move = { x: move.x * frame.moveScale, z: move.z * frame.moveScale };
 
       sim.prev = sim.curr;
-      sim.curr = stepPlayer(sim.curr, { move }, dt, currentWorld);
+      sim.curr = stepPlayer(sim.curr, { move }, dt, currentWorld, speedMultiplier());
       if (frame.faceOverride) sim.curr = { ...sim.curr, facing: frame.faceOverride };
 
       if (walking && sim.path.length > 0) {

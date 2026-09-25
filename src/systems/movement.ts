@@ -30,11 +30,13 @@ export function stepPlayer(
   intent: MoveIntent,
   dt: number,
   world: CollisionWorld,
+  /** Scales the walking speed (the mermaid form is slower on land and faster in water). */
+  speedMult = 1,
 ): PlayerState {
   const { move } = intent;
   const target = {
-    x: player.pos.x + move.x * PLAYER_SPEED * dt,
-    z: player.pos.z + move.z * PLAYER_SPEED * dt,
+    x: player.pos.x + move.x * PLAYER_SPEED * speedMult * dt,
+    z: player.pos.z + move.z * PLAYER_SPEED * speedMult * dt,
   };
   const pos = resolveCircle(target, PLAYER_RADIUS, world);
   const facing = isZero(move)

@@ -1,3 +1,4 @@
+import { MERMAID, type Form } from '@/systems/abilities';
 import { ITEMS, isItemId, type Bonuses, type EquipSlot, type ItemId } from '@/data/items';
 
 export const MAX_LEVEL = 10;
@@ -62,7 +63,11 @@ export function equipmentBonuses(equipment: Equipment): Bonuses {
 }
 
 /** Derived stats from level and equipment. */
-export function computeStats(level: number, equipment: Equipment): PlayerStats {
+export function computeStats(
+  level: number,
+  equipment: Equipment,
+  form: Form = 'human',
+): PlayerStats {
   const l = Math.min(MAX_LEVEL, Math.max(1, Math.floor(level)));
   const b = equipmentBonuses(equipment);
   return {
@@ -70,7 +75,7 @@ export function computeStats(level: number, equipment: Equipment): PlayerStats {
     maxMana: BASE_MANA + 8 * (l - 1) + b.maxMana,
     damageMult: 1 + 0.06 * (l - 1) + b.damagePct / 100,
     reduction: Math.min(MAX_REDUCTION, b.reductionPct / 100),
-    manaRegen: BASE_MANA_REGEN + b.manaRegen,
+    manaRegen: BASE_MANA_REGEN + b.manaRegen + (form === 'mermaid' ? MERMAID.manaRegen : 0),
   };
 }
 

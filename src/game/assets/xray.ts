@@ -73,6 +73,8 @@ export function applyHeroLook(root: Object3D): void {
   });
   for (const mesh of meshes) {
     mesh.material = material;
+    // Effects can run twice (React strict mode, remounts): one twin per mesh is enough.
+    if (mesh.children.some((c) => c.userData.xray)) continue;
     const twin = new Mesh(mesh.geometry, twinMaterial);
     twin.userData.xray = true;
     twin.renderOrder = 10;

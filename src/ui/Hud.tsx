@@ -10,6 +10,7 @@ import { ControlsPanel } from '@/ui/ControlsPanel';
 import { LoadingScreen } from '@/ui/LoadingScreen';
 import { Welcome } from '@/ui/Welcome';
 import { MapOverlay, MiniMap } from '@/ui/MapViews';
+import { FormButton } from '@/ui/FormButton';
 import { RecallButton } from '@/ui/RecallButton';
 import { QuickUse } from '@/ui/QuickUse';
 import { UiIcon } from '@/ui/icons';
@@ -136,6 +137,7 @@ export function Hud() {
         <FollowerButton />
         <div className="dock-row">
           {!touch && <RecallButton touch={false} />}
+          <FormButton touch={touch} />
           <QuickUse touch={touch} />
         </div>
       </div>

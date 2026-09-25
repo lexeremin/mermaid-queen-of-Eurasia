@@ -4,14 +4,14 @@ import { QUEST_BY_ID } from '@/data/quests';
 import { RED_SQUARE } from '@/data/maps/red-square';
 import { ITEMS, STARTER_EQUIPMENT, isItemId, type EquipSlot, type ItemId } from '@/data/items';
 import { ENEMIES } from '@/data/enemies';
-import { ABILITIES } from '@/systems/abilities';
+import { ABILITIES, type Form } from '@/systems/abilities';
 import { HERB_REGROW_SECONDS } from '@/systems/gathering';
 import { PICKUP_LIFE } from '@/systems/pickups';
 import { BAG_SIZE, MAX_KEEPSAKES, isKeepsake } from '@/systems/inventory';
 import { MAX_LEVEL, xpToNext } from '@/systems/progression';
 import { clampRelationship } from '@/systems/relationship';
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 export type SavedNpc = {
   relationship: number;
@@ -27,6 +27,8 @@ export type SavedProgress = {
   bag: ({ id: ItemId; qty: number } | null)[];
   /** Quest items, which take no bag slot. */
   keepsakes: Record<string, number>;
+  /** Unlocked transformations (the human form is always there). */
+  forms: Form[];
   equipment: Record<EquipSlot, ItemId | null>;
 };
 
@@ -94,6 +96,15 @@ export const MIGRATIONS: Migrations = {
   2: (data) => ({ ...data, quests: defaultSavedQuests() }),
   3: (data) => ({ ...data, garden: defaultSavedGarden() }),
   4: (data) => ({ ...data, dungeon: defaultSavedDungeon() }),
+  // v8: unlocked forms (a hero saved as a mermaid keeps the form).
+  7: (data) => {
+    const hero = isRecord(data.hero) ? data.hero : {};
+    const progress = isRecord(data.progress) ? data.progress : {};
+    return {
+      ...data,
+      progress: { ...progress, forms: hero.form === 'mermaid' ? ['mermaid'] : [] },
+    };
+  },
   // v7: a local-only world snapshot is added (none for old saves).
   6: (data) => ({ ...data, world: null }),
   // v6: the boss gate opens when the halls are cleared (no stamp), and two quests were renamed.
@@ -141,6 +152,7 @@ export const defaultSavedProgress = (): SavedProgress => ({
   awarded: [],
   bag: Array.from({ length: BAG_SIZE }, () => null),
   keepsakes: {},
+  forms: [],
   equipment: { ...STARTER_EQUIPMENT },
 });
 
@@ -222,7 +234,9 @@ function parseProgress(raw: unknown): SavedProgress {
       }
     }
   }
-  return { level, xp, awarded, bag, keepsakes, equipment };
+  const forms: Form[] =
+    Array.isArray(raw.forms) && raw.forms.includes('mermaid') ? ['mermaid'] : [];
+  return { level, xp, awarded, bag, keepsakes, forms, equipment };
 }
 
 const PEARL_IDS: ReadonlySet<string> = new Set(
@@ -392,19 +406,21 @@ export function parseSave(raw: unknown, migrations: Migrations = MIGRATIONS): Sa
     }
   }
 
+  const progress = parseProgress(data.progress);
   return {
     version: SAVE_VERSION,
     savedAt,
     playSeconds: Math.max(0, finite(data.playSeconds, 0)),
     hero: {
-      form: hero.form === 'mermaid' ? 'mermaid' : 'human',
+      // The mermaid form only counts once it has been unlocked.
+      form: hero.form === 'mermaid' && progress.forms.includes('mermaid') ? 'mermaid' : 'human',
       x: finite(hero.x, NaN),
       z: finite(hero.z, NaN),
       facingX: finite(hero.facingX, 0),
       facingZ: finite(hero.facingZ, 1),
     },
     npcs,
-    progress: parseProgress(data.progress),
+    progress,
     quests: parseQuests(data.quests),
     garden: parseGarden(data.garden),
     dungeon: parseDungeon(data.dungeon),

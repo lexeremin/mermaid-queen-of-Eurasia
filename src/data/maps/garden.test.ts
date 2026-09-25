@@ -21,19 +21,35 @@ const free = (x: number, z: number) => {
 };
 
 describe('garden gatherables', () => {
-  it('has 6 rose hips, 6 moon mint and 5 hidden pearls with unique ids', () => {
+  it('has 6 rose hips, 6 moon mint and 7 hidden pearls with unique ids', () => {
     expect(new Set(gathers.map((g) => g.id)).size).toBe(gathers.length);
     expect(gathers.filter((g) => g.kind === 'roseHip')).toHaveLength(6);
     expect(gathers.filter((g) => g.kind === 'moonMint')).toHaveLength(6);
-    expect(gathers.filter((g) => g.kind === 'pearl')).toHaveLength(5);
+    expect(gathers.filter((g) => g.kind === 'pearl')).toHaveLength(7);
   });
 
+  // Two pearls lie in the pond's blocked ends: only a swimming mermaid reaches them.
+  const IN_WATER = new Set(['pearl-6', 'pearl-7']);
+
   it('puts every one on free ground inside the garden that Rosa can walk to', () => {
-    for (const g of gathers) {
+    for (const g of gathers.filter((n) => !IN_WATER.has(n.id))) {
       expect(free(g.x, g.z), g.id).toBe(true);
       expect(g.x, g.id).toBeGreaterThan(45.5);
       expect(g.x, g.id).toBeLessThan(RED_SQUARE.bounds.maxX);
       expect(findPath(grid, RED_SQUARE.spawn, { x: g.x, z: g.z }), g.id).not.toBeNull();
+    }
+  });
+
+  it('hides two pearls in the pond: blocked on foot, free once the water colliders are gone', () => {
+    const swimming = {
+      bounds: world.bounds,
+      colliders: world.colliders.filter((c) => !world.water?.includes(c)),
+    };
+    for (const id of IN_WATER) {
+      const g = gathers.find((n) => n.id === id)!;
+      expect(free(g.x, g.z), id).toBe(false);
+      const p = resolveCircle({ x: g.x, z: g.z }, PLAYER_RADIUS, swimming);
+      expect(Math.hypot(p.x - g.x, p.z - g.z), id).toBeLessThan(1e-6);
     }
   });
 

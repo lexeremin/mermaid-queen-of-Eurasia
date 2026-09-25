@@ -26,12 +26,14 @@ export function buildCollisionWorld(map: MapData): CollisionWorld {
       ),
     );
   }
+  const waterColliders: Collider[] = [];
   for (const water of map.waters) {
     const radius = water.ribbon.width / 2 - WATER_COLLIDER_INSET;
-    for (const run of water.colliderRuns) colliders.push(...polylineToCapsules(run, radius));
+    for (const run of water.colliderRuns) waterColliders.push(...polylineToCapsules(run, radius));
   }
+  colliders.push(...waterColliders);
   colliders.push(...map.colliders);
   for (const npc of map.npcs)
     colliders.push({ kind: 'circle', x: npc.x, z: npc.z, r: NPC_COLLIDER_RADIUS });
-  return { bounds: map.bounds, colliders };
+  return { bounds: map.bounds, colliders, water: waterColliders };
 }

@@ -26,7 +26,8 @@ export function InventoryPanel() {
   const equip = useProgressStore((s) => s.equip);
   const unequip = useProgressStore((s) => s.unequip);
   const [sel, setSel] = useState<Selection>(null);
-  const stats = selectStats({ level, equipment });
+  const form = useGameStore((s) => s.form);
+  const stats = selectStats({ level, equipment, form });
 
   const selectedId: ItemId | null =
     sel === null ? null : sel.from === 'bag' ? (bag[sel.index]?.id ?? null) : equipment[sel.slot];

@@ -608,3 +608,44 @@ describe('respawning', () => {
     expect(s.enemies[1]!.state).toBe('dead');
   });
 });
+
+describe('Tidal Song', () => {
+  const cast = (form: 'human' | 'mermaid') => {
+    const s = createCombatState([{ id: 'far', kind: 'tycoon', x: 10, z: 0 }]);
+    const near = { id: 'npc', pos: { x: 10.5, z: 0 } };
+    const events = [] as ReturnType<typeof step>['events'];
+    events.push(...step(s, { form, npcs: [near], actions: { aura: true } }).events);
+    for (let t = 0; t < 3.2; t += DT) events.push(...step(s, { form, npcs: [near] }).events);
+    return { s, events };
+  };
+
+  it('the human Aura does not reach 10 m, the mermaid song does', () => {
+    const human = cast('human');
+    expect(human.events.some((e) => e.type === 'npcCharmed')).toBe(false);
+    expect(human.s.enemies[0]!.state).not.toBe('blinded');
+    const mermaid = cast('mermaid');
+    expect(mermaid.events.some((e) => e.type === 'npcCharmed')).toBe(true);
+    expect(mermaid.s.charmed.npc).toBeGreaterThan(0);
+  });
+
+  it('charms and blinds for longer than the Aura', () => {
+    const near = { id: 'npc', pos: { x: 3, z: 0 } };
+    const sing = (form: 'human' | 'mermaid') => {
+      const s = createCombatState([{ id: 'e', kind: 'tycoon', x: 4, z: 0 }]);
+      step(s, { form, npcs: [near], actions: { aura: true } });
+      for (let t = 0; t < 3; t += DT) step(s, { form, npcs: [near] });
+      return { charm: s.charmed.npc! - s.time, blind: s.enemies[0]!.blindedUntil - s.time };
+    };
+    const human = sing('human');
+    const mermaid = sing('mermaid');
+    expect(mermaid.charm).toBeGreaterThan(human.charm + 8);
+    expect(mermaid.blind).toBeGreaterThan(human.blind + 2);
+  });
+
+  it('keeps the song it was cast with, even if the form changes mid-song', () => {
+    const s = createCombatState();
+    step(s, { form: 'mermaid', actions: { aura: true } });
+    step(s, { form: 'human' });
+    expect(s.aura.song.maxRadius).toBe(12);
+  });
+});

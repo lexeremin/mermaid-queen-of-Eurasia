@@ -1987,3 +1987,41 @@
     letter-spacing: 0.04em;
   }
 }
+
+/* Form switch: a small round icon like Recall's; glows while Rosa is a mermaid. */
+.form-btn {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 2px solid var(--ui-line);
+  border-radius: 50%;
+  background: var(--ui-leather);
+  box-shadow: var(--ui-frame);
+  color: inherit;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.form-btn:disabled {
+  opacity: 0.45;
+}
+
+.form-btn[data-mermaid='1'] {
+  border-color: #5fd6c8;
+  box-shadow:
+    var(--ui-frame),
+    0 0 10px rgba(95, 214, 200, 0.65);
+}
+
+.form-btn kbd {
+  position: absolute;
+  right: 3px;
+  bottom: 1px;
+  font: 700 10px/1 var(--ui-font);
+  color: var(--ui-gold-bright);
+  text-shadow: 0 1px 2px #000;
+}

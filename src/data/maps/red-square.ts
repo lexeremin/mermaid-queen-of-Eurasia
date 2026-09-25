@@ -383,6 +383,9 @@ export const RED_SQUARE: MapData = {
     { id: 'pearl-3', kind: 'pearl', x: 61, z: -11 },
     { id: 'pearl-4', kind: 'pearl', x: 48.3, z: -27.5 },
     { id: 'pearl-5', kind: 'pearl', x: 61, z: 23.6 },
+    // In the pond's blocked ends: only a swimming mermaid can reach them.
+    { id: 'pearl-6', kind: 'pearl', x: 48, z: 22.6 },
+    { id: 'pearl-7', kind: 'pearl', x: 48, z: 33.4 },
   ],
   zones: [
     { id: 'pearl-shrine', label: 'Pearl Shrine', box: { cx: 59.3, cz: -27, hx: 2.7, hz: 3.2 } },

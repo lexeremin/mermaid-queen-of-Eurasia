@@ -15,7 +15,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { combat } from '@/game/combat-sim';
 import { sim } from '@/game/sim';
 import { createWaveGeometry } from '@/game/entities/wave-geometry';
-import { AURA, TRIDENT } from '@/systems/abilities';
+import { AURA, TIDAL, TRIDENT } from '@/systems/abilities';
 import type { Effect } from '@/systems/combat';
 
 const POOL = 6;
@@ -26,6 +26,7 @@ const WAVE_LAYERS = 3;
 const BUBBLES_PER_BURST = 14;
 const MAX_BURSTS = 6;
 const NOTES_PER_RING = 8;
+const MAX_RINGS = Math.max(AURA.rings, TIDAL.rings);
 const NOTE_COLORS = ['#ff9fb8', '#ffe28f', '#f4d0df'].map((c) => new Color(c));
 const dummy = new Object3D();
 
@@ -85,7 +86,7 @@ export function CombatEffects() {
   useEffect(() => {
     const mesh = notes.current;
     if (!mesh) return;
-    for (let i = 0; i < AURA.rings * NOTES_PER_RING; i++) {
+    for (let i = 0; i < MAX_RINGS * NOTES_PER_RING; i++) {
       mesh.setColorAt(
         i,
         NOTE_COLORS[Math.floor(i / NOTES_PER_RING) % NOTE_COLORS.length] ?? NOTE_COLORS[0]!,
@@ -185,13 +186,14 @@ export function CombatEffects() {
     const disc = auraDisc.current;
     const aura = combat.aura;
     if (notesMesh) {
-      const total = AURA.rings * NOTES_PER_RING;
+      const song = aura.song;
+      const total = song.rings * NOTES_PER_RING;
       if (aura.active) {
-        const progress = aura.t / AURA.duration;
-        const radius = AURA.maxRadius * Math.min(1, progress);
+        const progress = aura.t / song.duration;
+        const radius = song.maxRadius * Math.min(1, progress);
         const fade = progress > 0.8 ? Math.max(0, (1 - progress) / 0.2) : 1;
         let index = 0;
-        for (let ring = 0; ring < AURA.rings; ring++) {
+        for (let ring = 0; ring < song.rings; ring++) {
           const r = Math.max(0.6, radius - ring * 1.7);
           const spin = aura.t * (ring % 2 === 0 ? 2.2 : -2.6);
           for (let k = 0; k < NOTES_PER_RING; k++) {
@@ -216,9 +218,9 @@ export function CombatEffects() {
     if (disc && auraMaterial.current) {
       disc.visible = aura.active;
       if (aura.active) {
-        const progress = aura.t / AURA.duration;
+        const progress = aura.t / aura.song.duration;
         disc.position.set(sim.curr.pos.x, 0.09, sim.curr.pos.z);
-        disc.scale.setScalar(Math.max(0.1, AURA.maxRadius * Math.min(1, progress)));
+        disc.scale.setScalar(Math.max(0.1, aura.song.maxRadius * Math.min(1, progress)));
         auraMaterial.current.opacity = 0.55 * (1 - progress);
       }
     }
@@ -298,7 +300,7 @@ export function CombatEffects() {
       </instancedMesh>
       <instancedMesh
         ref={notes}
-        args={[noteGeo, undefined, AURA.rings * NOTES_PER_RING]}
+        args={[noteGeo, undefined, MAX_RINGS * NOTES_PER_RING]}
         frustumCulled={false}
       >
         <meshBasicMaterial />

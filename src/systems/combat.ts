@@ -2,6 +2,9 @@ import { RESPAWN_SECONDS, type EnemyKind } from '@/data/enemies';
 import {
   AIM_ASSIST,
   AURA,
+  songFor,
+  type Form,
+  type SongSpec,
   HP_REGEN,
   HP_REGEN_DELAY,
   HURT_INVULN,
@@ -76,7 +79,8 @@ export type CombatState = {
   hurtFlash: number;
   downed: boolean;
   attackLock: number;
-  aura: { active: boolean; t: number; hit: Set<string> };
+  /** The song being sung (the human Aura or the mermaid's Tidal Song), kept from the moment it was cast. */
+  aura: { active: boolean; t: number; hit: Set<string>; song: SongSpec };
   enemies: Enemy[];
   projectiles: Projectile[];
   /** Telegraphed danger zones (boss moves) waiting to land. */
@@ -116,7 +120,7 @@ export function createCombatState(spawns: readonly SpawnPoint[] = []): CombatSta
     hurtFlash: 0,
     downed: false,
     attackLock: 0,
-    aura: { active: false, t: 0, hit: new Set() },
+    aura: { active: false, t: 0, hit: new Set(), song: AURA },
     enemies: spawns.map((s) =>
       createEnemy(s.id, s.kind, { x: s.x, z: s.z }, { dormant: s.dormant, instanced: s.instanced }),
     ),
@@ -150,6 +154,8 @@ export type CombatParams = {
   world: CollisionWorld;
   /** Derived player stats (level and equipment); defaults to the base stats. */
   stats?: PlayerStats;
+  /** Rosa's form: the mermaid sings Tidal Song instead of the Aura. */
+  form?: Form;
   /** The NPC currently following Rosa as a companion, if any. */
   companion?: { id: string } | null;
   /** The boss arena; the boss only fights while Rosa is inside. */
@@ -180,7 +186,7 @@ function startMermaid(s: CombatState, seconds: number, at: Vec2): void {
   s.mermaid = Math.max(s.mermaid, seconds);
 }
 
-const pushEffect = (
+export const pushEffect = (
   s: CombatState,
   type: EffectType,
   x: number,
@@ -357,8 +363,9 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
     if (p.actions.aura && !s.aura.active && canUse(s.cooldowns, s.mana, 'aura')) {
       s.mana = spendAbility(s.cooldowns, s.mana, 'aura') ?? s.mana;
       events.push({ type: 'cast', ability: 'aura' });
-      s.aura = { active: true, t: 0, hit: new Set() };
-      startMermaid(s, AURA.duration + AURA.mermaidTail, playerPos);
+      const song = songFor(p.form);
+      s.aura = { active: true, t: 0, hit: new Set(), song };
+      startMermaid(s, song.duration + song.mermaidTail, playerPos);
       frame.cancelWalk = true;
     }
   }
@@ -369,12 +376,13 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
 
   if (s.aura.active) {
     s.aura.t += dt;
-    const radius = AURA.maxRadius * Math.min(1, s.aura.t / AURA.duration);
+    const song = s.aura.song;
+    const radius = song.maxRadius * Math.min(1, s.aura.t / song.duration);
     for (const npc of p.npcs) {
       if (s.aura.hit.has(npc.id)) continue;
       if (inCircle(playerPos, npc.pos, 0.5, radius)) {
         s.aura.hit.add(npc.id);
-        s.charmed[npc.id] = s.time + AURA.npcCharm;
+        s.charmed[npc.id] = s.time + song.npcCharm;
         events.push({ type: 'npcCharmed', id: npc.id });
       }
     }
@@ -382,10 +390,10 @@ export function stepCombat(s: CombatState, p: CombatParams): CombatFrame {
       if (e.state === 'dead' || e.dormant || s.aura.hit.has(e.id)) continue;
       if (inCircle(playerPos, e.pos, defOf(e).radius, radius)) {
         s.aura.hit.add(e.id);
-        blindEnemy(e, s.time + AURA.enemyBlind * (e.kind === 'boss' ? BOSS.blindFactor : 1));
+        blindEnemy(e, s.time + song.enemyBlind * (e.kind === 'boss' ? BOSS.blindFactor : 1));
       }
     }
-    if (s.aura.t >= AURA.duration) s.aura.active = false;
+    if (s.aura.t >= song.duration) s.aura.active = false;
   }
 
   if (p.companion) {
