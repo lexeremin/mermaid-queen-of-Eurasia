@@ -100,7 +100,7 @@ Read these files before starting any work:
 | Phase 15b — Environment polish | ✅ Complete | GUM flicker fixed at the source (coplanar faces), richer ground tiles with mipmapped filtering, plaza kerbs, contact shadows, GUM roof hides indoors | d41289c |
 | Phase 15c — Entrances | ✅ Complete | Arched GUM portals and gates, obstacles removed from doorway axes (tested), curved garden path, glowing entrance markers | 105b02f |
 | Phase 15d — Gate fixes, glow, hitbox rings | ✅ Complete | Floating seam plates removed from the gates, one united entrance glow, green/red hitbox rings, ground flicker fix, Trident reach 3.4 m | 85ba93c |
-| Phase 15e — Kits and generators | ✅ Complete | Wall-run assembler with a four-piece kit and a corner tower, ground autotiler (grid, variants, kerbs, connectors through both gates), see-through fade for occluding buildings | HASH15E |
+| Phase 15e — Kits and generators | ✅ Complete | Wall-run assembler with a four-piece kit and a corner tower, ground autotiler (grid, variants, kerbs, connectors through both gates), see-through fade for occluding buildings | 75457cc |
 | Phase 16 — Moscow underground + boss | ⬜ Next | 3 rooms, loot, boss arena + fight | |
 | Phase 17 — Transformations | ⬜ Todo | Mermaid Queen (Tidal Song), Forest Spirit, Elvish, Tsarina; unlock flow; review forms for the setting | |
 | Phase 18 — Polish | ⬜ Todo | Audio, VFX (mist/drizzle/particles), HUD juice, title screen, settings (hero X-ray silhouette already done in Phase 8) | |
