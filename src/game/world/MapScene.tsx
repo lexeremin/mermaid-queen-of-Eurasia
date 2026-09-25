@@ -15,6 +15,7 @@ import type { Placement } from '@/data/maps/types';
 import { PALETTE } from '@/data/palette';
 import { InstancedModel, type Transform } from '@/game/assets/InstancedModel';
 import { useGameStore } from '@/store/game-store';
+import { EntranceGlow } from '@/game/world/EntranceGlow';
 import { ContactShadows } from '@/game/world/ContactShadows';
 import { currentMap } from '@/game/world/current-map';
 import { buildRibbon, mergeRibbons, type RibbonMesh } from '@/game/world/ribbon';
@@ -192,6 +193,7 @@ export function MapScene() {
         </group>
       ))}
       <ContactShadows />
+      <EntranceGlow />
       <GlassRoofs map={map} />
     </>
   );

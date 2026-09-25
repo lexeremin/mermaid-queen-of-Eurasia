@@ -40,6 +40,14 @@ def build_gum_facade():
             p.box((1.1, 0.14, 2.7), (cx + k * 2.1, 2.58, 2.6), "candle")
         p.box((1.2, depth + 0.3, 9.6), (sx * (gap / 2 + 0.6), 0, 5.4), "brick_light")
         p.box((1.4, depth + 0.4, 0.4), (sx * (gap / 2 + 0.6), 0, 10.3), "stone")
+    # Round arched portal: solid tympanum with a stone trim ring and keystone on both faces, and warm lanterns.
+    arch_opening(p, gap / 2, 5.4, 8.0, -depth / 2, depth / 2, "brick_light", "stone", -depth / 2 - 0.05, segments=14)
+    arch_opening(p, gap / 2, 5.4, 8.0, -depth / 2, depth / 2, "brick_light", "stone", depth / 2 + 0.05, segments=14)
+    for sx in (-1, 1):
+        for yy in (-1.9, 1.9):
+            p.box((0.16, 0.3, 0.16), (sx * (gap / 2 - 0.1), yy, 3.85), "ink")
+            p.box((0.26, 0.34, 0.5), (sx * (gap / 2 - 0.22), yy, 3.45), "candle")
+            p.box((0.32, 0.4, 0.1), (sx * (gap / 2 - 0.22), yy, 3.75), "gold")
     p.box((gap + 2.4, depth + 0.3, 1.4), (0, 0, 8.7), "stone")
     p.box((gap + 2.6, depth + 0.4, 0.4), (0, 0, 9.6), "brick_light")
     p.prism_xz([(-3.6, 10.0), (3.6, 10.0), (0, 12.4)], -2.7, -2.3, "stone")

@@ -167,8 +167,16 @@ def build_garden_gate():
         p.cone(0.16, 0, 0.3, (x, 0, 5.95), "ruby", segments=4)
     p.box((3.4, 0.8, 0.7), (0, 0, 3.4), "brick_light")
     p.box((1.2, 0.06, 0.4), (0, -0.43, 3.4), "gold")
-    for i in range(7):
-        p.box((0.06, 0.06, 0.6), (-1.5 + i * 0.5, 0, 2.85), "ink")
+    # Iron scroll arch under the lintel with a hanging lantern (the opening stays clear below head height).
+    r = 1.6
+    for face in (-0.36, 0.36):
+        for i in range(13):
+            a = math.pi * i / 12
+            p.box((0.16, 0.06, 0.16), (r * math.cos(a), face, 1.4 + r * math.sin(a)), "ink")
+    p.box((0.06, 0.06, 0.55), (0, 0, 2.78), "ink")
+    p.box((0.34, 0.34, 0.46), (0, 0, 2.4), "candle")
+    p.box((0.4, 0.4, 0.1), (0, 0, 2.68), "gold")
+    p.box((0.4, 0.4, 0.08), (0, 0, 2.14), "gold")
     return _done("bld_garden_gate", p)
 
 

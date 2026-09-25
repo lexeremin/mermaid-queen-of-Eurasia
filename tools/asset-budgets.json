@@ -20,7 +20,7 @@
     "maxTexture": 128
   },
   "bld": {
-    "maxTris": 1500,
+    "maxTris": 2200,
     "maxKB": 300,
     "maxTexture": 128
   },

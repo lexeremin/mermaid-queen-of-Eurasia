@@ -67,7 +67,7 @@ Class is taken from the file name prefix.
 | `char` (hero) | ≤ 3 000 | ≤ 600 KB | ≤ 128 px |
 | `npc`, `enemy` | ≤ 1 500 | ≤ 300 KB | ≤ 128 px |
 | `boss` | ≤ 4 000 | ≤ 600 KB | ≤ 128 px |
-| `bld` | ≤ 1 500 | ≤ 300 KB | ≤ 128 px |
+| `bld` | ≤ 2 200 (raised from 1 500 in Phase 15c for the arched GUM portal) | ≤ 300 KB | ≤ 128 px |
 | `lmk` (landmark) | ≤ 4 000 | ≤ 300 KB | ≤ 128 px |
 | `prop`, `tree`, `fx` | ≤ 300 / 300 / 500 | ≤ 100 KB | ≤ 128 px |
 | `terrain` | ≤ 20 000 | ≤ 600 KB | ≤ 256 px |

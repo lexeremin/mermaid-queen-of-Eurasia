@@ -364,3 +364,23 @@ def author_clips(clips):
             anim.action = None
     for obj in bpy.data.objects:
         obj.rotation_euler = (0, 0, 0)
+
+
+def arch_opening(part, half_width, spring_z, top_z, y0, y1, fill_color, trim_color, trim_y, key_color="gold", segments=12, trim_w=0.32):
+    """A round arch over an opening. Fills the corners between the arc and the lintel line (`top_z`) with a solid
+    tympanum spanning y0..y1, and adds a trim ring of small blocks plus a keystone on the face at `trim_y`
+    (pass the y of the outer face, nudged outward). The opening is a semicircle of radius `half_width`."""
+    r = half_width
+    pts = [(-r, spring_z)]
+    for i in range(1, segments):
+        a = math.pi - math.pi * i / segments
+        pts.append((r * math.cos(a), spring_z + r * math.sin(a)))
+    pts += [(r, spring_z), (r, top_z), (-r, top_z)]
+    part.prism_xz(pts, y0, y1, fill_color)
+    sign = -1 if trim_y < 0 else 1
+    for i in range(segments):
+        a = math.pi * (i + 0.5) / segments
+        cx, cz = (r + trim_w / 2) * math.cos(a), spring_z + (r + trim_w / 2) * math.sin(a)
+        chord = 2 * (r + trim_w / 2) * math.sin(math.pi / (2 * segments)) * 1.05
+        part.box((chord, 0.16, trim_w), (cx, trim_y, cz), trim_color if i % 2 else fill_color, rot=(0, -(a + math.pi / 2), 0))
+    part.box((0.5, 0.2, 0.55), (0, trim_y + sign * 0.02, spring_z + r + trim_w / 2), key_color)

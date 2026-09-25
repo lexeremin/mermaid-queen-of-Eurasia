@@ -106,10 +106,9 @@ const redSquare: Placement[] = [
   { asset: 'crate', x: -6.5, z: -9.6 },
   { asset: 'barrel', x: -6.5, z: 0 },
   { asset: 'crate', x: -6.5, z: 9.6 },
-  ...[-24, -12, 0, 12, 24].flatMap((z) => [
-    { asset: 'lamppost' as const, x: -10, z },
-    { asset: 'lamppost' as const, x: 9.8, z },
-  ]),
+  // The GUM side keeps clear of the portal axes (z = -18, 0, 18) so nothing stands in a doorway.
+  ...[-24, -12, -6, 6, 12, 24].map((z) => ({ asset: 'lamppost' as const, x: -10, z })),
+  ...[-24, -12, 0, 12, 24].map((z) => ({ asset: 'lamppost' as const, x: 9.8, z })),
   { asset: 'firTub', x: -9, z: -26 },
   { asset: 'firTub', x: 9, z: -26 },
   ...[-24, -8, 8].map((z) => ({ asset: 'flowerbed' as const, x: 0, z })),
@@ -125,10 +124,9 @@ const manezhnaya: Placement[] = [
   { asset: 'bench', x: 33, z: 56, rotY: -HALF_PI },
   { asset: 'bench', x: 25, z: 64, rotY: Math.PI },
   { asset: 'bench', x: 25, z: 48, rotY: 0 },
-  ...[42, 60, 72].flatMap((z) => [
-    { asset: 'lamppost' as const, x: 9, z },
-    { asset: 'lamppost' as const, x: 41, z },
-  ]),
+  // Nothing stands on the axis of the Resurrection Gate (x = 9), so the west row starts further in.
+  ...[50, 62, 72].map((z) => ({ asset: 'lamppost' as const, x: 9, z })),
+  ...[42, 60, 72].map((z) => ({ asset: 'lamppost' as const, x: 41, z })),
   { asset: 'lamppost', x: 25, z: 42 },
   { asset: 'lamppost', x: 25, z: 72 },
   ...[
@@ -259,12 +257,15 @@ export const RED_SQUARE: MapData = {
       width: 2.4,
     },
     {
+      // Leaves the Manezhnaya plaza at its east edge (x = 45) and curves up to the garden gate.
       points: [
-        [36, 50],
-        [46, 46],
+        [45.2, 48.5],
+        [48.5, 48],
+        [51.6, 45.8],
         [PROMENADE_X, 43],
+        [PROMENADE_X, 41],
       ],
-      width: 3,
+      width: 3.2,
     },
   ],
   plazas: [
@@ -297,6 +298,35 @@ export const RED_SQUARE: MapData = {
     { id: 'speaker-garden-2', kind: 'speaker', x: 55.5, z: 24 },
     { id: 'speaker-shrine', kind: 'speaker', x: 57.6, z: -21.2 },
     { id: 'demagogue-shrine', kind: 'demagogue', x: 60.6, z: -21 },
+  ],
+  entrances: [
+    ...PORTALS_Z.map((z) => ({
+      id: `gum-portal-${z}`,
+      label: 'GUM',
+      x: FACADE_X,
+      z,
+      axis: 'x' as const,
+      width: 4.6,
+      color: '#ffd58a',
+    })),
+    {
+      id: 'resurrection-gate',
+      label: 'Manezhnaya Square',
+      x: 9,
+      z: 33.5,
+      axis: 'z',
+      width: 4.4,
+      color: '#ffb59a',
+    },
+    {
+      id: 'garden-gate',
+      label: 'Alexander Garden',
+      x: PROMENADE_X,
+      z: 40,
+      axis: 'z',
+      width: 3.1,
+      color: '#9fffd0',
+    },
   ],
   gatherables: [
     { id: 'rose-1', kind: 'roseHip', x: 50, z: -14 },

@@ -28,6 +28,19 @@ export type Water = {
 
 export type NpcSpot = { id: string; x: number; z: number; rotY: number };
 
+/** A doorway or gate Rosa can walk through to another area. `axis` is the direction of travel through it. */
+export type Entrance = {
+  id: string;
+  label: string;
+  x: number;
+  z: number;
+  axis: 'x' | 'z';
+  /** Clear width of the opening in metres. */
+  width: number;
+  /** Glow color. */
+  color: string;
+};
+
 export type GatherKind = 'roseHip' | 'moonMint' | 'pearl';
 
 /** A herb plant (regrows) or a hidden pearl (taken once ever). */
@@ -48,6 +61,7 @@ export type MapData = {
   npcs: readonly NpcSpot[];
   enemies: readonly EnemySpawn[];
   gatherables?: readonly Gatherable[];
+  entrances?: readonly Entrance[];
   /** Colored ground rectangles (e.g. interior floors). */
   floors?: readonly { cx: number; cz: number; w: number; d: number; color: string; y?: number }[];
   /** Translucent glass roofs. */

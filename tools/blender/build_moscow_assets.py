@@ -47,6 +47,14 @@ def build_resurrection_gate():
         p.cone(2.1, 0.12, 4.6, (x, 0, 11.2), "dome_green", segments=8)
         p.cone(0.08, 0, 0.7, (x, 0, 13.85), "gold", segments=4)
         p.cone(0, 0.2, 0.3, (x, 0, 13.3), "ruby", segments=4)
+    # Round arch under the gate block: stone trim ring, keystone and lanterns on both faces.
+    arch_opening(p, 2.2, 2.4, 4.6, -1.3, 1.3, "brick_light", "stone", -1.38, segments=12)
+    arch_opening(p, 2.2, 2.4, 4.6, -1.3, 1.3, "brick_light", "stone", 1.38, segments=12)
+    for sx in (-1, 1):
+        for yy in (-1.2, 1.2):
+            p.box((0.16, 0.3, 0.16), (sx * 2.05, yy, 3.3), "ink")
+            p.box((0.26, 0.34, 0.5), (sx * 1.92, yy, 2.9), "candle")
+            p.box((0.32, 0.4, 0.1), (sx * 1.92, yy, 3.2), "gold")
     p.box((4.4, 2.6, 3.4), (0, 0, 6.3), "brick_light")
     p.box((4.4, 2.7, 0.4), (0, 0, 8.2), "stone")
     p.box((2.4, 0.12, 1.4), (0, -1.33, 6.6), "candle")
