@@ -15,6 +15,7 @@ import { GRASS_URL, type AssetId } from '@/data/assets';
 import type { Placement } from '@/data/maps/types';
 import { PALETTE } from '@/data/palette';
 import { InstancedModel, type Transform } from '@/game/assets/InstancedModel';
+import { useDispose } from '@/game/assets/use-dispose';
 import { useLoadingState } from '@/game/loading-state';
 import { useGameStore } from '@/store/game-store';
 import { GroundPaving } from '@/game/world/GroundPaving';
@@ -59,6 +60,8 @@ function RibbonMeshView({ data, color }: { data: RibbonMesh; color: string }) {
     return g;
   }, [data]);
   const material = useMemo(() => new MeshLambertMaterial({ color }), [color]);
+  useDispose(geometry);
+  useDispose(material);
   return <mesh geometry={geometry} material={material} />;
 }
 
@@ -95,6 +98,16 @@ function TiledGround({
   y: number;
 }) {
   const material = useMemo(() => tiledMaterial(url, w, d, tileMeters), [url, w, d, tileMeters]);
+  const disposer = useMemo(
+    () => ({
+      dispose: () => {
+        material.map?.dispose();
+        material.dispose();
+      },
+    }),
+    [material],
+  );
+  useDispose(disposer);
   return (
     <mesh rotation-x={-Math.PI / 2} position={[cx, y, cz]} material={material}>
       <planeGeometry args={[w, d]} />
@@ -128,6 +141,7 @@ function Floors({ floors }: { floors: NonNullable<typeof currentMap.floors> }) {
     g.computeVertexNormals();
     return g;
   }, [floors]);
+  useDispose(geometry);
   if (floors.length === 0) return null;
   return (
     <mesh geometry={geometry}>

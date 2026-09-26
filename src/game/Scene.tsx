@@ -22,6 +22,7 @@ import { Player } from '@/game/entities/Player';
 import { MapScene } from '@/game/world/MapScene';
 import { WeatherEffects } from '@/game/world/WeatherEffects';
 import { Npcs } from '@/game/world/Npcs';
+import { PerfProbe, perfEnabled } from '@/game/perf-probe';
 import { RenderStatsProbe } from '@/game/RenderStatsProbe';
 import { Suspense } from 'react';
 import { useGameStore } from '@/store/game-store';
@@ -86,6 +87,7 @@ export function Scene() {
       </Suspense>
       <LoadingGate />
 
+      {perfEnabled && <PerfProbe />}
       {import.meta.env.DEV && (
         <>
           <Stats />

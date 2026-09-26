@@ -5,6 +5,7 @@ import type { Group } from 'three';
 import { clone } from 'three/examples/jsm/utils/SkeletonUtils.js';
 import { ASSETS } from '@/data/assets';
 import { applyRetroMaterial } from '@/game/assets/retro-material';
+import { useShortScreen } from '@/ui/use-short-screen';
 
 /** Rosa in mermaid form, idling and turning slowly. */
 function Turntable() {
@@ -36,8 +37,10 @@ function Turntable() {
   );
 }
 
-/** The animated mermaid shown at the top of the menu. */
+/** The animated mermaid shown at the top of the menu (left out on a phone held sideways: no room, and no second WebGL context). */
 export function MenuMermaid() {
+  const short = useShortScreen();
+  if (short) return null;
   return (
     <div className="menu-mermaid" aria-hidden="true">
       <Canvas

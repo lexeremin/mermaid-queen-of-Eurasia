@@ -2188,3 +2188,172 @@
     height: 20px;
   }
 }
+
+/* A phone held sideways: the menus give up their picture and stack their buttons in a row, so nothing is below the fold. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .panel.menu {
+    width: min(560px, 100%);
+    max-width: 560px;
+    gap: 8px;
+    padding: 12px 16px 14px;
+  }
+
+  .menu-title {
+    font-size: 20px;
+  }
+
+  .welcome-text {
+    max-width: 52ch;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .menu-buttons {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    gap: 8px;
+  }
+
+  .menu-buttons .hud-btn {
+    flex: 1 1 120px;
+    width: auto;
+    height: 44px;
+  }
+}
+
+/* ?perf=1: live numbers for a real-device check, small and out of the way. */
+.perf-overlay {
+  position: absolute;
+  left: calc(var(--safe-left) + 4px);
+  top: calc(var(--safe-top) + 200px);
+  z-index: 40;
+  max-width: 62vw;
+  padding: 4px 6px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.66);
+  color: #9ff0d0;
+  font:
+    10px/1.3 ui-monospace,
+    'SF Mono',
+    monospace;
+  pointer-events: none;
+}
+
+.perf-overlay pre {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.perf-buttons {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  pointer-events: auto;
+}
+
+.perf-buttons button {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #9ff0d0;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #9ff0d0;
+  font:
+    12px ui-monospace,
+    monospace;
+}
+
+/* Small phones. The recall button stays finger-sized, short portrait screens shrink the menu picture and text, and
+   sideways the dialogue choices sit in two columns so "Goodbye" is not below the fold. */
+@media (max-width: 340px) {
+  /* The whole button cluster is scaled down here, so the recall button is made bigger to end up finger-sized. */
+  .recall-slot .recall-btn {
+    width: 66px;
+    height: 66px;
+  }
+}
+
+@media (max-height: 620px) and (orientation: portrait) {
+  .menu-mermaid {
+    height: 96px;
+  }
+
+  .panel.menu {
+    gap: 8px;
+    padding: 10px 14px 14px;
+  }
+
+  .menu-title {
+    font-size: 22px;
+  }
+
+  .welcome-text {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .menu-buttons {
+    gap: 8px;
+  }
+
+  .menu-buttons .hud-btn {
+    height: 44px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .dialogue-choices {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .dialogue-choice {
+    min-height: 44px;
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.3;
+  }
+
+  .dialogue-card {
+    padding: 10px 12px;
+  }
+}
+
+@media (max-height: 600px) {
+  .dialogue-choice {
+    min-height: 44px;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .dialogue-choices {
+    gap: 6px;
+  }
+
+  .dialogue-card {
+    max-height: 86dvh;
+  }
+}
+
+@media (max-height: 340px) {
+  .dialogue-choice {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .dialogue-text {
+    font-size: 13px;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .perf-overlay {
+    top: calc(var(--safe-top) + 4px);
+    left: 50%;
+    max-width: 34vw;
+    transform: translateX(-50%);
+  }
+}

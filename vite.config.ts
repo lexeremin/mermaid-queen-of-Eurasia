@@ -7,6 +7,8 @@ export default defineConfig({
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
+  // iPhones stay on old iOS versions for years: write syntax that Safari 15 understands.
+  build: { target: ['es2020', 'safari15'] },
   optimizeDeps: {
     include: ['three', 'zustand', '@react-three/fiber', '@react-three/drei'],
   },

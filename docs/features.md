@@ -40,7 +40,7 @@ Feature list with phase mapping. Status lives in `docs/Task.md`.
 | Five underground bosses (Father of Corruption, Lobbyist, Senator Endless, Yacht Baron, Spin Doctor) with new moves, and seven ordinary people to talk to | 24 |
 | Sound effects, generative ambience, volume sliders, drizzle and mist, damage numbers, screen shake, "Welcome back" title screen | 25 |
 | Abilities unlock at levels 1, 3, 6, 10; sixty levels; passives at 20 (sea wave), 30 (light beams), 40 (sharks), 50 (arcane blast); holy wings and halo at 60; steeper dungeon | 26 |
-| iPhone Safari QA | 27 |
+| Phone QA: menus fit sideways, Safari 15 target, leak fix, `?perf=1` on-device report and iPhone checklist | 27 |
 | Hosting, env config, release | 28 |
 
 ## Stretch (post-slice)
