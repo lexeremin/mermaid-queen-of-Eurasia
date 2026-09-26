@@ -23,6 +23,9 @@ export function SettingsPanel() {
   const setWeather = useSettingsStore((s) => s.setWeather);
   const numbers = useSettingsStore((s) => s.damageNumbers);
   const setNumbers = useSettingsStore((s) => s.setDamageNumbers);
+  const tips = useSettingsStore((s) => s.tips);
+  const setTips = useSettingsStore((s) => s.setTips);
+  const resetTips = useSettingsStore((s) => s.resetTips);
 
   return (
     <div className="overlay overlay-top">
@@ -85,6 +88,17 @@ export function SettingsPanel() {
             onClick={() => setNumbers(!numbers)}
           >
             Damage numbers: {numbers ? 'on' : 'off'}
+          </button>
+          <button
+            type="button"
+            className="hud-btn"
+            aria-pressed={tips}
+            onClick={() => setTips(!tips)}
+          >
+            Tips: {tips ? 'on' : 'off'}
+          </button>
+          <button type="button" className="hud-btn" onClick={resetTips}>
+            Show tips again
           </button>
           <button
             type="button"

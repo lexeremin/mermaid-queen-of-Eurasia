@@ -4,6 +4,7 @@ import { NPCS } from '@/data/npcs';
 import { addToBag, emptyBag, countOf } from '@/systems/inventory';
 import {
   acceptQuest,
+  boardMark,
   claimQuest,
   emptyLog,
   isReady,
@@ -254,5 +255,31 @@ describe('the archangel objective', () => {
       'Save the Archangels: 1/3',
     );
     expect(def().minRank).toBe(0);
+  });
+});
+
+describe('the notice board mark', () => {
+  it('shows a new quest, a quest to hand in first, and nothing when there is nothing to do', () => {
+    expect(boardMark(QUESTS, emptyLog(), view(), 0)).toBe('available');
+
+    // Every quest done: nothing left to take or hand in.
+    const all: QuestLog = { active: {}, completed: QUESTS.map((q) => q.id) };
+    expect(boardMark(QUESTS, all, view(), 4)).toBeNull();
+
+    // A quest that is ready wins over new ones.
+    const ready = quest('pearls-for-the-board');
+    let log = accept(emptyLog(), ready.id, 0);
+    let bag = emptyBag();
+    bag = addToBag(bag, 'pearl', 3).bag;
+    expect(boardMark(QUESTS, log, view({ bag, keepsakes: { pearl: 3 } }), 0)).toBe('ready');
+    log = { active: {}, completed: [] };
+    expect(boardMark(QUESTS, log, view(), 0)).toBe('available');
+  });
+
+  it('has no mark when only locked quests are left', () => {
+    const open = QUESTS.filter((q) => q.minRank === 0).map((q) => q.id);
+    const log: QuestLog = { active: {}, completed: open };
+    expect(boardMark(QUESTS, log, view(), 0)).toBeNull();
+    expect(boardMark(QUESTS, log, view(), 4)).toBe('available');
   });
 });

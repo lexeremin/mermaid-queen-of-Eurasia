@@ -69,6 +69,24 @@ export function statusOf(def: QuestDef, log: QuestLog, view: WorldView, rank: nu
   return def.minRank <= rank ? 'available' : 'locked';
 }
 
+/** What the notice board shows above it: a quest to hand in, or a new one to take (hand-ins come first). */
+export type BoardMark = 'ready' | 'available';
+
+export function boardMark(
+  quests: readonly QuestDef[],
+  log: QuestLog,
+  view: WorldView,
+  rank: number,
+): BoardMark | null {
+  let mark: BoardMark | null = null;
+  for (const def of quests) {
+    const status = statusOf(def, log, view, rank);
+    if (status === 'ready') return 'ready';
+    if (status === 'available') mark = 'available';
+  }
+  return mark;
+}
+
 export type ObjectiveState = {
   text: string;
   have: number;

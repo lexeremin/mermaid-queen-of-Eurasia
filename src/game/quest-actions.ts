@@ -1,7 +1,7 @@
 import { playSfx } from '@/audio/sfx';
 import type { EnemyKind } from '@/data/enemies';
 import { ITEMS } from '@/data/items';
-import { QUEST_BY_ID } from '@/data/quests';
+import { QUESTS, QUEST_BY_ID } from '@/data/quests';
 import { unlockMermaid } from '@/game/form-sim';
 import { grantXp } from '@/game/progress-actions';
 import { track } from '@/net/stats';
@@ -14,6 +14,7 @@ import { useQuestStore } from '@/store/quest-store';
 import { useToastStore } from '@/store/toast-store';
 import {
   acceptQuest,
+  boardMark,
   claimQuest,
   isReady,
   rankIndex,
@@ -21,6 +22,7 @@ import {
   recordKill,
   recordVisit,
   reputation,
+  type BoardMark,
   type WorldView,
 } from '@/systems/quests';
 
@@ -49,6 +51,10 @@ export const currentReputation = (): number =>
   reputation(useQuestStore.getState().log, worldView().joinedCount);
 
 export const currentRank = (): number => rankIndex(currentReputation());
+
+/** The mark that hangs over the notice board right now (and on the map): `!` a new quest, `?` one to hand in. */
+export const currentBoardMark = (): BoardMark | null =>
+  boardMark(QUESTS, useQuestStore.getState().log, worldView(), currentRank());
 
 export function acceptQuestAction(id: string): boolean {
   const { log, setLog } = useQuestStore.getState();

@@ -9,6 +9,7 @@ import { GameLoop } from '@/game/GameLoop';
 import { ActorRings } from '@/game/entities/ActorRings';
 import { ClickMarker } from '@/game/entities/ClickMarker';
 import { CombatEffects } from '@/game/entities/CombatEffects';
+import { QuestBoardMark } from '@/game/entities/QuestBoardMark';
 import { SkillEffects } from '@/game/entities/SkillEffects';
 import { CompanionActor } from '@/game/entities/CompanionActor';
 import { DungeonProps } from '@/game/entities/DungeonProps';
@@ -77,6 +78,7 @@ export function Scene() {
         <ActorRings />
         <Pickups />
         <Gatherables />
+        <QuestBoardMark />
         <CombatEffects />
         <SkillEffects />
         <HazardMarks />

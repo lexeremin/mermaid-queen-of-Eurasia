@@ -33,6 +33,10 @@ There is no iPhone and no working iOS Simulator on the development machine (Xcod
 
 **Numbers**: production build 1.5 MB of script (435 kB gzip) plus 214 kB for the cloud code, loaded in about 9 s on the software renderer. On a 4× slowed CPU with software GL (so the frame rates mean little), draw calls were 49–66 in every scene of the soak run and triangles about 117 000.
 
+## Follow-up: a mark over the notice board, and tips for new players
+- **Quest mark.** A gold **!** floats over the notice board while there is a quest to take, and a **?** when one is ready to hand in (hand-ins win). It is drawn in the world (`QuestBoardMark`, a small merged geometry with a dark rim, bobbing and swaying, hidden underground) and on the minimap and the full map beside the board's icon. The rule is one pure function, `boardMark` in `systems/quests.ts` (tested); the scene and the map ask the same `currentBoardMark()`.
+- **Tips** (`systems/tips.ts`, `ui/TipsHud.tsx`): short cards, one at a time, each shown once, when it becomes useful: how to walk, the notice board, talking to people, a first fight, low health with a potion at hand, the bag, the map and Recall, the Aura / Blink / Surge as they unlock, and the first descent. Text is for keyboard and mouse or for touch. They wait for menus, conversations and loading, leave by themselves after 15 s, wait 8 s between cards, and are skipped for anyone who has played a while (level 4 or two quests done), so old saves do not see the basics. The tips already shown are kept in the settings, and Settings has *Tips: on/off* and *Show tips again*. On a phone the card sits in the free band under the top bar (portrait) or between the bars and icons (landscape), never over the stick or buttons.
+
 ## Not done (needs a real iPhone)
 Real frame rate and heat, the sound on phone speakers and earphones, the silent switch, Safari's own quirks (home-screen mode, safe areas on a real notch, gesture conflicts, audio resume after a call), and touch feel. `docs/qa-iphone.md` lists what to check and what to bring back.
 

@@ -5,6 +5,7 @@ import type { PlaceId } from '@/store/game-store';
 import { useDialogueStore } from '@/store/dialogue-store';
 import { DebugOverlay } from '@/ui/DebugOverlay';
 import { PerfOverlay } from '@/ui/PerfOverlay';
+import { TipsHud } from '@/ui/TipsHud';
 import { CombatHud } from '@/ui/CombatHud';
 import { DamageNumbers } from '@/ui/DamageNumbers';
 import { DialogueBox } from '@/ui/DialogueBox';
@@ -67,6 +68,7 @@ export function Hud() {
 
       <DamageNumbers />
       <CombatHud touch={touch} />
+      <TipsHud touch={touch} />
 
       <div className="hud-top">
         <button

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { isQuality, type Quality } from '@/systems/quality';
+import { TIP_IDS, isTipId } from '@/systems/tips';
 import { KEYS, readJson, writeJson } from '@/save/storage';
 
 export type SettingsValues = {
@@ -16,6 +17,10 @@ export type SettingsValues = {
   weather: boolean;
   /** Floating damage numbers. */
   damageNumbers: boolean;
+  /** Short tips for new players appear when they become useful. */
+  tips: boolean;
+  /** The tips already shown (each appears once). */
+  tipsSeen: string[];
 };
 
 type SettingsState = SettingsValues & {
@@ -27,6 +32,10 @@ type SettingsState = SettingsValues & {
   setShake: (value: boolean) => void;
   setWeather: (value: boolean) => void;
   setDamageNumbers: (value: boolean) => void;
+  setTips: (value: boolean) => void;
+  markTipSeen: (id: string) => void;
+  /** Shows every tip again. */
+  resetTips: () => void;
 };
 
 const unit = (value: unknown, fallback: number): number =>
@@ -49,6 +58,10 @@ export function parseSettings(raw: unknown, reducedMotion = false): SettingsValu
     shake: typeof obj.shake === 'boolean' ? obj.shake : !reducedMotion,
     weather: obj.weather !== false,
     damageNumbers: obj.damageNumbers !== false,
+    tips: obj.tips !== false,
+    tipsSeen: Array.isArray(obj.tipsSeen)
+      ? [...new Set(obj.tipsSeen.filter(isTipId))].slice(0, TIP_IDS.length)
+      : [],
   };
 }
 
@@ -61,6 +74,8 @@ const pick = (s: SettingsValues): SettingsValues => ({
   shake: s.shake,
   weather: s.weather,
   damageNumbers: s.damageNumbers,
+  tips: s.tips,
+  tipsSeen: s.tipsSeen,
 });
 
 const persist = (s: SettingsValues) => writeJson(KEYS.settings, pick(s));
@@ -80,5 +95,11 @@ export const useSettingsStore = create<SettingsState>((set, get) => {
     setShake: (shake) => change({ shake }),
     setWeather: (weather) => change({ weather }),
     setDamageNumbers: (damageNumbers) => change({ damageNumbers }),
+    setTips: (tips) => change({ tips }),
+    markTipSeen: (id) => {
+      if (!isTipId(id) || get().tipsSeen.includes(id)) return;
+      change({ tipsSeen: [...get().tipsSeen, id] });
+    },
+    resetTips: () => change({ tipsSeen: [], tips: true }),
   };
 });

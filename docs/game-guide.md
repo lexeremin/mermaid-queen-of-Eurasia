@@ -58,7 +58,7 @@ Walk up to a character and press `E`. Their **mood** climbs from *gloomy* throug
 - A mesmerized person shows a floating **heart**. Charm them enough and they may **join your kingdom**, for a little experience and a story.
 - Eight main characters have long persuasion conversations. Seven ordinary locals have a story or a small tip and sometimes a gift. And three **hidden children** are lost somewhere in the district; keep your eyes open, listen to what people say, and follow the hints.
 
-Quests come from the **notice board** in the square (there are 23), and each asks for something different: sing to a tour guide, send a few men home, collect pearls, walk a route, save someone, clear the embankment, make it to a certain depth.
+Quests come from the **notice board** in the square (there are 23). A gold **!** floats over the board when there is a new quest to take, and a **?** when one is ready to hand in; the same mark shows on the map. Each quest asks for something different: sing to a tour guide, send a few men home, collect pearls, walk a route, save someone, clear the embankment, make it to a certain depth.
 
 ## The world
 
@@ -87,6 +87,9 @@ Take the metro stairs down.
 - The deepest layer you reached is remembered: at the metro pavilion a **Depth** panel lets you jump back to layer 1, to any tenth layer you have reached, or to your deepest, so you do not have to walk it twice.
 
 ## Tips
+
+New players get a few **on-screen tips** at the right moments (how to walk, the notice board, a first fight, a new skill...). Each shows once; you can close it, turn tips off, or show them all again in Settings.
+
 
 - **Read the ground.** Red shapes (circles and long bars) show where a big attack will land, and how soon. Step out, or blink out at the last moment.
 - **Aura first.** A blinded enemy hits almost nothing unless you stand right on top of it. Bosses are only blinded for a short time, though.

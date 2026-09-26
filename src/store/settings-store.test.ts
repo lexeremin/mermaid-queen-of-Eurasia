@@ -16,7 +16,19 @@ describe('settings', () => {
       shake: true,
       weather: true,
       damageNumbers: true,
+      tips: true,
+      tipsSeen: [],
     });
+  });
+
+  it('keep the tips already shown, dropping unknown and repeated ones', () => {
+    expect(parseSettings({ tips: false, tipsSeen: ['move', 'move', 'nonsense', 4] })).toMatchObject(
+      {
+        tips: false,
+        tipsSeen: ['move'],
+      },
+    );
+    expect(parseSettings({ tipsSeen: 'move' }).tipsSeen).toEqual([]);
   });
 
   it('keep what was saved when it is valid, and clamp or drop the rest', () => {

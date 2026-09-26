@@ -8,6 +8,7 @@ import { getRenderPosition, sim } from '@/game/sim';
 import { currentMap } from '@/game/world/current-map';
 import { useDungeonStore } from '@/store/dungeon-store';
 import { useArchangelStore } from '@/store/archangel-store';
+import { currentBoardMark } from '@/game/quest-actions';
 import { useNpcStore } from '@/store/npc-store';
 import { defOf } from '@/systems/enemy-ai';
 
@@ -131,6 +132,20 @@ export function drawMap(
       if (p.asset !== 'questBoard' && p.asset !== 'shrine') continue;
       const s = toScreen(view, p.x, p.z);
       diamond(ctx, s.x, s.y, m * 0.8, '#d9a8ff');
+      const mark = p.asset === 'questBoard' ? currentBoardMark() : null;
+      if (mark) {
+        // The same mark as over the board itself: `!` a new quest, `?` one to hand in.
+        ctx.fillStyle = GOLD;
+        ctx.strokeStyle = '#120d09';
+        ctx.lineWidth = 3;
+        ctx.font = `bold ${Math.max(14, m * 3.4)}px Georgia, serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'alphabetic';
+        const glyph = mark === 'ready' ? '?' : '!';
+        const y = s.y - m * 1.3 + Math.sin(performance.now() / 260) * 1.5;
+        ctx.strokeText(glyph, s.x, y);
+        ctx.fillText(glyph, s.x, y);
+      }
     }
   }
 
